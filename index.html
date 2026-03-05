@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
   <title>ZonedIn — Clarity Beats Chaos</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script>
-    // Tell Babel not to transform ES modules — we handle globals manually
     Babel.registerPreset('zi-preset', {
       presets: [
         [Babel.availablePresets['react']],
@@ -16,916 +16,861 @@
       ]
     });
   </script>
-  <style>* { box-sizing: border-box; } body { margin: 0; }</style>
+  <style>
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { background:#0a0e14; font-family:'DM Sans',sans-serif; }
+    input,textarea,button { font-family:'DM Sans',sans-serif; }
+    input:focus,textarea:focus { outline:none; border-color:#00C2B2 !important; box-shadow:0 0 0 3px rgba(0,194,178,0.12); }
+    ::-webkit-scrollbar { width:4px; }
+    ::-webkit-scrollbar-thumb { background:rgba(0,194,178,0.25); border-radius:99px; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes popIn  { from{opacity:0;transform:scale(0.94)} to{opacity:1;transform:scale(1)} }
+    @keyframes taskPop { 0%{transform:scale(0.5) rotate(-10deg);opacity:0} 60%{transform:scale(1.2) rotate(4deg)} 100%{transform:scale(1);opacity:1} }
+    .fade-up  { animation:fadeUp 0.3s ease both; }
+    .pop-in   { animation:popIn  0.25s ease both; }
+  </style>
 </head>
 <body>
   <div id="root"></div>
-
-  <!-- Load Supabase via ESM into window before Babel runs -->
   <script type="module">
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
     window.__supabaseCreateClient = createClient;
-    // Signal that supabase is ready
     window.dispatchEvent(new Event('supabase-ready'));
   </script>
-
   <script type="text/babel" data-presets="zi-preset">
     const { useState, useEffect, useRef, useCallback } = React;
-
-    // Wait for supabase to be available
     const createClient = (...args) => window.__supabaseCreateClient(...args);
 
     const SUPABASE_URL = "https://takormabbagvdckpxpox.supabase.co";
     const SUPABASE_KEY = "sb_publishable_yOWhO9_U1TkyUmsvHy1CCQ_vDl9TTUi";
     const supabase     = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // ── milestone helpers ────────────────────────────────────────────────────────
-    const MILESTONES = [7, 14, 30, 60, 90, 120, 150, 200];
-    function getNextMilestone(s) {
-      const f = MILESTONES.find(m => m > s);
-      return f ?? Math.ceil((s + 1) / 50) * 50;
-    }
-    function getMilestoneProgress(s) {
-      const next = getNextMilestone(s);
-      const prevList = MILESTONES.filter(m => m <= s);
-      let prev = prevList.length ? prevList[prevList.length - 1] : 0;
-      if (s >= 200) prev = Math.floor(s / 50) * 50;
-      return { next, pct: Math.max(0, Math.min(100, ((s - prev) / (next - prev)) * 100)), daysLeft: next - s };
-    }
-
-    // ── tier helpers ─────────────────────────────────────────────────────────────
-    const TIER_CONFIG = {
-      platinum: { label:"Platinum Streak", emoji:"🏆", color:"#A78BFA", bg:"rgba(167,139,250,0.10)", border:"rgba(167,139,250,0.35)", multiplier:1.5  },
-      diamond:  { label:"Diamond Streak",  emoji:"💎", color:"#60A5FA", bg:"rgba(96,165,250,0.10)",  border:"rgba(96,165,250,0.35)",  multiplier:1.25 },
-      gold:     { label:"Gold Streak",     emoji:"🥇", color:"#F59E0B", bg:"rgba(245,158,11,0.10)",  border:"rgba(245,158,11,0.35)",  multiplier:1.1  },
-      none:     { label:"No Streak",       emoji:"—",  color:"#9CA3AF", bg:"rgba(156,163,175,0.06)", border:"rgba(156,163,175,0.2)",  multiplier:1.0  },
+    // ── design tokens ────────────────────────────────────────────────────────────
+    const T = {
+      bg:"#0a0e14", card:"#111720", card2:"#161d28",
+      border:"rgba(255,255,255,0.07)", border2:"rgba(255,255,255,0.12)",
+      text:"#F0F4F8", sub:"rgba(240,244,248,0.45)", sub2:"rgba(240,244,248,0.2)",
+      teal:"#00C2B2", teal2:"#00E5D4", tealBg:"rgba(0,194,178,0.08)",
+      gold:"#F59E0B", goldBg:"rgba(245,158,11,0.10)",
+      diamond:"#60A5FA", diamondBg:"rgba(96,165,250,0.10)",
+      plat:"#A78BFA", platBg:"rgba(167,139,250,0.10)",
     };
-    function getStreakTier(cz) {
-      const g = cz.includes("gold"), d = cz.includes("diamond"), p = cz.includes("platinum");
-      if (g && d && p) return "platinum";
-      if (g && d)      return "diamond";
-      if (g)           return "gold";
-      return "none";
-    }
 
-    // ── levels & points ──────────────────────────────────────────────────────────
+    // ── helpers ──────────────────────────────────────────────────────────────────
+    const MILESTONES = [7,14,30,60,90,120,150,200];
+    const getMilestoneProgress = s => {
+      const next = MILESTONES.find(m=>m>s) ?? Math.ceil((s+1)/50)*50;
+      const prevList = MILESTONES.filter(m=>m<=s);
+      let prev = prevList.length ? prevList[prevList.length-1] : 0;
+      if (s>=200) prev = Math.floor(s/50)*50;
+      return { next, pct:Math.max(0,Math.min(100,((s-prev)/(next-prev))*100)), daysLeft:next-s };
+    };
+    const TIER_CONFIG = {
+      platinum:{ label:"Platinum Streak", emoji:"🏆", color:T.plat,    bg:T.platBg,    border:"rgba(167,139,250,0.35)", multiplier:1.5  },
+      diamond: { label:"Diamond Streak",  emoji:"💎", color:T.diamond, bg:T.diamondBg, border:"rgba(96,165,250,0.35)",  multiplier:1.25 },
+      gold:    { label:"Gold Streak",     emoji:"🥇", color:T.gold,    bg:T.goldBg,    border:"rgba(245,158,11,0.35)",  multiplier:1.1  },
+      none:    { label:"No Streak",       emoji:"—",  color:"#6B7280", bg:"rgba(107,114,128,0.08)", border:"rgba(107,114,128,0.2)", multiplier:1.0 },
+    };
+    const getStreakTier = cz => {
+      const g=cz.includes("gold"), d=cz.includes("diamond"), p=cz.includes("platinum");
+      if(g&&d&&p) return "platinum"; if(g&&d) return "diamond"; if(g) return "gold"; return "none";
+    };
     const LEVELS = [
-      { name:"Zone Novice",    min:0,    badge:"🌱" },
-      { name:"Zone Builder",   min:200,  badge:"🔨" },
-      { name:"Zone Pro",       min:600,  badge:"⚡" },
-      { name:"Zone Elite",     min:1400, badge:"💎" },
-      { name:"ZonedIn Master", min:3000, badge:"👑" },
+      {name:"Zone Novice",min:0,badge:"🌱"},{name:"Zone Builder",min:200,badge:"🔨"},
+      {name:"Zone Pro",min:600,badge:"⚡"},{name:"Zone Elite",min:1400,badge:"💎"},
+      {name:"ZonedIn Master",min:3000,badge:"👑"},
     ];
-    function getLevel(pts) {
-      let level = LEVELS[0];
-      for (const l of LEVELS) { if (pts >= l.min) level = l; }
-      const idx  = LEVELS.indexOf(level);
-      const next = LEVELS[idx + 1] ?? null;
-      const pct  = next ? Math.min(100, ((pts - level.min) / (next.min - level.min)) * 100) : 100;
-      return { ...level, idx, next, pct, ptsToNext: next ? next.min - pts : 0 };
-    }
-    function calcDayPoints(cz, extraSessions, sessionCompleted, hasReflection, hasInsight, hasMoodEnergy, tier) {
-      let base = 0;
-      const g = cz.includes("gold"), d = cz.includes("diamond"), p = cz.includes("platinum");
-      if (g)           base += 10;
-      if (g && d)      base += 20;
-      if (g && d && p) base += 50;
-      if (sessionCompleted) base += 5; else if (g) base += 2;
-      if (extraSessions > 0) base += extraSessions * 3;
-      if (hasReflection) base += 10;
-      if (hasInsight)    base += 5;
-      if (hasMoodEnergy) base += 3;
-      return Math.round(base * (TIER_CONFIG[tier]?.multiplier ?? 1));
-    }
-
-    // ── utils ────────────────────────────────────────────────────────────────────
-    function fmt(secs) {
-      return `${String(Math.floor(secs/60)).padStart(2,"0")}:${String(secs%60).padStart(2,"0")}`;
-    }
+    const getLevel = pts => {
+      let lv=LEVELS[0]; for(const l of LEVELS){if(pts>=l.min)lv=l;}
+      const idx=LEVELS.indexOf(lv), next=LEVELS[idx+1]??null;
+      const pct=next?Math.min(100,((pts-lv.min)/(next.min-lv.min))*100):100;
+      return {...lv,idx,next,pct,ptsToNext:next?next.min-pts:0};
+    };
+    const calcDayPoints = (cz,extraS,sessComp,hasRef,hasIns,hasME,tier) => {
+      let b=0;
+      const g=cz.includes("gold"),d=cz.includes("diamond"),p=cz.includes("platinum");
+      if(g)b+=10; if(g&&d)b+=20; if(g&&d&&p)b+=50;
+      if(sessComp)b+=5; else if(g)b+=2;
+      if(extraS>0)b+=extraS*3; if(hasRef)b+=10; if(hasIns)b+=5; if(hasME)b+=3;
+      return Math.round(b*(TIER_CONFIG[tier]?.multiplier??1));
+    };
+    const fmt = s => `${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`;
     const LS = {
-      get: (k,fb) => { try { const v=localStorage.getItem(k); return v?JSON.parse(v):fb; } catch { return fb; } },
-      set: (k,v)  => { try { localStorage.setItem(k,JSON.stringify(v)); } catch {} },
-      clear: ()   => { try { Object.keys(localStorage).filter(k=>k.startsWith("zi_")).forEach(k=>localStorage.removeItem(k)); } catch {} },
+      get:(k,fb)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):fb;}catch{return fb;}},
+      set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch{}},
     };
     const todayStr   = () => new Date().toDateString();
     const todayShort = () => new Date().toLocaleDateString("en-GB",{day:"numeric",month:"short"});
+    const greet = () => { const h=new Date().getHours(); if(h<12)return"Good morning"; if(h<17)return"Good afternoon"; return"Good evening"; };
 
     const MOTIVATIONAL = [
       "One zone. One signal. Stay locked.",
       "Clarity is earned one minute at a time.",
-      "The zone doesn't care about distractions. Neither should you.",
       "Momentum builds in silence.",
       "Every second here is a second ahead.",
       "Deep work is the competitive advantage.",
       "Zone in. The world can wait.",
     ];
     const ONBOARDING = [
-      { emoji:"🗺️", title:"Map Your Zones",  body:"Set three focused tasks each day. Gold is your must-do, Diamond builds momentum, Platinum is your breakthrough. Tap a zone card to activate it." },
-      { emoji:"🔥", title:"Zone In",          body:"Start a timed focus session on your active zone. The app locks out distractions so you can do your best work. Choose 15 to 90 minutes." },
-      { emoji:"🧠", title:"Close the Loop",   body:"After each day, reflect on what went well. Claude analyses your patterns and tells you exactly what worked and what to try next." },
+      {emoji:"🗺️",title:"Map Your Zones",body:"Set three focused tasks each day. Gold is your must-do, Diamond builds momentum, Platinum is your breakthrough."},
+      {emoji:"🔥",title:"Zone In",body:"Start a timed focus session on your active zone. The app locks you in so you can do your best work."},
+      {emoji:"🧠",title:"Close the Loop",body:"Reflect each day. Claude analyses your patterns and tells you exactly what worked and what to try next."},
+      {emoji:"🏆",title:"Build Your Streak",body:"Complete zones daily to build streaks and level up. Gold → Diamond → Platinum tier unlocks bigger rewards."},
     ];
 
     // ── celebration sound ────────────────────────────────────────────────────────
-    function playCelebrationSound() {
+    const playCelebrationSound = () => {
       try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        const notes = [523.25, 659.25, 783.99, 1046.50];
-        notes.forEach((freq,i) => {
-          const osc=ctx.createOscillator(), gain=ctx.createGain();
-          osc.connect(gain); gain.connect(ctx.destination);
-          osc.type="sine";
-          osc.frequency.setValueAtTime(freq, ctx.currentTime+i*0.12);
-          gain.gain.setValueAtTime(0, ctx.currentTime+i*0.12);
-          gain.gain.linearRampToValueAtTime(0.18, ctx.currentTime+i*0.12+0.02);
-          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+i*0.12+0.35);
-          osc.start(ctx.currentTime+i*0.12);
-          osc.stop(ctx.currentTime+i*0.12+0.35);
+        const ctx=new(window.AudioContext||window.webkitAudioContext)();
+        [523.25,659.25,783.99,1046.50].forEach((freq,i)=>{
+          const osc=ctx.createOscillator(),gain=ctx.createGain();
+          osc.connect(gain);gain.connect(ctx.destination);osc.type="sine";
+          osc.frequency.setValueAtTime(freq,ctx.currentTime+i*0.12);
+          gain.gain.setValueAtTime(0,ctx.currentTime+i*0.12);
+          gain.gain.linearRampToValueAtTime(0.18,ctx.currentTime+i*0.12+0.02);
+          gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+i*0.12+0.35);
+          osc.start(ctx.currentTime+i*0.12);osc.stop(ctx.currentTime+i*0.12+0.35);
         });
-      } catch(e) {}
-    }
+      } catch(e){}
+    };
+
+    // ── shared style helpers ─────────────────────────────────────────────────────
+    const card  = (extra={}) => ({background:T.card,borderRadius:20,border:`1px solid ${T.border}`,padding:"18px 20px",...extra});
+    const btn   = (extra={}) => ({border:"none",borderRadius:50,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:700,transition:"all 0.2s",...extra});
+    const btnPrimary = (extra={}) => btn({background:`linear-gradient(135deg,${T.teal},${T.teal2})`,color:"#fff",padding:"14px 28px",fontSize:15,boxShadow:`0 6px 24px rgba(0,194,178,0.25)`,...extra});
 
     // ── ZonedInMark ──────────────────────────────────────────────────────────────
-    function ZonedInMark({ size=44 }) {
-      return (
-        <svg width={size} height={size} viewBox="0 0 64 64" fill="none">
-          <circle cx="32" cy="32" r="26" stroke="#1B1F23" strokeWidth="4"/>
-          <circle cx="32" cy="32" r="16" stroke="#00C2B2" strokeWidth="6"/>
-          <circle cx="32" cy="32" r="7"  fill="#1B1F23"/>
-          <text x="32" y="36" textAnchor="middle" fontSize="12" fontWeight="800" fill="#F9FAFB"
-            style={{fontFamily:'"Outfit",ui-sans-serif'}}>Z</text>
-        </svg>
-      );
-    }
+    const ZonedInMark = ({size=40}) => (
+      <svg width={size} height={size} viewBox="0 0 64 64" fill="none">
+        <circle cx="32" cy="32" r="26" stroke={T.border2} strokeWidth="3"/>
+        <circle cx="32" cy="32" r="16" stroke={T.teal} strokeWidth="5.5"/>
+        <circle cx="32" cy="32" r="7" fill={T.card}/>
+        <text x="32" y="36" textAnchor="middle" fontSize="11" fontWeight="900" fill={T.text} style={{fontFamily:"'Syne',sans-serif"}}>Z</text>
+      </svg>
+    );
 
     // ── Auth Screen ──────────────────────────────────────────────────────────────
-    function AuthScreen() {
-      const [email, setEmail]     = useState("");
-      const [sent, setSent]       = useState(false);
-      const [loading, setLoading] = useState(false);
-      const [error, setError]     = useState("");
-
+    const AuthScreen = () => {
+      const [email,setEmail]=useState(""); const [sent,setSent]=useState(false);
+      const [loading,setLoading]=useState(false); const [error,setError]=useState("");
       const handleLogin = async () => {
-        if (!email.trim()) return;
-        setLoading(true); setError("");
-        const { error: err } = await supabase.auth.signInWithOtp({
-          email: email.trim(),
-          options: { shouldCreateUser: true },
-        });
-        if (err) setError(err.message);
-        else setSent(true);
-        setLoading(false);
+        if(!email.trim())return; setLoading(true);setError("");
+        const {error:err}=await supabase.auth.signInWithOtp({email:email.trim(),options:{shouldCreateUser:true}});
+        if(err)setError(err.message); else setSent(true); setLoading(false);
       };
-
       return (
-        <div style={{minHeight:"100vh",background:"#0d1117",display:"flex",alignItems:"center",justifyContent:"center",padding:24,fontFamily:'"Outfit",ui-sans-serif'}}>
-          <div style={{maxWidth:380,width:"100%",textAlign:"center"}}>
-            <div style={{marginBottom:24,display:"flex",justifyContent:"center"}}><ZonedInMark size={56}/></div>
-            <h1 style={{margin:"0 0 6px",fontSize:28,fontWeight:900,color:"#F9FAFB",letterSpacing:-0.5}}>ZonedIn</h1>
-            <p style={{margin:"0 0 32px",fontSize:14,color:"rgba(249,250,251,0.5)"}}>Clarity Beats Chaos</p>
+        <div style={{minHeight:"100vh",background:T.bg,display:"flex",alignItems:"center",justifyContent:"center",padding:24}}>
+          <div style={{maxWidth:360,width:"100%",textAlign:"center"}}>
+            <div style={{marginBottom:20,display:"flex",justifyContent:"center"}}><ZonedInMark size={56}/></div>
+            <h1 style={{fontFamily:"'Syne',sans-serif",fontSize:30,fontWeight:900,color:T.text,letterSpacing:-0.5,margin:"0 0 6px"}}>ZonedIn</h1>
+            <p style={{fontSize:14,color:T.sub,margin:"0 0 36px"}}>Clarity Beats Chaos</p>
             {!sent ? (
-              <div style={{background:"#161b22",borderRadius:20,padding:"32px 28px",border:"1px solid rgba(255,255,255,0.08)"}}>
-                <h2 style={{margin:"0 0 6px",fontSize:18,fontWeight:800,color:"#F9FAFB"}}>Sign in to ZonedIn</h2>
-                <p style={{margin:"0 0 20px",fontSize:13,color:"rgba(249,250,251,0.5)",lineHeight:1.6}}>Enter your email and we'll send you a magic link — no password needed.</p>
-                <input type="email" value={email} onChange={e=>setEmail(e.target.value)}
-                  onKeyDown={e=>e.key==="Enter"&&handleLogin()}
-                  placeholder="your@email.com"
-                  style={{width:"100%",padding:"13px 16px",borderRadius:12,border:"1.5px solid rgba(255,255,255,0.1)",background:"rgba(255,255,255,0.05)",color:"#F9FAFB",fontSize:14,fontFamily:'"Outfit",ui-sans-serif',outline:"none",boxSizing:"border-box",marginBottom:12}}/>
-                {error && <p style={{margin:"0 0 10px",fontSize:12,color:"#EF4444"}}>{error}</p>}
-                <button onClick={handleLogin} disabled={loading||!email.trim()}
-                  style={{width:"100%",padding:"14px",borderRadius:50,border:"none",background:loading||!email.trim()?"#374151":"#00C2B2",color:"#fff",fontSize:15,fontWeight:800,cursor:loading||!email.trim()?"not-allowed":"pointer",fontFamily:'"Outfit",ui-sans-serif',transition:"all 0.2s"}}>
-                  {loading ? "Sending..." : "Send Magic Link ✦"}
+              <div style={{background:T.card,borderRadius:24,padding:"32px 28px",border:`1px solid ${T.border}`}}>
+                <h2 style={{fontFamily:"'Syne',sans-serif",fontSize:20,fontWeight:800,color:T.text,margin:"0 0 8px"}}>Welcome back</h2>
+                <p style={{fontSize:13,color:T.sub,lineHeight:1.6,margin:"0 0 22px"}}>Enter your email for a magic link — no password needed.</p>
+                <input type="email" value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&handleLogin()} placeholder="your@email.com"
+                  style={{width:"100%",padding:"13px 16px",borderRadius:12,border:`1.5px solid ${T.border}`,background:T.card2,color:T.text,fontSize:14,marginBottom:10,boxSizing:"border-box"}}/>
+                {error&&<p style={{fontSize:12,color:"#EF4444",margin:"0 0 10px"}}>{error}</p>}
+                <button onClick={handleLogin} disabled={loading||!email.trim()} style={btnPrimary({width:"100%",opacity:loading||!email.trim()?0.5:1,cursor:loading||!email.trim()?"not-allowed":"pointer"})}>
+                  {loading?"Sending…":"Send Magic Link ✦"}
                 </button>
               </div>
             ) : (
-              <div style={{background:"#161b22",borderRadius:20,padding:"32px 28px",border:"1px solid rgba(0,194,178,0.2)"}}>
-                <div style={{fontSize:48,marginBottom:16}}>📬</div>
-                <h2 style={{margin:"0 0 8px",fontSize:18,fontWeight:800,color:"#F9FAFB"}}>Check your inbox</h2>
-                <p style={{margin:"0 0 16px",fontSize:13,color:"rgba(249,250,251,0.5)",lineHeight:1.7}}>We sent a magic link to <strong style={{color:"#00C2B2"}}>{email}</strong>. Click it to sign in.</p>
-                <button onClick={()=>setSent(false)} style={{fontSize:13,background:"none",border:"none",color:"rgba(249,250,251,0.4)",cursor:"pointer",fontFamily:'"Outfit",ui-sans-serif'}}>Use a different email</button>
+              <div style={{background:T.card,borderRadius:24,padding:"32px 28px",border:`1px solid rgba(0,194,178,0.2)`}}>
+                <div style={{fontSize:52,marginBottom:14}}>📬</div>
+                <h2 style={{fontFamily:"'Syne',sans-serif",fontSize:18,fontWeight:800,color:T.text,margin:"0 0 8px"}}>Check your inbox</h2>
+                <p style={{fontSize:13,color:T.sub,lineHeight:1.7,margin:"0 0 16px"}}>Magic link sent to <strong style={{color:T.teal}}>{email}</strong>. Click it to sign in.</p>
+                <button onClick={()=>setSent(false)} style={btn({background:"none",color:T.sub,fontSize:13,padding:0})}>Use a different email</button>
               </div>
             )}
           </div>
         </div>
       );
-    }
+    };
 
     // ── Onboarding ───────────────────────────────────────────────────────────────
-    function Onboarding({ onComplete, dark }) {
-      const [step, setStep] = useState(0);
-      const s   = ONBOARDING[step];
-      const bg  = dark ? "#161b22" : "#fff";
-      const fg  = dark ? "#F9FAFB" : "#1B1F23";
-      const sub = dark ? "rgba(249,250,251,0.55)" : "rgba(27,31,35,0.6)";
-      const dot = dark ? "rgba(255,255,255,0.12)" : "#E2E8ED";
+    const Onboarding = ({onComplete}) => {
+      const [step,setStep]=useState(0); const s=ONBOARDING[step];
       return (
-        <div style={{position:"fixed",inset:0,zIndex:9998,background:"rgba(0,0,0,0.65)",display:"flex",alignItems:"center",justifyContent:"center",padding:24,fontFamily:'"Outfit",ui-sans-serif'}}>
-          <div style={{background:bg,borderRadius:24,padding:"40px 32px",maxWidth:380,width:"100%",boxShadow:"0 24px 80px rgba(0,0,0,0.3)",textAlign:"center"}}>
-            <div style={{fontSize:56,marginBottom:16}}>{s.emoji}</div>
-            <h2 style={{margin:"0 0 10px",fontSize:22,fontWeight:900,color:fg,letterSpacing:-0.5}}>{s.title}</h2>
-            <p  style={{margin:"0 0 28px",fontSize:14,color:sub,lineHeight:1.75}}>{s.body}</p>
+        <div style={{position:"fixed",inset:0,zIndex:9998,background:"rgba(0,0,0,0.8)",display:"flex",alignItems:"flex-end",justifyContent:"center",padding:16}}>
+          <div className="pop-in" style={{background:T.card,borderRadius:28,padding:"36px 28px 32px",maxWidth:420,width:"100%",textAlign:"center",border:`1px solid ${T.border2}`}}>
+            <div style={{fontSize:60,marginBottom:16}}>{s.emoji}</div>
+            <h2 style={{fontFamily:"'Syne',sans-serif",fontSize:22,fontWeight:900,color:T.text,margin:"0 0 10px",letterSpacing:-0.3}}>{s.title}</h2>
+            <p style={{fontSize:14,color:T.sub,lineHeight:1.75,margin:"0 0 28px"}}>{s.body}</p>
             <div style={{display:"flex",justifyContent:"center",gap:6,marginBottom:24}}>
-              {ONBOARDING.map((_,i)=>(
-                <div key={i} style={{width:i===step?20:6,height:6,borderRadius:99,background:i===step?"#00C2B2":dot,transition:"all 0.3s"}}/>
-              ))}
+              {ONBOARDING.map((_,i)=><div key={i} style={{width:i===step?20:6,height:6,borderRadius:99,background:i===step?T.teal:T.border2,transition:"all 0.3s"}}/>)}
             </div>
-            <button onClick={()=>step<ONBOARDING.length-1?setStep(x=>x+1):onComplete()}
-              style={{width:"100%",padding:"14px",borderRadius:50,border:"none",background:"#00C2B2",color:"#fff",fontSize:15,fontWeight:800,cursor:"pointer",fontFamily:'"Outfit",ui-sans-serif'}}>
+            <button onClick={()=>step<ONBOARDING.length-1?setStep(x=>x+1):onComplete()} style={btnPrimary({width:"100%"})}>
               {step<ONBOARDING.length-1?"Next →":"Let's Zone In ✦"}
             </button>
-            {step<ONBOARDING.length-1&&<button onClick={onComplete} style={{marginTop:12,background:"none",border:"none",color:sub,fontSize:13,cursor:"pointer",fontFamily:'"Outfit",ui-sans-serif'}}>Skip</button>}
+            {step<ONBOARDING.length-1&&<button onClick={onComplete} style={btn({background:"none",color:T.sub,fontSize:13,marginTop:12,padding:"6px"})}>Skip intro</button>}
           </div>
         </div>
       );
-    }
+    };
 
-    // ── SessionLock ──────────────────────────────────────────────────────────────
-    function SessionLock({ secondsLeft, activeZone, onEnd, onCompleteTask, sessionDuration }) {
-      const [msgIdx, setMsgIdx] = useState(0);
-      const pct = 1 - secondsLeft / (sessionDuration * 60);
-      const r = 54, circ = 2 * Math.PI * r;
-      useEffect(() => {
-        const id = setInterval(()=>setMsgIdx(i=>(i+1)%MOTIVATIONAL.length), 8000);
-        return ()=>clearInterval(id);
-      }, []);
+    // ── Session Lock Screen ──────────────────────────────────────────────────────
+    const SessionLock = ({secondsLeft,activeZone,onEnd,onCompleteTask,sessionDuration}) => {
+      const [msgIdx,setMsgIdx]=useState(0);
+      const pct=1-secondsLeft/(sessionDuration*60), r=70, circ=2*Math.PI*r;
+      useEffect(()=>{const id=setInterval(()=>setMsgIdx(i=>(i+1)%MOTIVATIONAL.length),8000);return()=>clearInterval(id);},[]);
       return (
-        <div style={{position:"fixed",inset:0,zIndex:9999,background:"linear-gradient(135deg,#0d1117 0%,#0a1a1a 60%,#001a18 100%)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:28,fontFamily:'"Outfit",ui-sans-serif'}}>
-          <div style={{position:"relative",width:160,height:160}}>
-            <svg width="160" height="160" viewBox="0 0 120 120" style={{transform:"rotate(-90deg)"}}>
-              <circle cx="60" cy="60" r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="6"/>
-              <circle cx="60" cy="60" r={r} fill="none" stroke="#00C2B2" strokeWidth="6"
+        <div style={{position:"fixed",inset:0,zIndex:9999,background:"linear-gradient(160deg,#060a10 0%,#0a1a18 100%)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:24,padding:24}}>
+          <div style={{position:"relative",width:200,height:200}}>
+            <svg width="200" height="200" viewBox="0 0 160 160" style={{transform:"rotate(-90deg)"}}>
+              <circle cx="80" cy="80" r={r} fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="8"/>
+              <circle cx="80" cy="80" r={r} fill="none" stroke="url(#tg)" strokeWidth="8"
                 strokeDasharray={circ} strokeDashoffset={circ*(1-pct)} strokeLinecap="round"
                 style={{transition:"stroke-dashoffset 1s linear"}}/>
+              <defs><linearGradient id="tg" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor={T.teal}/><stop offset="100%" stopColor={T.teal2}/></linearGradient></defs>
             </svg>
             <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
-              <span style={{fontSize:32,fontWeight:800,color:"#F9FAFB",letterSpacing:-1}}>{fmt(secondsLeft)}</span>
-              <span style={{fontSize:11,color:"#00C2B2",fontWeight:600,letterSpacing:2,textTransform:"uppercase"}}>remaining</span>
+              <span style={{fontFamily:"'Syne',sans-serif",fontSize:40,fontWeight:900,color:T.text,letterSpacing:-2}}>{fmt(secondsLeft)}</span>
+              <span style={{fontSize:10,color:T.teal,fontWeight:700,letterSpacing:2,textTransform:"uppercase",marginTop:2}}>remaining</span>
             </div>
           </div>
           <div style={{textAlign:"center"}}>
-            <div style={{fontSize:11,color:"#00C2B2",fontWeight:700,letterSpacing:3,textTransform:"uppercase",marginBottom:8}}>Active Zone</div>
-            <div style={{fontSize:22,fontWeight:800,color:"#F9FAFB",maxWidth:320,lineHeight:1.3}}>{activeZone}</div>
+            <div style={{fontSize:10,color:T.teal,fontWeight:700,letterSpacing:2,textTransform:"uppercase",marginBottom:8}}>Active Zone</div>
+            <div style={{fontFamily:"'Syne',sans-serif",fontSize:20,fontWeight:800,color:T.text,maxWidth:300,lineHeight:1.3}}>{activeZone}</div>
           </div>
-          <div style={{maxWidth:340,textAlign:"center",fontSize:15,color:"rgba(249,250,251,0.55)",lineHeight:1.6,fontStyle:"italic",minHeight:48}}>"{MOTIVATIONAL[msgIdx]}"</div>
-          <div style={{display:"flex",gap:10,width:"100%",maxWidth:340,padding:"0 4px"}}>
+          <div style={{maxWidth:320,textAlign:"center",fontSize:14,color:T.sub,lineHeight:1.65,fontStyle:"italic",minHeight:44}}>"{MOTIVATIONAL[msgIdx]}"</div>
+          <div style={{display:"flex",gap:10,width:"100%",maxWidth:340}}>
             <button onClick={onCompleteTask}
-              onPointerEnter={e=>{e.currentTarget.style.background="#00A89E";e.currentTarget.style.transform="scale(1.02)";}}
-              onPointerLeave={e=>{e.currentTarget.style.background="#00C2B2";e.currentTarget.style.transform="scale(1)";}}
-              style={{flex:1,padding:"15px 12px",borderRadius:50,border:"none",background:"#00C2B2",color:"#fff",fontSize:15,fontWeight:900,cursor:"pointer",fontFamily:'"Outfit",ui-sans-serif',boxShadow:"0 0 20px rgba(0,194,178,0.4)",transition:"all 0.2s",whiteSpace:"nowrap"}}>
-              ✓ Task Complete
-            </button>
+              onPointerEnter={e=>{e.currentTarget.style.opacity="0.9";e.currentTarget.style.transform="scale(1.02)";}}
+              onPointerLeave={e=>{e.currentTarget.style.opacity="1";e.currentTarget.style.transform="scale(1)";}}
+              style={btnPrimary({flex:1,fontSize:15,whiteSpace:"nowrap"})}>✓ Task Complete</button>
             <button onClick={onEnd}
-              onPointerEnter={e=>e.currentTarget.style.background="rgba(0,194,178,0.1)"}
+              onPointerEnter={e=>e.currentTarget.style.background="rgba(255,255,255,0.06)"}
               onPointerLeave={e=>e.currentTarget.style.background="transparent"}
-              style={{flex:1,padding:"15px 12px",borderRadius:50,border:"1.5px solid rgba(0,194,178,0.3)",background:"transparent",color:"rgba(249,250,251,0.55)",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:'"Outfit",ui-sans-serif',transition:"all 0.2s",whiteSpace:"nowrap"}}>
-              End Session
-            </button>
+              style={btn({flex:1,padding:"14px 12px",border:`1.5px solid ${T.border2}`,background:"transparent",color:T.sub,fontSize:13,whiteSpace:"nowrap"})}>End Session</button>
           </div>
         </div>
       );
-    }
+    };
 
-    // ── SessionComplete ──────────────────────────────────────────────────────────
-    function SessionComplete({ session, onDismiss, dark }) {
-      const bg     = dark ? "#161b22" : "#fff";
-      const fg     = dark ? "#F9FAFB" : "#1B1F23";
-      const sub    = dark ? "rgba(249,250,251,0.55)" : "rgba(27,31,35,0.55)";
-      const cardBg = dark ? "rgba(255,255,255,0.05)" : "#F4F6F8";
-      const isTaskComplete = session.taskCompleted;
-      useEffect(()=>{ if(isTaskComplete) playCelebrationSound(); },[isTaskComplete]);
+    // ── Session Complete ─────────────────────────────────────────────────────────
+    const SessionComplete = ({session,onDismiss}) => {
+      const isTC=session.taskCompleted;
+      useEffect(()=>{if(isTC)playCelebrationSound();},[isTC]);
       return (
-        <div style={{position:"fixed",inset:0,zIndex:9998,background:isTaskComplete?"rgba(0,0,0,0.75)":"rgba(0,0,0,0.6)",display:"flex",alignItems:"center",justifyContent:"center",padding:24,fontFamily:'"Outfit",ui-sans-serif'}}>
-          <div style={{background:bg,borderRadius:24,padding:"40px 32px",maxWidth:380,width:"100%",textAlign:"center",boxShadow:"0 24px 80px rgba(0,0,0,0.25)",position:"relative",overflow:"hidden"}}>
-            {isTaskComplete&&<div style={{position:"absolute",inset:0,background:"radial-gradient(ellipse at 50% 0%,rgba(0,194,178,0.15) 0%,transparent 70%)",pointerEvents:"none"}}/>}
-            <div style={{fontSize:64,marginBottom:10,display:"inline-block"}}>{isTaskComplete?"🏆":session.completed?"🎯":"⏹️"}</div>
-            <h2 style={{margin:"0 0 8px",fontSize:24,fontWeight:900,color:isTaskComplete?"#00C2B2":fg,letterSpacing:-0.5}}>
-              {isTaskComplete?"Task Complete!":session.completed?"Zone Complete!":"Session Ended"}
+        <div style={{position:"fixed",inset:0,zIndex:9998,background:"rgba(0,0,0,0.75)",display:"flex",alignItems:"flex-end",justifyContent:"center",padding:16}}>
+          <div className="pop-in" style={{background:T.card,borderRadius:28,padding:"36px 28px",maxWidth:420,width:"100%",textAlign:"center",border:`1px solid ${isTC?"rgba(0,194,178,0.25)":T.border}`,position:"relative",overflow:"hidden"}}>
+            {isTC&&<div style={{position:"absolute",inset:0,background:"radial-gradient(ellipse at 50% 0%,rgba(0,194,178,0.12),transparent 70%)",pointerEvents:"none"}}/>}
+            <div style={{fontSize:64,marginBottom:10,display:"inline-block",animation:isTC?"taskPop 0.5s cubic-bezier(0.34,1.56,0.64,1) both":"none"}}>{isTC?"🏆":session.completed?"🎯":"⏹️"}</div>
+            <h2 style={{fontFamily:"'Syne',sans-serif",fontSize:24,fontWeight:900,color:isTC?T.teal:T.text,margin:"0 0 8px",letterSpacing:-0.3}}>
+              {isTC?"Task Complete!":session.completed?"Session Done!":"Session Ended"}
             </h2>
-            {isTaskComplete&&<div style={{display:"inline-block",background:"linear-gradient(135deg,rgba(0,194,178,0.15),rgba(255,214,107,0.15))",border:"1.5px solid rgba(0,194,178,0.3)",borderRadius:50,padding:"4px 16px",fontSize:12,fontWeight:800,color:"#00C2B2",marginBottom:12,letterSpacing:1,textTransform:"uppercase"}}>🎉 Congratulations</div>}
-            <p style={{margin:"0 0 24px",fontSize:14,color:sub,lineHeight:1.7}}>
-              {isTaskComplete?`You completed "${session.zone}" — that's a real win.`:session.completed?"You locked in and delivered. Brilliant.":"Good work — every minute in the zone counts."}
+            {isTC&&<div style={{display:"inline-flex",alignItems:"center",gap:6,background:T.tealBg,border:`1px solid rgba(0,194,178,0.25)`,borderRadius:50,padding:"4px 14px",fontSize:12,fontWeight:700,color:T.teal,marginBottom:12,letterSpacing:0.5}}>🎉 Congratulations</div>}
+            <p style={{fontSize:14,color:T.sub,lineHeight:1.7,margin:"0 0 22px"}}>
+              {isTC?`You crushed "${session.zone}" — keep that momentum going.`:session.completed?"You locked in and delivered.":"Every minute in the zone counts."}
             </p>
-            <div style={{display:"flex",gap:10,marginBottom:24}}>
-              <div style={{flex:1,padding:"16px",borderRadius:14,background:isTaskComplete?"rgba(0,194,178,0.08)":cardBg,border:isTaskComplete?"1.5px solid rgba(0,194,178,0.2)":"none",textAlign:"center"}}>
-                <div style={{fontSize:28,fontWeight:900,color:"#00C2B2",letterSpacing:-1}}>{session.minutes}</div>
-                <div style={{fontSize:12,color:sub,fontWeight:600,marginTop:2}}>minutes</div>
+            <div style={{display:"flex",gap:10,marginBottom:20}}>
+              <div style={{flex:1,padding:16,borderRadius:14,background:isTC?T.tealBg:T.card2,border:`1px solid ${isTC?"rgba(0,194,178,0.2)":T.border}`,textAlign:"center"}}>
+                <div style={{fontFamily:"'Syne',sans-serif",fontSize:30,fontWeight:900,color:T.teal,letterSpacing:-1}}>{session.minutes}</div>
+                <div style={{fontSize:11,color:T.sub,fontWeight:600,marginTop:2}}>minutes</div>
               </div>
-              <div style={{flex:2,padding:"16px",borderRadius:14,background:cardBg,textAlign:"left"}}>
-                <div style={{fontSize:20,marginBottom:4}}>{session.emoji}</div>
-                <div style={{fontSize:13,color:fg,fontWeight:700,lineHeight:1.3}}>{session.zone}</div>
+              <div style={{flex:2,padding:16,borderRadius:14,background:T.card2,border:`1px solid ${T.border}`,textAlign:"left",display:"flex",alignItems:"center",gap:10}}>
+                <span style={{fontSize:22}}>{session.emoji}</span>
+                <div style={{fontSize:13,color:T.text,fontWeight:600,lineHeight:1.3}}>{session.zone}</div>
               </div>
             </div>
-            <div style={{padding:"12px 16px",borderRadius:12,background:"rgba(0,194,178,0.08)",border:"1px solid rgba(0,194,178,0.2)",marginBottom:20}}>
-              <p style={{margin:0,fontSize:13,color:sub,lineHeight:1.6}}>Head to <strong style={{color:"#00C2B2"}}>Close the Loop ↓</strong> to reflect and get a personalised Claude insight.</p>
-            </div>
-            <button onClick={onDismiss} style={{width:"100%",padding:"14px",borderRadius:50,border:"none",background:"#00C2B2",color:"#fff",fontSize:15,fontWeight:800,cursor:"pointer",fontFamily:'"Outfit",ui-sans-serif'}}>
-              {isTaskComplete?"Let's Keep Going 🚀":"Back to ZonedIn →"}
+            <button onClick={onDismiss} style={btnPrimary({width:"100%"})}>
+              {isTC?"Let's Keep Going 🚀":"Back to ZonedIn →"}
             </button>
           </div>
         </div>
       );
-    }
+    };
 
-    // ── Main App ─────────────────────────────────────────────────────────────────
-    function ZonedInMVP() {
-      const [user,        setUser]        = useState(null);
-      const [authLoading, setAuthLoading] = useState(true);
+    // ══════════════════════════════════════════════════════════════════════════════
+    // ── MAIN APP ─────────────────────────────────────────────────────────────────
+    // ══════════════════════════════════════════════════════════════════════════════
+    const ZonedInMVP = () => {
+      // ── auth ──────────────────────────────────────────────────────────────────
+      const [user,setUser]=useState(null); const [authLoading,setAuthLoading]=useState(true);
+      useEffect(()=>{
+        supabase.auth.getSession().then(({data:{session}})=>{setUser(session?.user??null);setAuthLoading(false);});
+        const {data:{subscription}}=supabase.auth.onAuthStateChange((_,session)=>{setUser(session?.user??null);setAuthLoading(false);});
+        return()=>subscription.unsubscribe();
+      },[]);
 
-      useEffect(() => {
-        supabase.auth.getSession().then(({ data: { session } }) => {
-          setUser(session?.user ?? null);
-          setAuthLoading(false);
-        });
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
-          setUser(session?.user ?? null);
-          setAuthLoading(false);
-        });
-        return () => subscription.unsubscribe();
-      }, []);
+      // ── tab ───────────────────────────────────────────────────────────────────
+      const [tab,setTab]=useState("plan");
 
-      const [darkMode, setDarkMode] = useState(() => LS.get("zi_dark", false));
-      const brand = {
-        teal:"#00C2B2", tealHover:"#00A89E",
-        charcoal: darkMode?"#F9FAFB":"#1B1F23",
-        bg:       darkMode?"#0d1117":"#F4F6F8",
-        accent:   "#FFD66B",
-        card:     darkMode?"#161b22":"#FFFFFF",
-        border:   darkMode?"rgba(255,255,255,0.08)":"#E2E8ED",
-        tealTint: "rgba(0,194,178,0.07)",
-        subText:  darkMode?"rgba(249,250,251,0.5)":"rgba(27,31,35,0.55)",
-        inputBg:  darkMode?"rgba(255,255,255,0.05)":"#FAFBFC",
-      };
+      // ── data state ────────────────────────────────────────────────────────────
+      const [dbLoading,setDbLoading]=useState(false);
+      const [streak,setStreak]=useState(0); const [lastStreakDate,setLastStreakDate]=useState(null);
+      const [streakTier,setStreakTier]=useState("none"); const [tierHistory,setTierHistory]=useState([]);
+      const [totalPoints,setTotalPoints]=useState(0); const [todayPointsLogged,setTodayPointsLogged]=useState(null);
+      const [goldZone,setGoldZone]=useState(""); const [diamondZone,setDiamondZone]=useState(""); const [platinumZone,setPlatinumZone]=useState("");
+      const [zoneLastSet,setZoneLastSet]=useState(null); const [completedZones,setCompletedZones]=useState([]);
+      const [activeZoneKey,setActiveZoneKey]=useState("gold");
+      const [wentWell,setWentWell]=useState(""); const [energy,setEnergy]=useState(3); const [mood,setMood]=useState(null);
+      const [insightHistory,setInsightHistory]=useState([]); const [sessionHistory,setSessionHistory]=useState([]);
+      const [streakReport,setStreakReport]=useState(""); const [hasOnboarded,setHasOnboarded]=useState(false);
+      const [sessionActive,setSessionActive]=useState(false); const [secondsLeft,setSecondsLeft]=useState(90*60);
+      const [sessionDuration,setSessionDuration]=useState(25); const [lastSession,setLastSession]=useState(null);
+      const [loadingInsight,setLoadingInsight]=useState(false); const [insightError,setInsightError]=useState("");
+      const [loadingStreakReport,setLoadingStreakReport]=useState(false);
+      const [historyExpanded,setHistoryExpanded]=useState(false);
+      const [showInsightHistory,setShowInsightHistory]=useState(false);
+      const [savingZones,setSavingZones]=useState(false);
+      const intervalRef=useRef(null); const zoneSaveTimer=useRef(null);
 
-      const [dbLoading,         setDbLoading]         = useState(false);
-      const [streak,            setStreak]             = useState(0);
-      const [lastStreakDate,    setLastStreakDate]      = useState(null);
-      const [streakTier,        setStreakTier]         = useState("none");
-      const [tierHistory,       setTierHistory]        = useState([]);
-      const [totalPoints,       setTotalPoints]        = useState(0);
-      const [todayPointsLogged, setTodayPointsLogged]  = useState(null);
-      const [goldZone,          setGoldZone]           = useState("");
-      const [diamondZone,       setDiamondZone]        = useState("");
-      const [platinumZone,      setPlatinumZone]       = useState("");
-      const [zoneLastSet,       setZoneLastSet]        = useState(null);
-      const [completedZones,    setCompletedZones]     = useState([]);
-      const [activeZoneKey,     setActiveZoneKey]      = useState("gold");
-      const [wentWell,          setWentWell]           = useState("");
-      const [energy,            setEnergy]             = useState(3);
-      const [mood,              setMood]               = useState(null);
-      const [insightHistory,    setInsightHistory]     = useState([]);
-      const [sessionHistory,    setSessionHistory]     = useState([]);
-      const [streakReport,      setStreakReport]       = useState("");
-      const [hasOnboarded,      setHasOnboarded]      = useState(false);
-      const [sessionActive,     setSessionActive]      = useState(false);
-      const [secondsLeft,       setSecondsLeft]        = useState(90*60);
-      const [sessionDuration,   setSessionDuration]    = useState(90);
-      const [lastSession,       setLastSession]        = useState(null);
-      const [loadingInsight,    setLoadingInsight]     = useState(false);
-      const [insightError,      setInsightError]       = useState("");
-      const [loadingStreakReport,setLoadingStreakReport]= useState(false);
-      const [historyExpanded,   setHistoryExpanded]    = useState(false);
-      const [showInsightHistory,setShowInsightHistory] = useState(false);
-      const [hasSeenCompleteHint,setHasSeenCompleteHint]=useState(false);
-      const [savingZones,       setSavingZones]        = useState(false);
-      const intervalRef  = useRef(null);
-      const zoneSaveTimer= useRef(null);
-
-      useEffect(() => { if (user) loadAllData(); }, [user]);
-
+      // ── load data ─────────────────────────────────────────────────────────────
+      useEffect(()=>{if(user)loadAllData();},[user]);
       const loadAllData = async () => {
         setDbLoading(true);
         try {
-          const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single();
-          if (profile) {
-            setStreak(profile.streak ?? 0);
-            setLastStreakDate(profile.last_streak_date ?? null);
-            setStreakTier(profile.streak_tier ?? "none");
-            setTierHistory(profile.tier_history ?? []);
-            setTotalPoints(profile.total_points ?? 0);
-            setTodayPointsLogged(profile.today_points_logged ?? null);
-            setHasOnboarded(profile.onboarded ?? false);
+          const {data:profile}=await supabase.from("profiles").select("*").eq("id",user.id).single();
+          if(profile){
+            setStreak(profile.streak??0); setLastStreakDate(profile.last_streak_date??null);
+            setStreakTier(profile.streak_tier??"none"); setTierHistory(profile.tier_history??[]);
+            setTotalPoints(profile.total_points??0); setTodayPointsLogged(profile.today_points_logged??null);
+            setHasOnboarded(profile.onboarded??false);
           }
-          const { data: zones } = await supabase.from("zones").select("*").eq("user_id", user.id).eq("date", todayStr()).single();
-          if (zones) {
-            setGoldZone(zones.gold ?? "");
-            setDiamondZone(zones.diamond ?? "");
-            setPlatinumZone(zones.platinum ?? "");
-            setCompletedZones(zones.completed_zones ?? []);
-            setWentWell(zones.went_well ?? "");
-            setEnergy(zones.energy ?? 3);
-            setMood(zones.mood ?? null);
-            setActiveZoneKey(zones.active_zone_key ?? "gold");
-            setZoneLastSet(zones.zone_last_set ?? null);
+          const {data:zones}=await supabase.from("zones").select("*").eq("user_id",user.id).eq("date",todayStr()).single();
+          if(zones){
+            setGoldZone(zones.gold??""); setDiamondZone(zones.diamond??""); setPlatinumZone(zones.platinum??"");
+            setCompletedZones(zones.completed_zones??[]); setWentWell(zones.went_well??"");
+            setEnergy(zones.energy??3); setMood(zones.mood??null);
+            setActiveZoneKey(zones.active_zone_key??"gold"); setZoneLastSet(zones.zone_last_set??null);
           }
-          const { data: sessions } = await supabase.from("sessions").select("*").eq("user_id", user.id).order("created_at",{ascending:false}).limit(20);
-          if (sessions) setSessionHistory(sessions.map(s=>({ date:s.date, zone:s.zone_label, emoji:s.zone_emoji, minutes:s.minutes, completed:s.completed, taskCompleted:s.task_completed })));
-          const { data: insights } = await supabase.from("insights").select("*").eq("user_id", user.id).order("created_at",{ascending:false}).limit(7);
-          if (insights) setInsightHistory(insights.map(i=>({ date:i.date, text:i.text, energy:i.energy, mood:i.mood })));
-        } catch(e) { console.error("Load error",e); }
-        finally { setDbLoading(false); }
+          const {data:sessions}=await supabase.from("sessions").select("*").eq("user_id",user.id).order("created_at",{ascending:false}).limit(20);
+          if(sessions)setSessionHistory(sessions.map(s=>({date:s.date,zone:s.zone_label,emoji:s.zone_emoji,minutes:s.minutes,completed:s.completed,taskCompleted:s.task_completed})));
+          const {data:insights}=await supabase.from("insights").select("*").eq("user_id",user.id).order("created_at",{ascending:false}).limit(7);
+          if(insights)setInsightHistory(insights.map(i=>({date:i.date,text:i.text,energy:i.energy,mood:i.mood})));
+        } catch(e){console.error(e);}
+        finally{setDbLoading(false);}
       };
 
-      const saveProfile = useCallback(async (updates) => {
-        if (!user) return;
-        await supabase.from("profiles").upsert({ id:user.id, ...updates });
-      }, [user]);
+      // ── save helpers ──────────────────────────────────────────────────────────
+      const saveProfile=useCallback(async(u)=>{if(!user)return;await supabase.from("profiles").upsert({id:user.id,...u});},[user]);
+      const saveZonesToDB=useCallback(async(z)=>{if(!user)return;setSavingZones(true);await supabase.from("zones").upsert({user_id:user.id,date:todayStr(),...z},{onConflict:"user_id,date"});setSavingZones(false);},[user]);
+      const debouncedSaveZones=useCallback((d)=>{clearTimeout(zoneSaveTimer.current);zoneSaveTimer.current=setTimeout(()=>saveZonesToDB(d),1500);},[saveZonesToDB]);
+      const saveSessionToDB=useCallback(async(s)=>{if(!user)return;await supabase.from("sessions").insert({user_id:user.id,zone_label:s.zone,zone_emoji:s.emoji,zone_key:s.zoneKey,minutes:s.minutes,completed:s.completed,task_completed:s.taskCompleted??false,date:s.date});},[user]);
+      const saveInsightToDB=useCallback(async(i)=>{if(!user)return;await supabase.from("insights").insert({user_id:user.id,date:i.date,text:i.text,energy:i.energy,mood:i.mood});},[user]);
 
-      const saveZonesToDB = useCallback(async (zoneData) => {
-        if (!user) return;
-        setSavingZones(true);
-        await supabase.from("zones").upsert({ user_id:user.id, date:todayStr(), ...zoneData }, { onConflict:"user_id,date" });
-        setSavingZones(false);
-      }, [user]);
-
-      const debouncedSaveZones = useCallback((data) => {
-        clearTimeout(zoneSaveTimer.current);
-        zoneSaveTimer.current = setTimeout(() => saveZonesToDB(data), 1500);
-      }, [saveZonesToDB]);
-
-      const saveSessionToDB = useCallback(async (s) => {
-        if (!user) return;
-        await supabase.from("sessions").insert({ user_id:user.id, zone_label:s.zone, zone_emoji:s.emoji, zone_key:s.zoneKey, minutes:s.minutes, completed:s.completed, task_completed:s.taskCompleted??false, date:s.date });
-      }, [user]);
-
-      const saveInsightToDB = useCallback(async (ins) => {
-        if (!user) return;
-        await supabase.from("insights").insert({ user_id:user.id, date:ins.date, text:ins.text, energy:ins.energy, mood:ins.mood });
-      }, [user]);
-
-      useEffect(() => { LS.set("zi_dark", darkMode); }, [darkMode]);
-
-      const needsDailyReset = zoneLastSet && zoneLastSet !== todayStr();
-      const handleDailyReset = async () => {
-        setGoldZone(""); setDiamondZone(""); setPlatinumZone("");
-        setCompletedZones([]); setWentWell(""); setMood(null); setEnergy(3);
-        setStreakTier("none"); setZoneLastSet(todayStr());
-        await saveZonesToDB({ gold:"",diamond:"",platinum:"",completed_zones:[],went_well:"",mood:null,energy:3,active_zone_key:"gold",zone_last_set:todayStr() });
+      // ── zones ─────────────────────────────────────────────────────────────────
+      const needsDailyReset=zoneLastSet&&zoneLastSet!==todayStr();
+      const handleDailyReset=async()=>{
+        setGoldZone("");setDiamondZone("");setPlatinumZone("");
+        setCompletedZones([]);setWentWell("");setMood(null);setEnergy(3);setStreakTier("none");setZoneLastSet(todayStr());
+        await saveZonesToDB({gold:"",diamond:"",platinum:"",completed_zones:[],went_well:"",mood:null,energy:3,active_zone_key:"gold",zone_last_set:todayStr()});
       };
-
-      const handleZoneChange = (setter, field) => (v) => {
-        setter(v);
-        const zls = zoneLastSet || todayStr();
-        if (!zoneLastSet) setZoneLastSet(zls);
-        debouncedSaveZones({
-          gold:field==="gold"?v:goldZone, diamond:field==="diamond"?v:diamondZone, platinum:field==="platinum"?v:platinumZone,
-          completed_zones:completedZones, went_well:wentWell, energy, mood, active_zone_key:activeZoneKey, zone_last_set:zls,
-        });
+      const handleZoneChange=(setter,field)=>v=>{
+        setter(v); const zls=zoneLastSet||todayStr(); if(!zoneLastSet)setZoneLastSet(zls);
+        debouncedSaveZones({gold:field==="gold"?v:goldZone,diamond:field==="diamond"?v:diamondZone,platinum:field==="platinum"?v:platinumZone,completed_zones:completedZones,went_well:wentWell,energy,mood,active_zone_key:activeZoneKey,zone_last_set:zls});
       };
-
-      const zoneConfig = [
-        { key:"gold",     val:goldZone,     set:handleZoneChange(setGoldZone,"gold"),         label:"Gold Zone",     sublabel:"Non-negotiable", emoji:"🥇", color:"#F59E0B", bg:darkMode?"rgba(245,158,11,0.12)":"rgba(245,158,11,0.08)",   border:"rgba(245,158,11,0.35)",   placeholder:"e.g. Finish the client proposal"       },
-        { key:"diamond",  val:diamondZone,  set:handleZoneChange(setDiamondZone,"diamond"),   label:"Diamond Zone",  sublabel:"Momentum",       emoji:"💎", color:"#60A5FA", bg:darkMode?"rgba(96,165,250,0.12)":"rgba(96,165,250,0.08)",   border:"rgba(96,165,250,0.35)",   placeholder:"e.g. Review and respond to key emails" },
-        { key:"platinum", val:platinumZone, set:handleZoneChange(setPlatinumZone,"platinum"), label:"Platinum Zone", sublabel:"Breakthrough",   emoji:"🏆", color:"#A78BFA", bg:darkMode?"rgba(167,139,250,0.12)":"rgba(167,139,250,0.08)", border:"rgba(167,139,250,0.35)", placeholder:"e.g. Start the new product research doc" },
+      const ZONE_CFG = [
+        {key:"gold",    val:goldZone,    set:handleZoneChange(setGoldZone,"gold"),       label:"Gold Zone",    sublabel:"Non-negotiable", emoji:"🥇", color:T.gold,    bg:T.goldBg,    border:"rgba(245,158,11,0.35)",   placeholder:"Your must-do task today…"},
+        {key:"diamond", val:diamondZone, set:handleZoneChange(setDiamondZone,"diamond"), label:"Diamond Zone", sublabel:"Momentum",       emoji:"💎", color:T.diamond, bg:T.diamondBg, border:"rgba(96,165,250,0.35)",   placeholder:"High-impact task…"},
+        {key:"platinum",val:platinumZone,set:handleZoneChange(setPlatinumZone,"platinum"),label:"Platinum Zone",sublabel:"Breakthrough",  emoji:"🏆", color:T.plat,   bg:T.platBg,   border:"rgba(167,139,250,0.35)", placeholder:"Your stretch goal today…"},
       ];
-
-      const activeZone      = zoneConfig.find(z=>z.key===activeZoneKey);
-      const activeZoneLabel = activeZone?.val?.trim() || activeZone?.label || "Gold Zone";
-      const isZoneDone      = k => completedZones.includes(k);
-
-      const toggleZoneDone = async (e, k) => {
-        e.stopPropagation();
-        const next    = completedZones.includes(k) ? completedZones.filter(x=>x!==k) : [...completedZones, k];
-        const newTier = getStreakTier(next);
-        const t       = todayStr();
-        const newHist = [{ date:t, tier:newTier }, ...tierHistory.filter(h=>h.date!==t)].slice(0,30);
-        setCompletedZones(next); setStreakTier(newTier); setTierHistory(newHist);
-        await saveZonesToDB({ gold:goldZone,diamond:diamondZone,platinum:platinumZone,completed_zones:next,went_well:wentWell,energy,mood,active_zone_key:activeZoneKey,zone_last_set:zoneLastSet });
-        await saveProfile({ streak_tier:newTier, tier_history:newHist });
+      const activeZone=ZONE_CFG.find(z=>z.key===activeZoneKey);
+      const activeZoneLabel=activeZone?.val?.trim()||activeZone?.label||"Gold Zone";
+      const isZoneDone=k=>completedZones.includes(k);
+      const toggleZoneDone=async(k)=>{
+        const next=completedZones.includes(k)?completedZones.filter(x=>x!==k):[...completedZones,k];
+        const newTier=getStreakTier(next); const t=todayStr();
+        const newHist=[{date:t,tier:newTier},...tierHistory.filter(h=>h.date!==t)].slice(0,30);
+        setCompletedZones(next);setStreakTier(newTier);setTierHistory(newHist);
+        await saveZonesToDB({gold:goldZone,diamond:diamondZone,platinum:platinumZone,completed_zones:next,went_well:wentWell,energy,mood,active_zone_key:activeZoneKey,zone_last_set:zoneLastSet});
+        await saveProfile({streak_tier:newTier,tier_history:newHist});
       };
 
-      const startSession = useCallback(() => {
-        if (!activeZone?.val?.trim()) return;
-        setSecondsLeft(sessionDuration*60); setSessionActive(true);
-      }, [sessionDuration, activeZone]);
-
-      const endSession = useCallback(() => {
-        setSessionActive(false); clearInterval(intervalRef.current);
-        const completed=secondsLeft===0, minutesDone=Math.round((sessionDuration*60-secondsLeft)/60);
-        const session={ date:todayShort(), zone:activeZoneLabel, emoji:activeZone?.emoji||"🥇", zoneKey:activeZoneKey, minutes:minutesDone, completed };
-        setSessionHistory(prev=>[session,...prev.slice(0,19)]); setLastSession(session); saveSessionToDB(session);
+      // ── session ───────────────────────────────────────────────────────────────
+      const startSession=useCallback(()=>{if(!activeZone?.val?.trim())return;setSecondsLeft(sessionDuration*60);setSessionActive(true);},[sessionDuration,activeZone]);
+      const endSession=useCallback(()=>{
+        setSessionActive(false);clearInterval(intervalRef.current);
+        const completed=secondsLeft===0,mins=Math.round((sessionDuration*60-secondsLeft)/60);
+        const s={date:todayShort(),zone:activeZoneLabel,emoji:activeZone?.emoji||"🥇",zoneKey:activeZoneKey,minutes:mins,completed};
+        setSessionHistory(p=>[s,...p.slice(0,19)]);setLastSession(s);saveSessionToDB(s);
         const t=todayStr();
-        if (lastStreakDate!==t) { const ns=streak+1; setStreak(ns); setLastStreakDate(t); saveProfile({streak:ns,last_streak_date:t}); }
-      }, [secondsLeft,sessionDuration,activeZoneLabel,activeZone,activeZoneKey,lastStreakDate,streak]);
-
-      const completeTask = useCallback(() => {
-        setSessionActive(false); clearInterval(intervalRef.current);
-        const minutesDone=Math.round((sessionDuration*60-secondsLeft)/60);
-        const session={ date:todayShort(), zone:activeZoneLabel, emoji:activeZone?.emoji||"🥇", zoneKey:activeZoneKey, minutes:minutesDone, completed:true, taskCompleted:true };
-        setSessionHistory(prev=>[session,...prev.slice(0,19)]); setLastSession(session); saveSessionToDB(session);
-        if (!completedZones.includes(activeZoneKey)) {
-          const next=[ ...completedZones, activeZoneKey ], newTier=getStreakTier(next), t=todayStr();
+        if(lastStreakDate!==t){const ns=streak+1;setStreak(ns);setLastStreakDate(t);saveProfile({streak:ns,last_streak_date:t});}
+      },[secondsLeft,sessionDuration,activeZoneLabel,activeZone,activeZoneKey,lastStreakDate,streak]);
+      const completeTask=useCallback(()=>{
+        setSessionActive(false);clearInterval(intervalRef.current);
+        const mins=Math.round((sessionDuration*60-secondsLeft)/60);
+        const s={date:todayShort(),zone:activeZoneLabel,emoji:activeZone?.emoji||"🥇",zoneKey:activeZoneKey,minutes:mins,completed:true,taskCompleted:true};
+        setSessionHistory(p=>[s,...p.slice(0,19)]);setLastSession(s);saveSessionToDB(s);
+        if(!completedZones.includes(activeZoneKey)){
+          const next=[...completedZones,activeZoneKey],newTier=getStreakTier(next),t=todayStr();
           const newHist=[{date:t,tier:newTier},...tierHistory.filter(h=>h.date!==t)].slice(0,30);
-          setCompletedZones(next); setStreakTier(newTier); setTierHistory(newHist);
+          setCompletedZones(next);setStreakTier(newTier);setTierHistory(newHist);
           saveZonesToDB({gold:goldZone,diamond:diamondZone,platinum:platinumZone,completed_zones:next,went_well:wentWell,energy,mood,active_zone_key:activeZoneKey,zone_last_set:zoneLastSet});
           saveProfile({streak_tier:newTier,tier_history:newHist});
         }
         const t=todayStr();
-        if (lastStreakDate!==t) { const ns=streak+1; setStreak(ns); setLastStreakDate(t); saveProfile({streak:ns,last_streak_date:t}); }
-      }, [secondsLeft,sessionDuration,activeZoneLabel,activeZone,activeZoneKey,lastStreakDate,streak,completedZones,tierHistory,goldZone,diamondZone,platinumZone,wentWell,energy,mood,zoneLastSet]);
+        if(lastStreakDate!==t){const ns=streak+1;setStreak(ns);setLastStreakDate(t);saveProfile({streak:ns,last_streak_date:t});}
+      },[secondsLeft,sessionDuration,activeZoneLabel,activeZone,activeZoneKey,lastStreakDate,streak,completedZones,tierHistory,goldZone,diamondZone,platinumZone,wentWell,energy,mood,zoneLastSet]);
+      useEffect(()=>{
+        if(sessionActive){intervalRef.current=setInterval(()=>setSecondsLeft(s=>{if(s<=1){endSession();return 0;}return s-1;}),1000);}
+        return()=>clearInterval(intervalRef.current);
+      },[sessionActive,endSession]);
 
-      useEffect(() => {
-        if (sessionActive) {
-          intervalRef.current = setInterval(()=>{ setSecondsLeft(s=>{ if(s<=1){endSession();return 0;} return s-1; }); }, 1000);
-        }
-        return ()=>clearInterval(intervalRef.current);
-      }, [sessionActive, endSession]);
-
-      const logTodayPoints = async (hasInsight) => {
-        const t=todayStr();
-        if (todayPointsLogged===t) return 0;
+      // ── points ────────────────────────────────────────────────────────────────
+      const logTodayPoints=async(hasInsight)=>{
+        const t=todayStr(); if(todayPointsLogged===t)return 0;
         const todaySess=sessionHistory.filter(s=>s.date===todayShort());
         const pts=calcDayPoints(completedZones,Math.max(0,todaySess.length-1),todaySess.some(s=>s.completed),!!wentWell.trim(),hasInsight,!!(mood&&energy),streakTier);
-        const newTotal=totalPoints+pts;
-        setTotalPoints(newTotal); setTodayPointsLogged(t);
-        await saveProfile({total_points:newTotal,today_points_logged:t});
-        return pts;
+        const nt=totalPoints+pts; setTotalPoints(nt);setTodayPointsLogged(t);
+        await saveProfile({total_points:nt,today_points_logged:t}); return pts;
       };
 
-      const generateInsight = async () => {
-        if (!wentWell.trim()) return;
-        setLoadingInsight(true); setInsightError("");
+      // ── insight ───────────────────────────────────────────────────────────────
+      const generateInsight=async()=>{
+        if(!wentWell.trim())return; setLoadingInsight(true);setInsightError("");
         const zones=[goldZone,diamondZone,platinumZone].filter(Boolean).join(", ");
-        const recentSessions=sessionHistory.slice(0,5).map(s=>`${s.date}: ${s.minutes} min on "${s.zone}" (${s.completed?"completed":"partial"})`).join("\n");
-        const prompt=`You are ZonedIn, a sharp productivity coach. Give a personalised insight in exactly two parts:\n\n1. WHAT WORKED: One observation — specific, affirming.\n2. WHAT TO TRY: One concrete suggestion for tomorrow.\n\n1-2 sentences each. Direct, no fluff.\n\nZones: ${zones||"not set"}\nWent well: ${wentWell}\nEnergy: ${energy}/5  Mood: ${mood||"not recorded"}\nRecent sessions:\n${recentSessions||"None yet"}\n\nFormat:\n✅ What worked: [observation]\n🔧 What to try: [suggestion]`;
+        const recent=sessionHistory.slice(0,5).map(s=>`${s.date}: ${s.minutes}min on "${s.zone}" (${s.completed?"done":"partial"})`).join("\n");
+        const prompt=`You are ZonedIn, a sharp productivity coach. Two parts:\n\n1. WHAT WORKED: One specific observation.\n2. WHAT TO TRY: One concrete suggestion for tomorrow.\n\n1-2 sentences each. Direct, no filler.\n\nZones: ${zones||"not set"}\nWent well: ${wentWell}\nEnergy: ${energy}/5 Mood: ${mood||"not recorded"}\nRecent sessions:\n${recent||"None yet"}\n\nFormat:\n✅ What worked: [observation]\n🔧 What to try: [suggestion]`;
         try {
           const res=await fetch("https://zonedin-api.vercel.app/api/insight",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,messages:[{role:"user",content:prompt}]})});
           const data=await res.json();
           const text=data.content?.map(b=>b.text||"").join("")||"";
-          if (text) {
+          if(text){
             const entry={date:todayShort(),text:text.trim(),energy,mood};
-            setInsightHistory(prev=>[entry,...prev.slice(0,6)]);
-            await saveInsightToDB(entry);
-            await logTodayPoints(true);
+            setInsightHistory(p=>[entry,...p.slice(0,6)]);
+            await saveInsightToDB(entry); await logTodayPoints(true);
             await saveZonesToDB({gold:goldZone,diamond:diamondZone,platinum:platinumZone,completed_zones:completedZones,went_well:wentWell,energy,mood,active_zone_key:activeZoneKey,zone_last_set:zoneLastSet});
           } else setInsightError("No insight returned. Try again.");
-        } catch { setInsightError("Couldn't reach Claude. Check your connection."); }
-        finally { setLoadingInsight(false); }
+        } catch{setInsightError("Couldn't reach Claude. Check your connection.");}
+        finally{setLoadingInsight(false);}
       };
-
-      const generateStreakReport = async () => {
+      const generateStreakReport=async()=>{
         setLoadingStreakReport(true);
         const zones=[goldZone,diamondZone,platinumZone].filter(Boolean);
-        const compSess=sessionHistory.filter(s=>s.completed);
-        const avgMins=sessionHistory.length?Math.round(sessionHistory.reduce((a,s)=>a+s.minutes,0)/sessionHistory.length):0;
-        const prompt=`You are ZonedIn, a performance coach. ${streak}-day streak analysis.\n\nData: ${sessionHistory.length} sessions, ${compSess.length} completed, avg ${avgMins} min, zones: ${zones.join(", ")||"not set"}\n\nWrite 3 punchy sections:\nWHAT'S WORKING: (2 sentences)\nYOUR EDGE: (1 sentence)\nNEXT 7 DAYS: (2 sentences)`;
+        const avg=sessionHistory.length?Math.round(sessionHistory.reduce((a,s)=>a+s.minutes,0)/sessionHistory.length):0;
+        const prompt=`ZonedIn performance coach. ${streak}-day streak.\nData: ${sessionHistory.length} sessions, ${sessionHistory.filter(s=>s.completed).length} completed, avg ${avg}min, zones: ${zones.join(", ")||"not set"}\n\nWrite 3 punchy sections:\nWHAT'S WORKING: (2 sentences)\nYOUR EDGE: (1 sentence)\nNEXT 7 DAYS: (2 sentences)`;
         try {
           const res=await fetch("https://zonedin-api.vercel.app/api/insight",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,messages:[{role:"user",content:prompt}]})});
           const data=await res.json();
           const text=data.content?.map(b=>b.text||"").join("")||"";
-          if (text) setStreakReport(text.trim());
-        } catch { console.error("Streak report failed"); }
-        finally { setLoadingStreakReport(false); }
+          if(text)setStreakReport(text.trim());
+        } catch{console.error("Streak report failed");}
+        finally{setLoadingStreakReport(false);}
       };
 
-      const isStreakMilestone  = streak>0&&(MILESTONES.includes(streak)||(streak>200&&streak%50===0));
-      const { next:nextMilestone, pct:milestonePct, daysLeft } = getMilestoneProgress(streak);
-      const currentLevel   = getLevel(totalPoints);
-      const currentTierCfg = TIER_CONFIG[streakTier]??TIER_CONFIG.none;
-      const latestInsight  = insightHistory[0];
+      // ── derived ───────────────────────────────────────────────────────────────
+      const {next:nextMilestone,pct:milestonePct,daysLeft}=getMilestoneProgress(streak);
+      const currentLevel=getLevel(totalPoints);
+      const tierCfg=TIER_CONFIG[streakTier]??TIER_CONFIG.none;
+      const isStreakMilestone=streak>0&&(MILESTONES.includes(streak)||(streak>200&&streak%50===0));
+      const latestInsight=insightHistory[0];
+      const todayDone=completedZones.length;
 
-      const inputStyle = { width:"100%",padding:"12px 14px",borderRadius:12,outline:"none",border:`1.5px solid ${brand.border}`,background:brand.inputBg,fontSize:14,fontFamily:'"Outfit",ui-sans-serif',color:brand.charcoal,boxSizing:"border-box",transition:"border-color 0.2s" };
-      const cardStyle  = { background:brand.card,borderRadius:20,padding:"20px 24px",border:`1px solid ${brand.border}`,boxShadow:darkMode?"none":"0 2px 12px rgba(0,0,0,0.05)" };
-      const btnPrimary = { background:brand.teal,color:"#fff",border:"none",borderRadius:50,padding:"12px 28px",fontWeight:700,fontSize:14,cursor:"pointer",fontFamily:'"Outfit",ui-sans-serif',letterSpacing:0.3,transition:"all 0.2s" };
-
-      if (authLoading) return (
-        <div style={{minHeight:"100vh",background:"#0d1117",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:'"Outfit",ui-sans-serif'}}>
-          <div style={{textAlign:"center"}}><ZonedInMark size={48}/><p style={{color:"rgba(249,250,251,0.4)",marginTop:16,fontSize:14}}>Loading...</p></div>
+      // ── gates ─────────────────────────────────────────────────────────────────
+      if(authLoading)return(
+        <div style={{minHeight:"100vh",background:T.bg,display:"flex",alignItems:"center",justifyContent:"center"}}>
+          <div style={{textAlign:"center"}}><ZonedInMark size={48}/><p style={{color:T.sub,marginTop:14,fontSize:13}}>Loading…</p></div>
         </div>
       );
-      if (!user) return <AuthScreen/>;
-      if (dbLoading) return (
-        <div style={{minHeight:"100vh",background:brand.bg,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:'"Outfit",ui-sans-serif'}}>
-          <div style={{textAlign:"center"}}><ZonedInMark size={48}/><p style={{color:brand.subText,marginTop:16,fontSize:14}}>Loading your zones...</p></div>
+      if(!user)return <AuthScreen/>;
+      if(dbLoading)return(
+        <div style={{minHeight:"100vh",background:T.bg,display:"flex",alignItems:"center",justifyContent:"center"}}>
+          <div style={{textAlign:"center"}}><ZonedInMark size={48}/><p style={{color:T.sub,marginTop:14,fontSize:13}}>Loading your zones…</p></div>
         </div>
       );
 
-      return (
-        <>
-          <style>{`
-            @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap');
-            * { box-sizing:border-box; } body { margin:0; background:${brand.bg}; }
-            input:focus, textarea:focus { border-color:#00C2B2 !important; box-shadow:0 0 0 3px rgba(0,194,178,0.12); }
-            @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
-            .card-anim { animation:fadeUp 0.35s ease both; }
-            ::-webkit-scrollbar { width:5px; } ::-webkit-scrollbar-thumb { background:rgba(0,194,178,0.3); border-radius:99px; }
-          `}</style>
+      // ── layout shell ──────────────────────────────────────────────────────────
+      const Shell = ({children}) => (
+        <div style={{minHeight:"100vh",background:T.bg,display:"flex",flexDirection:"column",maxWidth:480,margin:"0 auto",position:"relative"}}>
+          {!hasOnboarded&&<Onboarding onComplete={async()=>{setHasOnboarded(true);await saveProfile({onboarded:true});}}/>}
+          {sessionActive&&<SessionLock secondsLeft={secondsLeft} activeZone={activeZoneLabel} onEnd={endSession} onCompleteTask={completeTask} sessionDuration={sessionDuration}/>}
+          {lastSession&&!sessionActive&&<SessionComplete session={lastSession} onDismiss={()=>{setLastSession(null);setTab("reflect");}}/>}
+          <div style={{flex:1,overflowY:"auto",overflowX:"hidden",paddingBottom:80}}>{children}</div>
+          {/* ── Tab Bar ── */}
+          <div style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:480,height:76,background:"rgba(10,14,20,0.96)",backdropFilter:"blur(20px)",borderTop:`1px solid ${T.border}`,display:"flex",alignItems:"center",justifyContent:"space-around",padding:"0 8px 12px",zIndex:100}}>
+            {[
+              {id:"plan",  icon:"🗺️", label:"Plan"},
+              {id:"focus", icon:"🔥", label:"Focus"},
+              {id:"reflect",icon:"🧠",label:"Reflect"},
+              {id:"progress",icon:"🏆",label:"Progress"},
+            ].map(t=>(
+              <button key={t.id} onClick={()=>setTab(t.id)} style={btn({flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:3,padding:"8px 4px",borderRadius:16,background:tab===t.id?"rgba(0,194,178,0.1)":"transparent",border:"none"})}>
+                <span style={{fontSize:22,lineHeight:1}}>{t.icon}</span>
+                <span style={{fontSize:10,fontWeight:700,letterSpacing:0.5,textTransform:"uppercase",color:tab===t.id?T.teal:T.sub}}>{t.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      );
 
-          {!hasOnboarded && <Onboarding dark={darkMode} onComplete={async()=>{ setHasOnboarded(true); await saveProfile({onboarded:true}); }}/>}
-          {sessionActive && <SessionLock secondsLeft={secondsLeft} activeZone={activeZoneLabel} onEnd={endSession} onCompleteTask={completeTask} sessionDuration={sessionDuration}/>}
-          {lastSession && !sessionActive && <SessionComplete session={lastSession} dark={darkMode} onDismiss={()=>setLastSession(null)}/>}
-
-          <div style={{minHeight:"100vh",background:brand.bg,color:brand.charcoal,fontFamily:'"Outfit",ui-sans-serif',padding:"24px 16px"}}>
-            <div style={{maxWidth:680,margin:"0 auto",display:"flex",flexDirection:"column",gap:20}}>
-
-              {/* Header */}
-              <header className="card-anim" style={cardStyle}>
-                <div style={{display:"flex",alignItems:"flex-end",gap:14}}>
-                  <ZonedInMark size={48}/>
-                  <div style={{flex:1}}>
-                    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:8}}>
-                      <h1 style={{margin:0,fontSize:26,fontWeight:900,letterSpacing:-0.5,lineHeight:1}}>ZonedIn</h1>
-                      <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
-                        <span style={{background:brand.inputBg,border:`1px solid ${brand.border}`,borderRadius:50,padding:"4px 10px",fontSize:12,fontWeight:800,color:brand.teal}}>{currentLevel.badge} {currentLevel.name}</span>
-                        <button onClick={()=>setDarkMode(d=>!d)} style={{background:brand.inputBg,border:`1px solid ${brand.border}`,borderRadius:50,width:34,height:34,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:16}}>{darkMode?"☀️":"🌙"}</button>
-                        <button onClick={()=>supabase.auth.signOut()} title="Sign out" style={{background:brand.inputBg,border:`1px solid ${brand.border}`,borderRadius:50,width:34,height:34,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:14,color:brand.subText}}>↩</button>
-                      </div>
-                    </div>
-                    <p style={{margin:0,fontSize:13,color:brand.subText}}>
-                      {user.email} · Zone in. Gain clarity. Level up.
-                      {savingZones&&<span style={{marginLeft:8,color:brand.teal,fontSize:11}}>saving...</span>}
-                    </p>
-                  </div>
-                </div>
-              </header>
-
-              {/* Daily reset */}
-              {needsDailyReset && (
-                <div className="card-anim" style={{padding:"14px 20px",borderRadius:16,display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,flexWrap:"wrap",background:darkMode?"rgba(245,158,11,0.1)":"rgba(255,214,107,0.2)",border:"1.5px solid rgba(245,158,11,0.35)"}}>
-                  <div><div style={{fontWeight:800,fontSize:14}}>🌅 New day, new zones</div><div style={{fontSize:12,color:brand.subText,marginTop:2}}>Yesterday's zones are saved. Ready to start fresh?</div></div>
-                  <button onClick={handleDailyReset} style={{...btnPrimary,fontSize:12,padding:"8px 18px",background:"#F59E0B",flexShrink:0}}>Reset Zones</button>
-                </div>
-              )}
-
-              {/* Zone Mapping */}
-              <section className="card-anim" style={{...cardStyle,animationDelay:"0.05s"}}>
-                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
-                  <h2 style={{margin:0,fontSize:18,fontWeight:800}}>🗺️ Zone Mapping</h2>
-                  <span style={{fontSize:11,color:brand.subText,fontWeight:600}}>Tap a zone to activate</span>
-                </div>
-                <p style={{margin:"4px 0 14px",fontSize:13,color:brand.subText}}>Set your three tasks for today. Tick the ○ checkbox when complete.</p>
-                <div style={{display:"flex",flexDirection:"column",gap:10}}>
-                  {zoneConfig.map(({key,val,set,label,sublabel,emoji,color,bg,border:zb,placeholder})=>{
-                    const isActive=activeZoneKey===key, isDone=isZoneDone(key);
-                    return (
-                      <div key={key} onClick={()=>!isDone&&setActiveZoneKey(key)} style={{borderRadius:14,border:`2px solid ${isDone?brand.border:isActive?color:brand.border}`,background:isDone?brand.inputBg:isActive?bg:brand.inputBg,padding:"12px 14px",cursor:isDone?"default":"pointer",transition:"all 0.2s",boxShadow:isActive&&!isDone?`0 0 0 3px ${zb}`:"none",opacity:isDone?0.6:1,position:"relative"}}>
-                        {!hasSeenCompleteHint&&key==="gold"&&val.trim()&&!isDone&&(
-                          <div onClick={e=>{e.stopPropagation();setHasSeenCompleteHint(true);}} style={{position:"absolute",left:6,top:-36,background:"#1B1F23",color:"#fff",fontSize:11,fontWeight:700,padding:"5px 10px",borderRadius:8,whiteSpace:"nowrap",zIndex:10,cursor:"pointer",boxShadow:"0 4px 12px rgba(0,0,0,0.3)"}}>
-                            Tick here when done ✓
-                            <div style={{position:"absolute",bottom:-6,left:14,width:0,height:0,borderLeft:"6px solid transparent",borderRight:"6px solid transparent",borderTop:"6px solid #1B1F23"}}/>
-                          </div>
-                        )}
-                        <div style={{display:"flex",alignItems:"center",gap:10}}>
-                          <div onClick={e=>e.stopPropagation()} style={{flexShrink:0}}>
-                            {(isDone||val.trim()) ? (
-                              <button onClick={e=>{e.stopPropagation();toggleZoneDone(e,key);setHasSeenCompleteHint(true);}}
-                                style={{width:28,height:28,borderRadius:8,border:`2px solid ${isDone?brand.teal:brand.border}`,background:isDone?"rgba(0,194,178,0.12)":"transparent",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",transition:"all 0.15s",flexShrink:0,fontSize:15,color:isDone?brand.teal:brand.subText}}>
-                                {isDone?"✓":"○"}
-                              </button>
-                            ) : (
-                              <div style={{width:28,height:28,borderRadius:8,border:`2px dashed ${brand.border}`,background:"transparent",flexShrink:0}}/>
-                            )}
-                          </div>
-                          <div style={{flex:1,minWidth:0}}>
-                            <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}>
-                              <span style={{fontSize:16}}>{emoji}</span>
-                              <span style={{fontWeight:800,fontSize:13,color:isDone?brand.subText:isActive?color:brand.charcoal}}>{label}</span>
-                              <span style={{fontSize:11,color:brand.subText}}>{sublabel}</span>
-                              {isActive&&!isDone&&<span style={{fontSize:10,fontWeight:800,letterSpacing:1,textTransform:"uppercase",color,border:`1px solid ${color}`,padding:"2px 8px",borderRadius:50,marginLeft:"auto"}}>Active</span>}
-                            </div>
-                            <input type="text" value={val} onChange={e=>{e.stopPropagation();set(e.target.value);}} onClick={e=>e.stopPropagation()} placeholder={placeholder} disabled={isDone}
-                              style={{...inputStyle,background:"transparent",border:`1.5px solid ${isActive&&!isDone?color:brand.border}`,borderRadius:10,fontSize:13,textDecoration:isDone?"line-through":"none",color:isDone?brand.subText:brand.charcoal}}/>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </section>
-
-              {/* Zone In */}
-              <section className="card-anim" style={{...cardStyle,animationDelay:"0.1s"}}>
-                <h2 style={{margin:"0 0 6px",fontSize:18,fontWeight:800}}>🔥 Zone In</h2>
-                <p style={{margin:"0 0 14px",fontSize:13,color:brand.subText}}>One zone. One signal. No noise.</p>
-                <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14,padding:"12px 14px",borderRadius:12,background:activeZone?.val?.trim()?activeZone.bg:brand.inputBg,border:`1.5px solid ${activeZone?.val?.trim()?activeZone.color:brand.border}`,transition:"all 0.25s"}}>
-                  <span style={{fontSize:20}}>{activeZone?.emoji}</span>
-                  <div style={{flex:1}}>
-                    <div style={{fontSize:10,fontWeight:700,color:brand.subText,textTransform:"uppercase",letterSpacing:1.5,marginBottom:2}}>Focusing on</div>
-                    <div style={{fontWeight:800,fontSize:14,color:activeZone?.val?.trim()?activeZone.color:brand.subText,fontStyle:activeZone?.val?.trim()?"normal":"italic"}}>
-                      {activeZone?.val?.trim()||"No task set — add one above"}
-                    </div>
-                  </div>
-                </div>
-                <div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}}>
-                  {[15,30,45,60,90].map(d=>(
-                    <button key={d} onClick={()=>setSessionDuration(d)} style={{padding:"8px 16px",borderRadius:50,fontSize:13,fontWeight:700,cursor:"pointer",transition:"all 0.15s",fontFamily:'"Outfit",ui-sans-serif',background:sessionDuration===d?brand.teal:"transparent",color:sessionDuration===d?"#fff":brand.charcoal,border:`1.5px solid ${sessionDuration===d?brand.teal:brand.border}`}}>{d} min</button>
-                  ))}
-                </div>
-                <button style={{...btnPrimary,width:"100%",padding:"14px",fontSize:15,opacity:activeZone?.val?.trim()?1:0.4,cursor:activeZone?.val?.trim()?"pointer":"not-allowed",background:activeZone?.val?.trim()?brand.teal:"#9CA3AF"}}
-                  onClick={startSession}
-                  onPointerEnter={e=>{if(activeZone?.val?.trim())e.currentTarget.style.background=brand.tealHover;}}
-                  onPointerLeave={e=>{e.currentTarget.style.background=activeZone?.val?.trim()?brand.teal:"#9CA3AF";}}>
-                  Start {sessionDuration}-Min Session →
-                </button>
-              </section>
-
-              {/* Session History */}
-              <section className="card-anim" style={{...cardStyle,animationDelay:"0.13s"}}>
-                <div onClick={()=>sessionHistory.length>0&&setHistoryExpanded(h=>!h)} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12,cursor:sessionHistory.length>0?"pointer":"default"}}>
-                  <h2 style={{margin:0,fontSize:18,fontWeight:800}}>📋 Session History</h2>
-                  {sessionHistory.length>3&&<span style={{fontSize:12,fontWeight:700,color:brand.teal}}>{historyExpanded?"Show less ↑":`View all ${sessionHistory.length} ↓`}</span>}
-                </div>
-                {sessionHistory.length===0 ? (
-                  <div style={{textAlign:"center",padding:"28px 0"}}>
-                    <div style={{fontSize:40,marginBottom:10}}>🎯</div>
-                    <div style={{fontWeight:700,fontSize:15,marginBottom:6}}>No sessions yet</div>
-                    <div style={{fontSize:13,color:brand.subText}}>Complete your first zone session and it'll appear here.</div>
-                  </div>
-                ) : (
-                  <div style={{display:"flex",flexDirection:"column",gap:8}}>
-                    {(historyExpanded?sessionHistory:sessionHistory.slice(0,3)).map((s,i)=>(
-                      <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 14px",borderRadius:12,background:brand.bg,border:`1px solid ${brand.border}`,fontSize:13}}>
-                        <div style={{display:"flex",alignItems:"center",gap:6,minWidth:0}}>
-                          <span>{s.emoji||"🥇"}</span>
-                          <span style={{fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.zone}</span>
-                          <span style={{color:brand.subText,flexShrink:0}}>{s.date}</span>
-                        </div>
-                        <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
-                          <span style={{fontWeight:600,color:brand.teal}}>{s.minutes} min</span>
-                          <span>{s.taskCompleted?"🏆":s.completed?"✅":"⏹️"}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </section>
-
-              {/* Close the Loop */}
-              <section className="card-anim" style={{...cardStyle,animationDelay:"0.15s"}}>
-                <h2 style={{margin:"0 0 4px",fontSize:18,fontWeight:800}}>🧠 Close the Loop</h2>
-                <p style={{margin:"0 0 14px",fontSize:13,color:brand.subText}}>Reflection builds clarity. Clarity builds momentum.</p>
-                <div style={{display:"flex",flexDirection:"column",gap:12}}>
-                  <textarea value={wentWell} onChange={e=>setWentWell(e.target.value)} placeholder="What went well today? Be specific — the more detail, the better your insight." style={{...inputStyle,minHeight:90,resize:"vertical"}}/>
-                  <div style={{padding:"12px 14px",borderRadius:12,border:`1.5px solid ${brand.border}`,background:brand.inputBg}}>
-                    <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:12}}>
-                      <span style={{fontSize:13,fontWeight:700,minWidth:60}}>⚡ Energy</span>
-                      <input type="range" min="1" max="5" value={energy} onChange={e=>setEnergy(Number(e.target.value))} style={{flex:1,accentColor:brand.teal}}/>
-                      <span style={{fontSize:14,fontWeight:800,color:brand.teal,minWidth:28}}>{energy}/5</span>
-                    </div>
-                    <div style={{display:"flex",gap:8}}>
-                      {["😊","😐","😔","😴","😎"].map(m=>(
-                        <button key={m} onClick={()=>setMood(m)} style={{fontSize:22,padding:"7px 11px",borderRadius:10,cursor:"pointer",border:`2px solid ${mood===m?brand.teal:brand.border}`,background:mood===m?brand.tealTint:"transparent",transition:"all 0.15s"}}>{m}</button>
-                      ))}
-                    </div>
-                  </div>
-                  <button style={{...btnPrimary,alignSelf:"flex-start",opacity:loadingInsight||!wentWell.trim()?0.5:1,cursor:!wentWell.trim()?"not-allowed":"pointer"}}
-                    onClick={generateInsight} disabled={loadingInsight||!wentWell.trim()}
-                    onPointerEnter={e=>{if(!loadingInsight&&wentWell.trim())e.currentTarget.style.background=brand.tealHover;}}
-                    onPointerLeave={e=>e.currentTarget.style.background=brand.teal}>
-                    {loadingInsight?"Getting insight...":"Save & Get Claude Insight ✦"}
-                  </button>
-                  {insightError&&<p style={{margin:0,fontSize:13,color:"#EF4444"}}>{insightError}</p>}
-                  {latestInsight&&!loadingInsight&&(
-                    <div style={{borderRadius:14,border:"1px solid rgba(0,194,178,0.2)",overflow:"hidden"}}>
-                      <div style={{padding:"10px 14px",background:"rgba(0,194,178,0.07)",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                        <div style={{display:"flex",alignItems:"center",gap:8}}>
-                          <span style={{fontSize:11,fontWeight:700,color:brand.teal,textTransform:"uppercase",letterSpacing:1}}>{latestInsight.date}</span>
-                          {latestInsight.mood&&<span style={{fontSize:14}}>{latestInsight.mood}</span>}
-                          {latestInsight.energy&&<span style={{fontSize:11,color:brand.subText}}>⚡{latestInsight.energy}/5</span>}
-                        </div>
-                        {insightHistory.length>1&&<button onClick={()=>setShowInsightHistory(h=>!h)} style={{fontSize:11,fontWeight:700,color:brand.teal,background:"none",border:"none",cursor:"pointer",padding:0}}>{showInsightHistory?"Hide ↑":`${insightHistory.length-1} more ↓`}</button>}
-                      </div>
-                      <div style={{padding:"14px",fontSize:14,lineHeight:1.8,color:brand.charcoal,whiteSpace:"pre-wrap"}}>{latestInsight.text}</div>
-                      {showInsightHistory&&insightHistory.slice(1).map((ins,i)=>(
-                        <div key={i} style={{borderTop:`1px solid ${brand.border}`,padding:"12px 14px"}}>
-                          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
-                            <span style={{fontSize:11,fontWeight:700,color:brand.subText}}>{ins.date}</span>
-                            {ins.mood&&<span style={{fontSize:13}}>{ins.mood}</span>}
-                          </div>
-                          <div style={{fontSize:13,lineHeight:1.7,color:brand.charcoal,whiteSpace:"pre-wrap"}}>{ins.text}</div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </section>
-
-              {/* Zone Streak */}
-              <section className="card-anim" style={{...cardStyle,animationDelay:"0.2s"}}>
-                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
-                  <h2 style={{margin:0,fontSize:18,fontWeight:800}}>🏆 Zone Streak</h2>
-                  <span style={{background:brand.accent,color:"#1B1F23",fontSize:11,fontWeight:800,padding:"3px 10px",borderRadius:50}}>Level up by consistency</span>
-                </div>
-                <div style={{display:"flex",alignItems:"center",gap:12,padding:"12px 16px",borderRadius:14,marginBottom:16,background:currentTierCfg.bg,border:`1.5px solid ${currentTierCfg.border}`,transition:"all 0.4s"}}>
-                  <span style={{fontSize:28}}>{currentTierCfg.emoji==="—"?"🔘":currentTierCfg.emoji}</span>
-                  <div style={{flex:1}}>
-                    <div style={{fontWeight:900,fontSize:15,color:currentTierCfg.color}}>{currentTierCfg.label}</div>
-                    <div style={{fontSize:12,color:brand.subText,marginTop:2}}>
-                      {streakTier==="none"&&"Complete your Gold Zone to start a streak"}
-                      {streakTier==="gold"&&"Tick Diamond Zone too to upgrade your streak"}
-                      {streakTier==="diamond"&&"Complete Platinum Zone to reach the top tier"}
-                      {streakTier==="platinum"&&"🔥 Perfect streak — you're firing on all cylinders"}
-                    </div>
-                  </div>
-                  <div style={{textAlign:"right"}}>
-                    <div style={{fontSize:11,fontWeight:700,color:brand.subText,textTransform:"uppercase",letterSpacing:1}}>Multiplier</div>
-                    <div style={{fontSize:18,fontWeight:900,color:currentTierCfg.color}}>{currentTierCfg.multiplier}×</div>
-                  </div>
-                </div>
-                <div style={{display:"flex",gap:12,marginBottom:20}}>
-                  <div style={{flex:1,padding:"14px 16px",borderRadius:14,background:`linear-gradient(135deg,${currentTierCfg.bg},transparent)`,border:`1.5px solid ${currentTierCfg.border}`}}>
-                    <div style={{fontSize:11,fontWeight:700,color:brand.subText,textTransform:"uppercase",letterSpacing:1,marginBottom:4}}>Current</div>
-                    <div style={{fontSize:32,fontWeight:900,color:currentTierCfg.color,letterSpacing:-1,lineHeight:1}}>{streak}</div>
-                    <div style={{fontSize:13,fontWeight:600,color:brand.subText,marginTop:2}}>day streak</div>
-                  </div>
-                  <div style={{flex:1,padding:"14px 16px",borderRadius:14,background:brand.inputBg,border:`1.5px solid ${brand.border}`,textAlign:"right"}}>
-                    <div style={{fontSize:11,fontWeight:700,color:brand.subText,textTransform:"uppercase",letterSpacing:1,marginBottom:4}}>Next milestone</div>
-                    <div style={{fontSize:32,fontWeight:900,color:brand.charcoal,letterSpacing:-1,lineHeight:1}}>{nextMilestone}</div>
-                    <div style={{fontSize:13,fontWeight:600,color:brand.subText,marginTop:2}}>{daysLeft} day{daysLeft!==1?"s":""} to go</div>
-                  </div>
-                </div>
-                <div style={{marginBottom:8}}>
-                  <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
-                    <span style={{fontSize:11,fontWeight:700,color:brand.subText,textTransform:"uppercase",letterSpacing:1}}>Progress to Day {nextMilestone}</span>
-                    <span style={{fontSize:11,fontWeight:800,color:currentTierCfg.color}}>{Math.round(milestonePct)}%</span>
-                  </div>
-                  <div style={{position:"relative"}}>
-                    <div style={{height:10,borderRadius:99,background:brand.border}}>
-                      <div style={{height:"100%",borderRadius:99,width:`${milestonePct}%`,background:`linear-gradient(90deg,${currentTierCfg.color},${currentTierCfg.color}bb)`,transition:"width 0.8s cubic-bezier(0.34,1.56,0.64,1)",boxShadow:`0 0 8px ${currentTierCfg.color}55`}}/>
-                    </div>
-                  </div>
-                </div>
-                {streak===0&&<p style={{margin:"10px 0 0",fontSize:13,color:brand.subText,textAlign:"center"}}>🚀 Complete your Gold Zone today to start your streak</p>}
-                <div style={{marginTop:20,padding:"16px",borderRadius:14,background:brand.inputBg,border:`1px solid ${brand.border}`}}>
-                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:12}}>
-                    <div>
-                      <div style={{fontSize:11,fontWeight:700,color:brand.subText,textTransform:"uppercase",letterSpacing:1,marginBottom:4}}>Level</div>
-                      <div style={{display:"flex",alignItems:"center",gap:8}}>
-                        <span style={{fontSize:22}}>{currentLevel.badge}</span>
-                        <span style={{fontWeight:900,fontSize:16,color:brand.charcoal}}>{currentLevel.name}</span>
-                      </div>
-                    </div>
-                    <div style={{textAlign:"right"}}>
-                      <div style={{fontSize:11,fontWeight:700,color:brand.subText,textTransform:"uppercase",letterSpacing:1,marginBottom:4}}>Total Points</div>
-                      <div style={{fontSize:28,fontWeight:900,color:brand.teal,letterSpacing:-1,lineHeight:1}}>{totalPoints.toLocaleString()}</div>
-                    </div>
-                  </div>
-                  {currentLevel.next ? (
-                    <>
-                      <div style={{display:"flex",justifyContent:"space-between",marginBottom:5}}>
-                        <span style={{fontSize:11,color:brand.subText,fontWeight:600}}>Next: {currentLevel.next.badge} {currentLevel.next.name}</span>
-                        <span style={{fontSize:11,fontWeight:800,color:brand.teal}}>{currentLevel.ptsToNext.toLocaleString()} pts to go</span>
-                      </div>
-                      <div style={{height:6,borderRadius:99,background:brand.border}}>
-                        <div style={{height:"100%",borderRadius:99,width:`${currentLevel.pct}%`,background:`linear-gradient(90deg,${brand.teal},#00E5D5)`,transition:"width 0.6s ease"}}/>
-                      </div>
-                    </>
-                  ) : (
-                    <div style={{fontSize:13,color:brand.teal,fontWeight:700,textAlign:"center"}}>👑 Maximum level reached. Legend status.</div>
-                  )}
-                  {tierHistory.length>0&&(
-                    <div style={{marginTop:14,paddingTop:12,borderTop:`1px solid ${brand.border}`}}>
-                      <div style={{fontSize:11,fontWeight:700,color:brand.subText,textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>Recent Days</div>
-                      <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-                        {tierHistory.slice(0,14).map((h,i)=>{
-                          const tc=TIER_CONFIG[h.tier]||TIER_CONFIG.none;
-                          return <div key={i} title={`${h.date} — ${tc.label}`} style={{width:28,height:28,borderRadius:8,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,background:tc.bg,border:`1.5px solid ${tc.border}`,cursor:"default"}}>{tc.emoji==="—"?"·":tc.emoji}</div>;
-                        })}
-                      </div>
-                    </div>
-                  )}
-                </div>
-                {isStreakMilestone&&(
-                  <div style={{marginTop:16,padding:"16px",borderRadius:14,background:`linear-gradient(135deg,${currentTierCfg.bg},rgba(255,214,107,0.08))`,border:`1.5px solid ${currentTierCfg.border}`}}>
-                    <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
-                      <span style={{fontSize:20}}>🎯</span>
-                      <span style={{fontWeight:800,fontSize:15}}>{streak}-Day Milestone Unlocked</span>
-                    </div>
-                    <p style={{margin:"0 0 12px",fontSize:13,color:brand.subText,lineHeight:1.6}}>You've hit {streak} days. Time to analyse your performance.</p>
-                    {!streakReport ? (
-                      <button style={{...btnPrimary,fontSize:13,padding:"10px 20px",opacity:loadingStreakReport?0.7:1}} onClick={generateStreakReport} disabled={loadingStreakReport}
-                        onPointerEnter={e=>{if(!loadingStreakReport)e.currentTarget.style.background=brand.tealHover;}}
-                        onPointerLeave={e=>e.currentTarget.style.background=brand.teal}>
-                        {loadingStreakReport?"Analysing...":"Get My Performance Analysis ✦"}
-                      </button>
-                    ) : (
-                      <div>
-                        <div style={{padding:"14px 16px",borderRadius:12,background:brand.card,border:`1px solid ${brand.border}`,fontSize:13,lineHeight:1.8,whiteSpace:"pre-wrap",color:brand.charcoal}}>{streakReport}</div>
-                        <button style={{marginTop:10,fontSize:12,background:"none",border:"none",color:brand.teal,cursor:"pointer",fontWeight:600,padding:0}} onClick={()=>setStreakReport("")}>Refresh analysis</button>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </section>
-
-              {/* Footer */}
-              <footer style={{textAlign:"center",fontSize:12,color:brand.subText,paddingBottom:24}}>
-                <span style={{fontWeight:800,color:brand.charcoal}}>ZonedIn</span>
-                <span style={{margin:"0 8px"}}>•</span>
-                <span style={{color:brand.teal,fontWeight:700}}>Clarity Beats Chaos</span>
-                <div style={{marginTop:4}}>Zone in. Gain clarity. Level up.</div>
-              </footer>
-
+      // ══════════════ TAB: PLAN ═════════════════════════════════════════════════
+      const PlanTab = () => (
+        <div className="fade-up">
+          {/* Header */}
+          <div style={{padding:"20px 20px 12px",display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+            <div>
+              <div style={{fontFamily:"'Syne',sans-serif",fontSize:22,fontWeight:900,color:T.text,letterSpacing:-0.3}}>{greet()} 👋</div>
+              <div style={{fontSize:13,color:T.sub,marginTop:3}}>{new Date().toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long"})}</div>
+            </div>
+            <div style={{display:"flex",alignItems:"center",gap:8}}>
+              {savingZones&&<span style={{fontSize:10,color:T.teal,fontWeight:700}}>saving…</span>}
+              <button onClick={()=>supabase.auth.signOut()} title="Sign out" style={btn({background:T.card,border:`1px solid ${T.border}`,borderRadius:12,width:36,height:36,display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,color:T.sub})}>↩</button>
             </div>
           </div>
-        </>
-      );
-    }
 
-    // Wait for Supabase ESM to load before rendering
-    function waitForSupabase(cb) {
-      if (window.__supabaseCreateClient) { cb(); }
-      else { window.addEventListener('supabase-ready', cb, { once: true }); }
+          {/* Daily reset */}
+          {needsDailyReset&&(
+            <div className="pop-in" style={{margin:"0 16px 12px",padding:"14px 18px",borderRadius:16,display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,background:"rgba(245,158,11,0.08)",border:"1.5px solid rgba(245,158,11,0.25)"}}>
+              <div><div style={{fontWeight:700,fontSize:14,color:T.text}}>🌅 New day</div><div style={{fontSize:12,color:T.sub,marginTop:2}}>Ready to set today's zones?</div></div>
+              <button onClick={handleDailyReset} style={btn({background:T.gold,color:"#fff",padding:"8px 16px",fontSize:13,borderRadius:50,flexShrink:0})}>Reset →</button>
+            </div>
+          )}
+
+          {/* Progress strip */}
+          <div style={{margin:"0 16px 14px",padding:"14px 18px",borderRadius:16,background:T.card,border:`1px solid ${T.border}`,display:"flex",alignItems:"center",gap:14}}>
+            <div style={{textAlign:"center"}}>
+              <div style={{fontFamily:"'Syne',sans-serif",fontSize:28,fontWeight:900,color:tierCfg.color,letterSpacing:-1,lineHeight:1}}>{streak}</div>
+              <div style={{fontSize:10,color:T.sub,fontWeight:700,letterSpacing:1,textTransform:"uppercase",marginTop:2}}>Streak</div>
+            </div>
+            <div style={{width:1,height:36,background:T.border}}/>
+            <div style={{flex:1}}>
+              <div style={{display:"flex",justifyContent:"space-between",marginBottom:5}}>
+                <span style={{fontSize:12,fontWeight:600,color:T.text}}>{tierCfg.emoji==="—"?"🔘":tierCfg.emoji} {tierCfg.label}</span>
+                <span style={{fontSize:11,color:T.teal,fontWeight:700}}>{daysLeft}d to day {nextMilestone}</span>
+              </div>
+              <div style={{height:5,borderRadius:99,background:T.border,overflow:"hidden"}}>
+                <div style={{height:"100%",borderRadius:99,width:`${milestonePct}%`,background:`linear-gradient(90deg,${tierCfg.color},${tierCfg.color}bb)`,transition:"width 0.6s ease"}}/>
+              </div>
+            </div>
+            <div style={{textAlign:"center"}}>
+              <div style={{fontSize:10,color:T.sub,fontWeight:700,letterSpacing:1,textTransform:"uppercase",marginBottom:2}}>Done</div>
+              <div style={{fontFamily:"'Syne',sans-serif",fontSize:22,fontWeight:900,color:T.teal}}>{todayDone}/3</div>
+            </div>
+          </div>
+
+          {/* Zone cards */}
+          <div style={{padding:"0 16px"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+              <span style={{fontSize:11,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:T.sub}}>Today's Zones</span>
+              <span style={{fontSize:11,color:T.sub}}>Tap card to activate</span>
+            </div>
+            {ZONE_CFG.map(({key,val,set,label,sublabel,emoji,color,bg,border:zb,placeholder})=>{
+              const isActive=activeZoneKey===key, isDone=isZoneDone(key);
+              return (
+                <div key={key} onClick={()=>!isDone&&setActiveZoneKey(key)} style={{borderRadius:18,border:`1.5px solid ${isDone?"rgba(0,194,178,0.25)":isActive?color:T.border}`,background:isDone?"rgba(0,194,178,0.05)":isActive?bg:T.card,padding:"14px 16px",marginBottom:10,cursor:isDone?"default":"pointer",transition:"all 0.2s",boxShadow:isActive&&!isDone?`0 0 0 3px ${zb}`:"none",opacity:isDone?0.7:1}}>
+                  <div style={{display:"flex",alignItems:"center",gap:12}}>
+                    {/* Checkbox */}
+                    <div onClick={e=>{e.stopPropagation();if(isDone||val.trim())toggleZoneDone(key);}} style={{flexShrink:0}}>
+                      {(isDone||val.trim())?(
+                        <div style={{width:30,height:30,borderRadius:9,border:`2px solid ${isDone?"#00C2B2":T.border}`,background:isDone?"rgba(0,194,178,0.12)":"transparent",display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,color:isDone?"#00C2B2":T.sub,cursor:"pointer",transition:"all 0.15s"}}>
+                          {isDone?"✓":"○"}
+                        </div>
+                      ):(
+                        <div style={{width:30,height:30,borderRadius:9,border:`2px dashed ${T.border}`,background:"transparent",flexShrink:0}}/>
+                      )}
+                    </div>
+                    {/* Info + input */}
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:7}}>
+                        <span style={{fontSize:16}}>{emoji}</span>
+                        <span style={{fontFamily:"'Syne',sans-serif",fontSize:13,fontWeight:800,color:isDone?"#00C2B2":isActive?color:T.text}}>{label}</span>
+                        <span style={{fontSize:11,color:T.sub}}>{sublabel}</span>
+                        {isActive&&!isDone&&<span style={{marginLeft:"auto",fontSize:10,fontWeight:800,letterSpacing:0.5,textTransform:"uppercase",color,border:`1px solid ${color}`,padding:"2px 8px",borderRadius:50}}>Active</span>}
+                        {isDone&&<span style={{marginLeft:"auto",fontSize:10,fontWeight:800,color:"#00C2B2",background:"rgba(0,194,178,0.1)",padding:"2px 8px",borderRadius:50}}>Done ✓</span>}
+                      </div>
+                      <input type="text" value={val} onChange={e=>{e.stopPropagation();set(e.target.value);}} onClick={e=>e.stopPropagation()} placeholder={placeholder} disabled={isDone}
+                        style={{width:"100%",padding:"10px 12px",borderRadius:10,border:`1.5px solid ${isActive&&!isDone?color:T.border}`,background:"transparent",fontSize:13,color:isDone?T.sub:T.text,textDecoration:isDone?"line-through":"none",boxSizing:"border-box",outline:"none"}}/>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Quick start nudge */}
+          {goldZone.trim()&&!sessionActive&&(
+            <div style={{margin:"4px 16px 16px",padding:"14px 18px",borderRadius:16,background:`linear-gradient(135deg,${T.tealBg},transparent)`,border:`1px solid rgba(0,194,178,0.15)`,display:"flex",alignItems:"center",justifyContent:"space-between",gap:12}}>
+              <div>
+                <div style={{fontSize:13,fontWeight:700,color:T.text}}>Ready to focus?</div>
+                <div style={{fontSize:12,color:T.sub,marginTop:2}}>Tap Focus to start your session</div>
+              </div>
+              <button onClick={()=>setTab("focus")} style={btnPrimary({fontSize:13,padding:"10px 18px"})}>Focus →</button>
+            </div>
+          )}
+        </div>
+      );
+
+      // ══════════════ TAB: FOCUS ════════════════════════════════════════════════
+      const FocusTab = () => (
+        <div className="fade-up">
+          <div style={{padding:"20px 20px 14px"}}>
+            <div style={{fontFamily:"'Syne',sans-serif",fontSize:22,fontWeight:900,color:T.text,letterSpacing:-0.3}}>Zone In 🔥</div>
+            <div style={{fontSize:13,color:T.sub,marginTop:3}}>One task. Full focus. No noise.</div>
+          </div>
+
+          {/* Active zone pill */}
+          <div style={{margin:"0 16px 14px",padding:"16px 18px",borderRadius:18,background:activeZone?.val?.trim()?activeZone.bg:T.card,border:`1.5px solid ${activeZone?.val?.trim()?activeZone.color:T.border}`,transition:"all 0.25s"}}>
+            <div style={{fontSize:10,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:activeZone?.val?.trim()?activeZone.color:T.sub,marginBottom:8}}>Active Zone</div>
+            <div style={{display:"flex",alignItems:"center",gap:10}}>
+              <span style={{fontSize:24}}>{activeZone?.emoji}</span>
+              <div style={{flex:1}}>
+                <div style={{fontFamily:"'Syne',sans-serif",fontSize:16,fontWeight:800,color:activeZone?.val?.trim()?activeZone.color:T.sub,fontStyle:activeZone?.val?.trim()?"normal":"italic",lineHeight:1.3}}>
+                  {activeZone?.val?.trim()||"No task set — add one in Plan tab"}
+                </div>
+                {activeZone?.val?.trim()&&<div style={{fontSize:11,color:T.sub,marginTop:4}}>{activeZone.label} · {activeZone.sublabel}</div>}
+              </div>
+            </div>
+            {/* Switch zone */}
+            <div style={{display:"flex",gap:6,marginTop:12}}>
+              {ZONE_CFG.map(z=>(
+                <button key={z.key} onClick={()=>!isZoneDone(z.key)&&setActiveZoneKey(z.key)} disabled={isZoneDone(z.key)||!z.val.trim()} style={btn({padding:"4px 10px",fontSize:11,fontWeight:700,borderRadius:50,border:`1px solid ${activeZoneKey===z.key?z.color:T.border}`,background:activeZoneKey===z.key?z.bg:"transparent",color:activeZoneKey===z.key?z.color:T.sub,opacity:isZoneDone(z.key)||!z.val.trim()?0.35:1})}>
+                  {z.emoji} {z.label.split(" ")[0]}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Duration */}
+          <div style={{display:"flex",gap:8,margin:"0 16px 14px",flexWrap:"wrap"}}>
+            {[15,25,45,60,90].map(d=>(
+              <button key={d} onClick={()=>setSessionDuration(d)} style={btn({flex:1,minWidth:52,padding:"10px 4px",borderRadius:50,fontSize:13,border:`1.5px solid ${sessionDuration===d?T.teal:T.border}`,background:sessionDuration===d?T.teal:"transparent",color:sessionDuration===d?"#fff":T.sub,textAlign:"center"})}>
+                {d}<span style={{fontSize:10}}> min</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Start button */}
+          <div style={{margin:"0 16px 14px"}}>
+            <button style={btnPrimary({width:"100%",fontSize:16,padding:"16px",opacity:activeZone?.val?.trim()?1:0.4,cursor:activeZone?.val?.trim()?"pointer":"not-allowed",background:activeZone?.val?.trim()?`linear-gradient(135deg,${T.teal},${T.teal2})`:"#374151"})}
+              onClick={startSession}
+              onPointerEnter={e=>{if(activeZone?.val?.trim())e.currentTarget.style.opacity="0.9";}}
+              onPointerLeave={e=>e.currentTarget.style.opacity="1"}>
+              Start {sessionDuration}-Min Session →
+            </button>
+          </div>
+
+          {/* Session history */}
+          <div style={{margin:"0 16px"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+              <span style={{fontSize:11,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:T.sub}}>Session History</span>
+              {sessionHistory.length>3&&<button onClick={()=>setHistoryExpanded(h=>!h)} style={btn({background:"none",color:T.teal,fontSize:11,fontWeight:700,padding:0})}>{historyExpanded?"Less ↑":`All ${sessionHistory.length} ↓`}</button>}
+            </div>
+            {sessionHistory.length===0?(
+              <div style={{...card(),textAlign:"center",padding:"32px 20px"}}>
+                <div style={{fontSize:36,marginBottom:10}}>🎯</div>
+                <div style={{fontWeight:700,fontSize:15,color:T.text,marginBottom:6}}>No sessions yet</div>
+                <div style={{fontSize:13,color:T.sub}}>Complete your first session above.</div>
+              </div>
+            ):(
+              <div style={card({padding:"6px 16px"})}>
+                {(historyExpanded?sessionHistory:sessionHistory.slice(0,4)).map((s,i)=>(
+                  <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"11px 0",borderBottom:i<(historyExpanded?sessionHistory:sessionHistory.slice(0,4)).length-1?`1px solid ${T.border}`:"none"}}>
+                    <span style={{fontSize:20,width:28,textAlign:"center"}}>{s.emoji||"🥇"}</span>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontSize:13,fontWeight:600,color:T.text,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{s.zone}</div>
+                      <div style={{fontSize:11,color:T.sub,marginTop:1}}>{s.date}</div>
+                    </div>
+                    <div style={{display:"flex",alignItems:"center",gap:6,flexShrink:0}}>
+                      <span style={{fontSize:13,fontWeight:700,color:T.teal}}>{s.minutes}m</span>
+                      <span style={{fontSize:14}}>{s.taskCompleted?"🏆":s.completed?"✅":"⏹️"}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      );
+
+      // ══════════════ TAB: REFLECT ══════════════════════════════════════════════
+      const ReflectTab = () => (
+        <div className="fade-up">
+          <div style={{padding:"20px 20px 14px"}}>
+            <div style={{fontFamily:"'Syne',sans-serif",fontSize:22,fontWeight:900,color:T.text,letterSpacing:-0.3}}>Close the Loop 🧠</div>
+            <div style={{fontSize:13,color:T.sub,marginTop:3}}>Reflection builds clarity. Clarity builds momentum.</div>
+          </div>
+
+          {/* Reflection card */}
+          <div style={{...card(),margin:"0 16px 12px"}}>
+            <div style={{fontSize:11,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:T.sub,marginBottom:10}}>What went well today?</div>
+            <textarea value={wentWell} onChange={e=>setWentWell(e.target.value)} placeholder="Be specific — the more detail, the better your insight…"
+              style={{width:"100%",minHeight:90,padding:"12px 14px",borderRadius:12,border:`1.5px solid ${T.border}`,background:T.card2,color:T.text,fontSize:14,resize:"vertical",boxSizing:"border-box"}}/>
+            {/* Energy */}
+            <div style={{marginTop:14}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+                <span style={{fontSize:12,fontWeight:700,color:T.sub}}>⚡ Energy today</span>
+                <span style={{fontSize:14,fontWeight:800,color:T.teal}}>{energy}/5</span>
+              </div>
+              <input type="range" min="1" max="5" value={energy} onChange={e=>setEnergy(Number(e.target.value))} style={{width:"100%",accentColor:T.teal}}/>
+            </div>
+            {/* Mood */}
+            <div style={{marginTop:12}}>
+              <div style={{fontSize:12,fontWeight:700,color:T.sub,marginBottom:8}}>How did you feel?</div>
+              <div style={{display:"flex",gap:8}}>
+                {["😊","😎","😐","😔","😴"].map(m=>(
+                  <button key={m} onClick={()=>setMood(m)} style={btn({flex:1,fontSize:22,padding:"8px 4px",borderRadius:12,border:`2px solid ${mood===m?T.teal:T.border}`,background:mood===m?T.tealBg:"transparent"})}>
+                    {m}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <button style={btnPrimary({width:"100%",marginTop:16,opacity:loadingInsight||!wentWell.trim()?0.5:1,cursor:!wentWell.trim()?"not-allowed":"pointer"})}
+              onClick={generateInsight} disabled={loadingInsight||!wentWell.trim()}>
+              {loadingInsight?"Getting your insight…":"Save & Get Claude Insight ✦"}
+            </button>
+            {insightError&&<p style={{fontSize:13,color:"#EF4444",marginTop:8,margin:"8px 0 0"}}>{insightError}</p>}
+          </div>
+
+          {/* Latest insight */}
+          {latestInsight&&!loadingInsight&&(
+            <div style={{margin:"0 16px 12px",background:`linear-gradient(135deg,rgba(0,194,178,0.07),rgba(167,139,250,0.05))`,border:`1px solid rgba(0,194,178,0.18)`,borderRadius:18,overflow:"hidden"}}>
+              <div style={{padding:"12px 16px",background:"rgba(0,194,178,0.07)",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <div style={{display:"flex",alignItems:"center",gap:8}}>
+                  <div style={{width:6,height:6,borderRadius:"50%",background:T.teal,flexShrink:0}}/>
+                  <span style={{fontSize:11,fontWeight:700,letterSpacing:1,textTransform:"uppercase",color:T.teal}}>Claude Insight</span>
+                  {latestInsight.mood&&<span style={{fontSize:13}}>{latestInsight.mood}</span>}
+                  {latestInsight.energy&&<span style={{fontSize:11,color:T.sub}}>⚡{latestInsight.energy}/5</span>}
+                </div>
+                <div style={{display:"flex",alignItems:"center",gap:8}}>
+                  <span style={{fontSize:11,color:T.sub}}>{latestInsight.date}</span>
+                  {insightHistory.length>1&&<button onClick={()=>setShowInsightHistory(h=>!h)} style={btn({background:"none",color:T.teal,fontSize:11,fontWeight:700,padding:0})}>{showInsightHistory?"Hide ↑":`+${insightHistory.length-1} ↓`}</button>}
+                </div>
+              </div>
+              <div style={{padding:"14px 16px",fontSize:14,lineHeight:1.85,color:"rgba(240,244,248,0.8)",whiteSpace:"pre-wrap"}}>{latestInsight.text}</div>
+              {showInsightHistory&&insightHistory.slice(1).map((ins,i)=>(
+                <div key={i} style={{borderTop:`1px solid ${T.border}`,padding:"12px 16px"}}>
+                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
+                    <span style={{fontSize:11,fontWeight:700,color:T.sub}}>{ins.date}</span>
+                    {ins.mood&&<span style={{fontSize:13}}>{ins.mood}</span>}
+                  </div>
+                  <div style={{fontSize:13,lineHeight:1.7,color:T.sub,whiteSpace:"pre-wrap"}}>{ins.text}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+
+      // ══════════════ TAB: PROGRESS ═════════════════════════════════════════════
+      const ProgressTab = () => (
+        <div className="fade-up">
+          <div style={{padding:"20px 20px 14px",display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+            <div>
+              <div style={{fontFamily:"'Syne',sans-serif",fontSize:22,fontWeight:900,color:T.text,letterSpacing:-0.3}}>Your Progress 🏆</div>
+              <div style={{fontSize:13,color:T.sub,marginTop:3}}>Streak · Level · History</div>
+            </div>
+            <span style={{background:T.card,border:`1px solid ${T.border}`,borderRadius:50,padding:"5px 12px",fontSize:12,fontWeight:700,color:T.teal,whiteSpace:"nowrap"}}>
+              {currentLevel.badge} {currentLevel.name}
+            </span>
+          </div>
+
+          {/* Streak hero */}
+          <div style={{margin:"0 16px 12px",padding:"20px",borderRadius:20,background:`linear-gradient(135deg,${tierCfg.bg},transparent)`,border:`1.5px solid ${tierCfg.border}`,display:"flex",alignItems:"center",gap:16}}>
+            <div>
+              <div style={{fontFamily:"'Syne',sans-serif",fontSize:52,fontWeight:900,color:tierCfg.color,letterSpacing:-3,lineHeight:1}}>{streak}</div>
+              <div style={{fontSize:10,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:T.sub,marginTop:4}}>Day Streak</div>
+            </div>
+            <div style={{flex:1}}>
+              <div style={{fontFamily:"'Syne',sans-serif",fontSize:16,fontWeight:800,color:tierCfg.color,marginBottom:6}}>
+                {tierCfg.emoji==="—"?"🔘":tierCfg.emoji} {tierCfg.label}
+              </div>
+              <div style={{fontSize:12,color:T.sub,marginBottom:8}}>
+                {streakTier==="none"&&"Complete Gold Zone to start your streak"}
+                {streakTier==="gold"&&"Complete Diamond too to upgrade"}
+                {streakTier==="diamond"&&"Complete Platinum to reach the top"}
+                {streakTier==="platinum"&&"🔥 Perfect streak — firing on all cylinders"}
+              </div>
+              <div style={{height:5,borderRadius:99,background:"rgba(255,255,255,0.06)",overflow:"hidden"}}>
+                <div style={{height:"100%",borderRadius:99,width:`${milestonePct}%`,background:`linear-gradient(90deg,${tierCfg.color},${tierCfg.color}bb)`,transition:"width 0.8s ease"}}/>
+              </div>
+              <div style={{display:"flex",justifyContent:"space-between",marginTop:5}}>
+                <span style={{fontSize:11,color:T.sub}}>Day {streak}</span>
+                <span style={{fontSize:11,color:tierCfg.color,fontWeight:700}}>{daysLeft}d to Day {nextMilestone}</span>
+              </div>
+            </div>
+            <div style={{textAlign:"center",flexShrink:0}}>
+              <div style={{fontSize:10,fontWeight:700,letterSpacing:1,textTransform:"uppercase",color:T.sub,marginBottom:4}}>Boost</div>
+              <div style={{fontFamily:"'Syne',sans-serif",fontSize:22,fontWeight:900,color:tierCfg.color}}>{tierCfg.multiplier}×</div>
+            </div>
+          </div>
+
+          {/* Level + points */}
+          <div style={{display:"flex",gap:10,margin:"0 16px 12px"}}>
+            <div style={{...card({flex:1,padding:"16px",textAlign:"center"})}}>
+              <div style={{fontSize:28,marginBottom:4}}>{currentLevel.badge}</div>
+              <div style={{fontFamily:"'Syne',sans-serif",fontSize:13,fontWeight:800,color:T.text}}>{currentLevel.name}</div>
+              <div style={{fontSize:11,color:T.teal,fontWeight:600,marginTop:2}}>{totalPoints.toLocaleString()} pts</div>
+            </div>
+            {currentLevel.next&&(
+              <div style={{...card({flex:1,padding:"16px",background:"rgba(0,194,178,0.05)",border:`1px solid rgba(0,194,178,0.15)`})}}>
+                <div style={{fontSize:11,fontWeight:700,letterSpacing:1,textTransform:"uppercase",color:T.sub,marginBottom:8}}>Next Level</div>
+                <div style={{fontSize:28,marginBottom:4}}>{currentLevel.next.badge}</div>
+                <div style={{fontFamily:"'Syne',sans-serif",fontSize:12,fontWeight:800,color:T.teal}}>{currentLevel.next.name}</div>
+                <div style={{fontSize:11,color:T.sub,marginTop:2}}>{currentLevel.ptsToNext.toLocaleString()} pts to go</div>
+                <div style={{height:4,borderRadius:99,background:T.border,marginTop:8,overflow:"hidden"}}>
+                  <div style={{height:"100%",borderRadius:99,width:`${currentLevel.pct}%`,background:`linear-gradient(90deg,${T.teal},${T.teal2})`}}/>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Tier history */}
+          {tierHistory.length>0&&(
+            <div style={{...card(),margin:"0 16px 12px"}}>
+              <div style={{fontSize:11,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:T.sub,marginBottom:12}}>Last {Math.min(tierHistory.length,14)} Days</div>
+              <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                {tierHistory.slice(0,14).map((h,i)=>{
+                  const tc=TIER_CONFIG[h.tier]||TIER_CONFIG.none;
+                  return <div key={i} title={`${h.date} — ${tc.label}`} style={{width:32,height:32,borderRadius:9,display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,background:tc.bg,border:`1.5px solid ${tc.border}`,cursor:"default"}}>{tc.emoji==="—"?"·":tc.emoji}</div>;
+                })}
+              </div>
+              <div style={{display:"flex",gap:12,marginTop:12,paddingTop:10,borderTop:`1px solid ${T.border}`}}>
+                {["platinum","diamond","gold","none"].map(k=>{const tc=TIER_CONFIG[k];return(
+                  <div key={k} style={{display:"flex",alignItems:"center",gap:4,fontSize:11,color:T.sub}}>
+                    <span style={{fontSize:12}}>{tc.emoji==="—"?"·":tc.emoji}</span>{k==="none"?"Miss":tc.label.split(" ")[0]}
+                  </div>
+                );})}
+              </div>
+            </div>
+          )}
+
+          {/* Milestone analysis */}
+          {isStreakMilestone&&(
+            <div style={{...card({margin:"0 16px 12px",background:`linear-gradient(135deg,${tierCfg.bg},rgba(255,214,107,0.06))`,border:`1.5px solid ${tierCfg.border}`})}}>
+              <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
+                <span style={{fontSize:20}}>🎯</span>
+                <span style={{fontFamily:"'Syne',sans-serif",fontWeight:800,fontSize:15,color:T.text}}>{streak}-Day Milestone!</span>
+              </div>
+              <p style={{fontSize:13,color:T.sub,lineHeight:1.6,margin:"0 0 12px"}}>You've hit {streak} days. Time to analyse your performance.</p>
+              {!streakReport?(
+                <button style={btnPrimary({fontSize:13,padding:"10px 20px",opacity:loadingStreakReport?0.6:1})} onClick={generateStreakReport} disabled={loadingStreakReport}>
+                  {loadingStreakReport?"Analysing…":"Get Performance Analysis ✦"}
+                </button>
+              ):(
+                <div>
+                  <div style={{padding:"14px",borderRadius:12,background:T.card,border:`1px solid ${T.border}`,fontSize:13,lineHeight:1.8,whiteSpace:"pre-wrap",color:T.text}}>{streakReport}</div>
+                  <button onClick={()=>setStreakReport("")} style={btn({background:"none",color:T.teal,fontSize:12,fontWeight:600,marginTop:8,padding:0})}>Refresh →</button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Sign out */}
+          <div style={{textAlign:"center",padding:"8px 16px 16px"}}>
+            <button onClick={()=>supabase.auth.signOut()} style={btn({background:"none",color:T.sub,fontSize:12,padding:"8px 16px",border:`1px solid ${T.border}`,borderRadius:50})}>Sign out ↩</button>
+          </div>
+        </div>
+      );
+
+      // ── render ────────────────────────────────────────────────────────────────
+      return (
+        <Shell>
+          {tab==="plan"     && <PlanTab/>}
+          {tab==="focus"    && <FocusTab/>}
+          {tab==="reflect"  && <ReflectTab/>}
+          {tab==="progress" && <ProgressTab/>}
+        </Shell>
+      );
+    };
+
+    function waitForSupabase(cb){
+      if(window.__supabaseCreateClient)cb();
+      else window.addEventListener('supabase-ready',cb,{once:true});
     }
-    waitForSupabase(() => {
+    waitForSupabase(()=>{
       ReactDOM.createRoot(document.getElementById('root')).render(<ZonedInMVP/>);
     });
   </script>
