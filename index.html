@@ -53,10 +53,10 @@ var __spreadValues = (a, b) => {
 };
 var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
 const { useState, useEffect, useRef, useCallback, useMemo } = React;
-const createClient = (...a) => window.__supabaseCreateClient(...a);
-const SUPABASE_URL = "https://takormabbagvdckpxpox.supabase.co";
-const SUPABASE_KEY = "sb_publishable_yOWhO9_U1TkyUmsvHy1CCQ_vDl9TTUi";
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+const createClient=(...a)=>window.__supabaseCreateClient(...a);
+const SUPABASE_URL="https://takormabbagvdckpxpox.supabase.co";
+const SUPABASE_KEY="sb_publishable_yOWhO9_U1TkyUmsvHy1CCQ_vDl9TTUi";
+let supabase;
 const T = {
   bg: "#0a0e14",
   card: "#111720",
@@ -873,11 +873,12 @@ waitForSupabase(() => {
       if(window.__supabaseCreateClient)cb();
       else window.addEventListener('supabase-ready',cb,{once:true});
     }
-    waitForSupabase(()=>{
-      ReactDOM.createRoot(document.getElementById('root')).render(
-        React.createElement(ZonedInMVP)
-      );
-    });
+   waitForSupabase(()=>{
+  supabase=createClient(SUPABASE_URL,SUPABASE_KEY);
+  ReactDOM.createRoot(document.getElementById('root')).render(
+    React.createElement(ZonedInMVP)
+  );
+});
   </script>
 </body>
 </html>
