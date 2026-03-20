@@ -449,42 +449,108 @@ const SessionComplete = ({ session, onDismiss }) => {
   }, [isTC]);
   return /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", inset: 0, zIndex: 9998, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "flex-end", justifyContent: "center", padding: 16 } }, /* @__PURE__ */ React.createElement("div", { className: "pop-in", style: { background: T.card, borderRadius: 28, padding: "36px 28px", maxWidth: 420, width: "100%", textAlign: "center", border: `1px solid ${isTC ? "rgba(0,194,178,0.25)" : T.border}`, position: "relative", overflow: "hidden" } }, isTC && /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", inset: 0, background: "radial-gradient(ellipse at 50% 0%,rgba(0,194,178,0.12),transparent 70%)", pointerEvents: "none" } }), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 64, marginBottom: 10, display: "inline-block", animation: isTC ? "taskPop 0.5s cubic-bezier(0.34,1.56,0.64,1) both" : "none" } }, isTC ? "\u{1F3AF}" : session.completed ? "\u{1F3AF}" : "\u23F9\uFE0F"), /* @__PURE__ */ React.createElement("h2", { style: { fontFamily: "'Syne',sans-serif", fontSize: 24, fontWeight: 900, color: isTC ? T.teal : T.text, margin: "0 0 8px", letterSpacing: -0.3 } }, isTC ? "Done!" : session.completed ? "Session Complete" : "Session Ended"), /* @__PURE__ */ React.createElement("p", { style: { fontSize: 14, color: T.sub, lineHeight: 1.7, margin: "0 0 22px" } }, isTC ? "Nicely done. Head to Reflect to close the loop." : session.completed ? "You locked in and delivered." : "Every minute of focus counts."), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, marginBottom: 20 } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, padding: 16, borderRadius: 14, background: T.card2, textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 30, fontWeight: 900, color: T.teal, letterSpacing: -1 } }, session.minutes), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: T.sub, fontWeight: 600, marginTop: 2 } }, "minutes")), /* @__PURE__ */ React.createElement("div", { style: { flex: 2, padding: 16, borderRadius: 14, background: T.card2, textAlign: "left", display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 22 } }, session.emoji), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: T.text, fontWeight: 600, lineHeight: 1.3 } }, session.zone))), /* @__PURE__ */ React.createElement("button", { onClick: onDismiss, style: btnPrimary({ width: "100%" }) }, "Back to ZonedIn \u2192")));
 };
-const ZonedInRating = ({ onRate }) => {
-  const [selected, setSelected] = useState(null);
-  const options = [
-    { key: "fully", emoji: "\u{1F525}", label: "Fully" },
-    { key: "partly", emoji: "\u{1F30A}", label: "Had moments" },
-    { key: "elsewhere", emoji: "\u{1F4AD}", label: "Mind was elsewhere" }
+const PostSessionFlow = ({ onComplete }) => {
+  const [step, setStep] = useState(0);
+  const [rating, setRating] = useState(null);
+  const [energy, setEnergy] = useState(null);
+  const [mood, setMood] = useState(null);
+  const RATING_OPTS = [
+    { key: "fully", emoji: "\u{1F525}", label: "Fully", sub: "Locked in the whole way" },
+    { key: "partly", emoji: "\u{1F30A}", label: "Had moments", sub: "In and out of focus" },
+    { key: "elsewhere", emoji: "\u{1F4AD}", label: "Mind was elsewhere", sub: "Struggled to stay present" }
   ];
-  const handleRate = (key) => {
-    setSelected(key);
-    setTimeout(() => onRate(key), 600);
+  const advance = () => setStep((s) => s + 1);
+  const handleRating = (key) => {
+    setRating(key);
+    setTimeout(() => advance(), 500);
   };
-  return /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "flex-end", justifyContent: "center", padding: 16 } }, /* @__PURE__ */ React.createElement("div", { className: "slide-up", style: { background: T.card, borderRadius: 28, padding: "28px 24px 32px", maxWidth: 420, width: "100%", border: `1px solid ${T.border2}` } }, /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", marginBottom: 24 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: T.teal, marginBottom: 10 } }, "Quick check"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 22, fontWeight: 900, color: T.text, letterSpacing: -0.3 } }, "Were you Zoned In?")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 10 } }, options.map((o) => {
-    const isSelected = selected === o.key;
+  const handleEnergy = (val) => {
+    setEnergy(val);
+    setTimeout(() => advance(), 500);
+  };
+  const handleMood = (val) => {
+    setMood(val);
+    setTimeout(() => onComplete({ rating, energy, mood: val }), 500);
+  };
+  const handleSkip = () => onComplete({ rating, energy, mood });
+  const Screen = ({ children, step: s, total: t, title, sub }) => /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", inset: 0, zIndex: 9999, background: "#0a0e14", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 32 } }, /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", top: 56, display: "flex", gap: 8 } }, Array.from({ length: t }, (_, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { width: i === s ? 24 : 8, height: 8, borderRadius: 99, background: i <= s ? T.teal : "rgba(255,255,255,0.1)", transition: "all 0.3s" } }))), /* @__PURE__ */ React.createElement("div", { style: { width: "100%", maxWidth: 360, textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: T.teal, marginBottom: 12 } }, sub), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 26, fontWeight: 900, color: T.text, letterSpacing: -0.5, marginBottom: 32, lineHeight: 1.2 } }, title), children), /* @__PURE__ */ React.createElement("button", { onClick: handleSkip, style: { position: "absolute", bottom: 48, fontSize: 12, color: T.sub, background: "none", border: "none", cursor: "pointer", padding: "8px 20px" } }, "Skip"));
+  if (step === 0) return /* @__PURE__ */ React.createElement(Screen, { step: 0, total: 3, sub: "Quick check", title: "Were you Zoned In?" }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 10 } }, RATING_OPTS.map((o) => {
+    const sel = rating === o.key;
     return /* @__PURE__ */ React.createElement(
       "button",
       {
         key: o.key,
-        onClick: () => handleRate(o.key),
+        onClick: () => handleRating(o.key),
+        style: btn({
+          width: "100%",
+          padding: "16px 20px",
+          borderRadius: 18,
+          display: "flex",
+          alignItems: "center",
+          gap: 16,
+          textAlign: "left",
+          border: `1.5px solid ${sel ? T.teal : T.border}`,
+          background: sel ? T.tealBg : T.card,
+          transform: sel ? "scale(0.98)" : "scale(1)",
+          transition: "all 0.2s"
+        })
+      },
+      /* @__PURE__ */ React.createElement("span", { style: { fontSize: 28, flexShrink: 0 } }, o.emoji),
+      /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 800, color: sel ? T.teal : T.text } }, o.label), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: T.sub, marginTop: 2 } }, o.sub)),
+      sel && /* @__PURE__ */ React.createElement("span", { style: { fontSize: 16, color: T.teal, flexShrink: 0 } }, "\u2713")
+    );
+  })));
+  if (step === 1) return /* @__PURE__ */ React.createElement(Screen, { step: 1, total: 3, sub: "How was your body?", title: "Energy level?" }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 10 } }, ENERGY_OPTS.map((o) => {
+    const sel = energy === o.val;
+    return /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        key: o.val,
+        onClick: () => handleEnergy(o.val),
         style: btn({
           width: "100%",
           padding: "14px 20px",
-          borderRadius: 16,
+          borderRadius: 18,
           display: "flex",
           alignItems: "center",
-          gap: 14,
-          border: `1.5px solid ${isSelected ? T.teal : T.border}`,
-          background: isSelected ? T.tealBg : T.card2,
-          transition: "all 0.2s",
-          transform: isSelected ? "scale(0.98)" : "scale(1)"
+          gap: 16,
+          border: `1.5px solid ${sel ? T.teal : T.border}`,
+          background: sel ? T.tealBg : T.card,
+          transform: sel ? "scale(0.98)" : "scale(1)",
+          transition: "all 0.2s"
         })
       },
-      /* @__PURE__ */ React.createElement("span", { style: { fontSize: 24 } }, o.emoji),
-      /* @__PURE__ */ React.createElement("span", { style: { fontSize: 15, fontWeight: 700, color: isSelected ? T.teal : T.text } }, o.label),
-      isSelected && /* @__PURE__ */ React.createElement("span", { style: { marginLeft: "auto", fontSize: 14, color: T.teal } }, "\u2713")
+      /* @__PURE__ */ React.createElement("span", { style: { fontSize: 26, flexShrink: 0 } }, o.emoji),
+      /* @__PURE__ */ React.createElement("span", { style: { fontSize: 15, fontWeight: 700, color: sel ? T.teal : T.text } }, o.label),
+      sel && /* @__PURE__ */ React.createElement("span", { style: { marginLeft: "auto", fontSize: 16, color: T.teal } }, "\u2713")
     );
-  })), /* @__PURE__ */ React.createElement("button", { onClick: () => onRate(null), style: btn({ width: "100%", background: "none", color: T.sub, fontSize: 12, marginTop: 14, padding: "8px" }) }, "Skip")));
+  })));
+  if (step === 2) return /* @__PURE__ */ React.createElement(Screen, { step: 2, total: 3, sub: "How was your mind?", title: "How did you feel?" }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 10 } }, MOOD_OPTS.map((o) => {
+    const sel = mood === String(o.val);
+    return /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        key: o.val,
+        onClick: () => handleMood(String(o.val)),
+        style: btn({
+          width: "100%",
+          padding: "14px 20px",
+          borderRadius: 18,
+          display: "flex",
+          alignItems: "center",
+          gap: 16,
+          border: `1.5px solid ${sel ? T.teal : T.border}`,
+          background: sel ? T.tealBg : T.card,
+          transform: sel ? "scale(0.98)" : "scale(1)",
+          transition: "all 0.2s"
+        })
+      },
+      /* @__PURE__ */ React.createElement("span", { style: { fontSize: 26, flexShrink: 0 } }, o.emoji),
+      /* @__PURE__ */ React.createElement("span", { style: { fontSize: 15, fontWeight: 700, color: sel ? T.teal : T.text } }, o.label),
+      sel && /* @__PURE__ */ React.createElement("span", { style: { marginLeft: "auto", fontSize: 16, color: T.teal } }, "\u2713")
+    );
+  })));
+  return null;
 };
 const computeMomentum = (sessionHistory) => {
   const goldSessions = sessionHistory.filter((s) => s.zoneKey === "gold" || s.doneLooks);
@@ -1138,11 +1204,13 @@ NEXT 7 DAYS: (2 sentences)`;
   ), sessionActive && /* @__PURE__ */ React.createElement(SessionLock, { secondsLeft, activeTask: activeZoneLabel, doneLooks: currentDoneLooks, onEnd: endSession, onCompleteTask: completeTask, sessionDuration }), showReckoning && /* @__PURE__ */ React.createElement(ReckoningScreen, { doneLooks: currentDoneLooks, task: goldZone, onYes: handleReckoningYes, onNotQuite: handleReckoningNotQuite }), showGoldComplete && /* @__PURE__ */ React.createElement(GoldCompleteScreen, { goldTask: goldZone, streak: streak + 1, onDismiss: handleGoldCompleteDismiss }), lastSession && !sessionActive && !showReckoning && !showGoldComplete && /* @__PURE__ */ React.createElement(SessionComplete, { session: lastSession, onDismiss: () => {
     setLastSession(null);
     setShowZonedInRating(true);
-  } }), showZonedInRating && /* @__PURE__ */ React.createElement(ZonedInRating, { onRate: (r) => {
-    setSessionRating(r);
+  } }), showZonedInRating && /* @__PURE__ */ React.createElement(PostSessionFlow, { onComplete: ({ rating, energy: e, mood: m }) => {
+    setSessionRating(rating);
+    if (e) setEnergy(e);
+    if (m) setMood(m);
     setShowZonedInRating(false);
     setTab("reflect");
-  } }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { className: tab === "focus" ? "" : "tab-scroll", style: { flex: 1, paddingBottom: tab === "focus" ? 0 : 80, overflow: tab === "focus" ? "hidden" : "auto" } }, tab === "plan" && /* @__PURE__ */ React.createElement(PlanTab, { greetMsg, dateStr, userName, savingZones, needsDailyReset, handleDailyReset, notQuiteCount, completedZones, streak, milestonePct, tierCfg, daysLeft, nextMilestone, todayDone, ZONE_CFG, activeZoneKey, setActiveZoneKey, isZoneDone, toggleZoneDone, goldZone, diamondZone, platinumZone, sessionActive, setTab }), tab === "focus" && /* @__PURE__ */ React.createElement(FocusTab, { activeZone, activeZoneKey, setActiveZoneKey, ZONE_CFG, isZoneDone, sessionDuration, setSessionDuration, handleStartSession, sessionHistory, setTab }), tab === "reflect" && /* @__PURE__ */ React.createElement(ReflectTab, { wentWell, setWentWell, energy, setEnergy, mood, setMood, loadingInsight, insightError, generateInsight, insightHistory, sessionRating }), tab === "progress" && /* @__PURE__ */ React.createElement(ProgressTab, { streak, tierCfg, milestonePct, daysLeft, nextMilestone, totalPoints, currentLevel, tierHistory, isStreakMilestone, streakReport, setStreakReport, loadingStreakReport, generateStreakReport, streakTier }))), /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 480, height: 76, background: "rgba(10,14,20,0.96)", backdropFilter: "blur(20px)", borderTop: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "space-around", padding: "0 8px 12px", zIndex: 100 } }, [{ id: "plan", icon: "\u{1F5FA}\uFE0F", label: "Plan" }, { id: "focus", icon: "\u{1F525}", label: "Focus" }, { id: "reflect", icon: "\u{1F9E0}", label: "Reflect" }, { id: "progress", icon: "\u{1F3C6}", label: "Progress" }].map((t) => /* @__PURE__ */ React.createElement("button", { key: t.id, onClick: () => setTab(t.id), style: btn({ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "8px 4px", borderRadius: 16, background: tab === t.id ? "rgba(0,194,178,0.1)" : "transparent", border: "none" }) }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 22, lineHeight: 1 } }, t.icon), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 10, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", color: tab === t.id ? T.teal : T.sub } }, t.label)))));
+  } }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { className: tab === "focus" ? "" : "tab-scroll", style: { flex: 1, overflow: tab === "focus" ? "hidden" : "auto", paddingBottom: tab === "focus" ? 0 : 80 } }, tab === "plan" && /* @__PURE__ */ React.createElement(PlanTab, { greetMsg, dateStr, userName, savingZones, needsDailyReset, handleDailyReset, notQuiteCount, completedZones, streak, milestonePct, tierCfg, daysLeft, nextMilestone, todayDone, ZONE_CFG, activeZoneKey, setActiveZoneKey, isZoneDone, toggleZoneDone, goldZone, diamondZone, platinumZone, sessionActive, setTab }), tab === "focus" && /* @__PURE__ */ React.createElement(FocusTab, { activeZone, activeZoneKey, setActiveZoneKey, ZONE_CFG, isZoneDone, sessionDuration, setSessionDuration, handleStartSession, sessionHistory, setTab }), tab === "reflect" && /* @__PURE__ */ React.createElement(ReflectTab, { wentWell, setWentWell, energy, setEnergy, mood, setMood, loadingInsight, insightError, generateInsight, insightHistory, sessionRating }), tab === "progress" && /* @__PURE__ */ React.createElement(ProgressTab, { streak, tierCfg, milestonePct, daysLeft, nextMilestone, totalPoints, currentLevel, tierHistory, isStreakMilestone, streakReport, setStreakReport, loadingStreakReport, generateStreakReport, streakTier }))), /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 480, height: 76, background: "rgba(10,14,20,0.96)", backdropFilter: "blur(20px)", borderTop: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "space-around", padding: "0 8px 12px", zIndex: 100 } }, [{ id: "plan", icon: "\u{1F5FA}\uFE0F", label: "Plan" }, { id: "focus", icon: "\u{1F525}", label: "Focus" }, { id: "reflect", icon: "\u{1F9E0}", label: "Reflect" }, { id: "progress", icon: "\u{1F3C6}", label: "Progress" }].map((t) => /* @__PURE__ */ React.createElement("button", { key: t.id, onClick: () => setTab(t.id), style: btn({ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "8px 4px", borderRadius: 16, background: tab === t.id ? "rgba(0,194,178,0.1)" : "transparent", border: "none" }) }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 22, lineHeight: 1 } }, t.icon), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 10, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", color: tab === t.id ? T.teal : T.sub } }, t.label)))));
 };
 function waitForSupabase(cb) {
   if (window.__supabaseCreateClient) cb();
