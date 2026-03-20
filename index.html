@@ -770,7 +770,7 @@ Format:
 \u2705 What worked: [observation]
 \u{1F527} What to try: [suggestion]`;
     try {
-      const res = await fetch("https://zonedin-api.vercel.app/api/insight", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model: "claude-sonnet-4-5", max_tokens: 1e3, messages: [{ role: "user", content: prompt }] }) });
+      const res = await fetch("https://zonedin-api.vercel.app/api/insight", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model: "claude-haiku-4-5-20251001", max_tokens: 1e3, messages: [{ role: "user", content: prompt }] }) });
       const data = await res.json();
       const text = ((_a2 = data.content) == null ? void 0 : _a2.map((b) => b.text || "").join("")) || "";
       if (text) {
@@ -801,7 +801,7 @@ WHAT'S WORKING: (2 sentences)
 YOUR EDGE: (1 sentence)
 NEXT 7 DAYS: (2 sentences)`;
     try {
-      const res = await fetch("https://zonedin-api.vercel.app/api/insight", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model: "claude-sonnet-4-5", max_tokens: 1e3, messages: [{ role: "user", content: prompt }] }) });
+      const res = await fetch("https://zonedin-api.vercel.app/api/insight", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model: "claude-haiku-4-5-20251001", max_tokens: 1e3, messages: [{ role: "user", content: prompt }] }) });
       const data = await res.json();
       const text = ((_a2 = data.content) == null ? void 0 : _a2.map((b) => b.text || "").join("")) || "";
       if (text) setStreakReport(text.trim());
