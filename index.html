@@ -245,7 +245,7 @@ const Onboarding = ({ onComplete }) => {
       disabled: !task.trim(),
       style: btnGold({ width: "100%", fontSize: 17, padding: "17px", opacity: task.trim() ? 1 : 0.4, cursor: task.trim() ? "pointer" : "not-allowed" })
     },
-    "That's my Gold \u2192"
+    "Go for Gold \u2192"
   )));
   return /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", inset: 0, zIndex: 9998, background: T.bg, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 28 } }, /* @__PURE__ */ React.createElement("div", { style: { maxWidth: 380, width: "100%" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "center", marginBottom: 32 } }, /* @__PURE__ */ React.createElement(ZonedInMark, { size: 48 })), /* @__PURE__ */ React.createElement("div", { style: { padding: "12px 16px", borderRadius: 14, background: T.goldBg, border: `1px solid rgba(245,158,11,0.2)`, marginBottom: 28, textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: T.gold, marginBottom: 4 } }, "Your Gold today"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 15, fontWeight: 800, color: T.text } }, task)), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 22, fontWeight: 900, color: T.text, letterSpacing: -0.3, marginBottom: 6, textAlign: "center" } }, "What should we call you?"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: T.sub, textAlign: "center", marginBottom: 24, lineHeight: 1.6 } }, "Just your first name \u2014 we'll use it every day."), /* @__PURE__ */ React.createElement(
     "input",
@@ -748,12 +748,12 @@ const FocusTab = ({ activeZone, activeZoneKey, setActiveZoneKey, ZONE_CFG, isZon
     "button",
     {
       key: d,
-      onClick: () => setSessionDuration(d),
+      onClick: () => { setSessionDuration(d); LS.set("zi_last_duration", d); },
       style: btn({ flex: 1, padding: "10px 4px", borderRadius: 50, fontSize: 13, border: `1.5px solid ${sessionDuration === d ? T.teal : T.border}`, background: sessionDuration === d ? T.teal : "transparent", color: sessionDuration === d ? "#fff" : T.sub, textAlign: "center" })
     },
     d,
     /* @__PURE__ */ React.createElement("span", { style: { fontSize: 10 } }, " min")
-  ))), /* @__PURE__ */ React.createElement("div", { style: { margin: "0 16px", flexShrink: 0 } }, activeZoneKey === "gold" && ((_h = activeZone == null ? void 0 : activeZone.val) == null ? void 0 : _h.trim()) ? /* @__PURE__ */ React.createElement("button", { style: btnGold({ width: "100%", fontSize: 17, padding: "18px" }), onClick: handleStartSession }, "Commit & Start Gold \u2192") : /* @__PURE__ */ React.createElement(
+  ))), /* @__PURE__ */ React.createElement("div", { style: { margin: "0 16px", flexShrink: 0 } }, activeZoneKey === "gold" && ((_h = activeZone == null ? void 0 : activeZone.val) == null ? void 0 : _h.trim()) ? /* @__PURE__ */ React.createElement("button", { style: btnGold({ width: "100%", fontSize: 17, padding: "18px" }), onClick: handleStartSession }, "Commit & Go for Gold \u2192") : /* @__PURE__ */ React.createElement(
     "button",
     {
       style: btnPrimary({
@@ -885,7 +885,7 @@ const ZonedInMVP = () => {
   const [userName, setUserName] = useState("");
   const [sessionActive, setSessionActive] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(25 * 60);
-  const [sessionDuration, setSessionDuration] = useState(25);
+  const [sessionDuration, setSessionDuration] = useState(() => LS.get("zi_last_duration", 25));
   const [sessionStartedAt, setSessionStartedAt] = useState(null);
   const [lastSession, setLastSession] = useState(null);
   const [showCommitment, setShowCommitment] = useState(false);
