@@ -308,27 +308,85 @@ const AuthScreen = () => {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showMagicLink, setShowMagicLink] = useState(false);
+
+  const handleGoogle = async () => {
+    setGoogleLoading(true); setError("");
+    const { error: err } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: "https://zonedin-api.vercel.app" }
+    });
+    if (err) { setError(err.message); setGoogleLoading(false); }
+  };
+
   const handleLogin = async () => {
     if (!email.trim()) return;
-    setLoading(true);
-    setError("");
+    setLoading(true); setError("");
     const { error: err } = await supabase.auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: true } });
     if (err) setError(err.message);
     else setSent(true);
     setLoading(false);
   };
-  return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 } }, /* @__PURE__ */ React.createElement("div", { style: { maxWidth: 360, width: "100%", textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 20, display: "flex", justifyContent: "center" } }, /* @__PURE__ */ React.createElement(ZonedInMark, { size: 56 })), /* @__PURE__ */ React.createElement("h1", { style: { fontFamily: "'Syne',sans-serif", fontSize: 30, fontWeight: 900, color: T.text, letterSpacing: -0.5, margin: "0 0 6px" } }, "ZonedIn"), /* @__PURE__ */ React.createElement("p", { style: { fontSize: 14, color: T.sub, margin: "0 0 36px" } }, "Clarity Beats Chaos"), !sent ? /* @__PURE__ */ React.createElement("div", { style: { background: T.card, borderRadius: 24, padding: "32px 28px", border: `1px solid ${T.border}` } }, /* @__PURE__ */ React.createElement("h2", { style: { fontFamily: "'Syne',sans-serif", fontSize: 20, fontWeight: 800, color: T.text, margin: "0 0 8px" } }, "Welcome back"), /* @__PURE__ */ React.createElement("p", { style: { fontSize: 13, color: T.sub, lineHeight: 1.6, margin: "0 0 22px" } }, "Enter your email for a magic link \u2014 no password needed."), /* @__PURE__ */ React.createElement(
-    "input",
-    {
-      type: "email",
-      value: email,
-      onChange: (e) => setEmail(e.target.value),
-      onKeyDown: (e) => e.key === "Enter" && handleLogin(),
-      placeholder: "your@email.com",
-      style: { width: "100%", padding: "13px 16px", borderRadius: 12, border: `1.5px solid ${T.border}`, background: T.card2, color: T.text, fontSize: 14, marginBottom: 10, boxSizing: "border-box" }
-    }
-  ), error && /* @__PURE__ */ React.createElement("p", { style: { fontSize: 12, color: "#EF4444", margin: "0 0 10px" } }, error), /* @__PURE__ */ React.createElement("button", { onClick: handleLogin, disabled: loading || !email.trim(), style: btnPrimary({ width: "100%", opacity: loading || !email.trim() ? 0.5 : 1, cursor: loading || !email.trim() ? "not-allowed" : "pointer" }) }, loading ? "Sending\u2026" : "Send Magic Link \u2726")) : /* @__PURE__ */ React.createElement("div", { style: { background: T.card, borderRadius: 24, padding: "32px 28px", border: `1px solid rgba(0,194,178,0.2)` } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 52, marginBottom: 14 } }, "\u{1F4EC}"), /* @__PURE__ */ React.createElement("h2", { style: { fontFamily: "'Syne',sans-serif", fontSize: 18, fontWeight: 800, color: T.text, margin: "0 0 8px" } }, "Check your inbox"), /* @__PURE__ */ React.createElement("p", { style: { fontSize: 13, color: T.sub, lineHeight: 1.7, margin: "0 0 16px" } }, "Magic link sent to ", /* @__PURE__ */ React.createElement("strong", { style: { color: T.teal } }, email), ". Click it to sign in."), /* @__PURE__ */ React.createElement("button", { onClick: () => setSent(false), style: btn({ background: "none", color: T.sub, fontSize: 13, padding: 0 }) }, "Use a different email"))));
+
+  const GoogleIcon = () => React.createElement("svg", { width: 20, height: 20, viewBox: "0 0 48 48" },
+    React.createElement("path", { fill: "#EA4335", d: "M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" }),
+    React.createElement("path", { fill: "#4285F4", d: "M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" }),
+    React.createElement("path", { fill: "#FBBC05", d: "M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" }),
+    React.createElement("path", { fill: "#34A853", d: "M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" })
+  );
+
+  return React.createElement("div", { style: { minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 } },
+    React.createElement("div", { style: { maxWidth: 360, width: "100%", textAlign: "center" } },
+      React.createElement("div", { style: { marginBottom: 20, display: "flex", justifyContent: "center" } }, React.createElement(ZonedInMark, { size: 56 })),
+      React.createElement("h1", { style: { fontFamily: "'Syne',sans-serif", fontSize: 30, fontWeight: 900, color: T.text, letterSpacing: -0.5, margin: "0 0 6px" } }, "ZonedIn"),
+      React.createElement("p", { style: { fontSize: 14, color: T.sub, margin: "0 0 36px" } }, "Clarity Beats Chaos"),
+      !sent
+        ? React.createElement("div", { style: { background: T.card, borderRadius: 24, padding: "32px 28px", border: `1px solid ${T.border}` } },
+            React.createElement("h2", { style: { fontFamily: "'Syne',sans-serif", fontSize: 20, fontWeight: 800, color: T.text, margin: "0 0 24px" } }, "Welcome"),
+            /* Google — primary CTA */
+            React.createElement("button", {
+              onClick: handleGoogle,
+              disabled: googleLoading,
+              style: btn({ width: "100%", padding: "14px 20px", borderRadius: 14, background: "#fff", color: "#1a1a1a", fontSize: 15, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 16, opacity: googleLoading ? 0.7 : 1, cursor: googleLoading ? "not-allowed" : "pointer", boxShadow: "0 2px 12px rgba(0,0,0,0.4)" })
+            }, React.createElement(GoogleIcon), googleLoading ? "Connecting…" : "Continue with Google"),
+            /* Divider */
+            React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12, marginBottom: 16 } },
+              React.createElement("div", { style: { flex: 1, height: 1, background: T.border } }),
+              React.createElement("span", { style: { fontSize: 12, color: T.sub } }, "or"),
+              React.createElement("div", { style: { flex: 1, height: 1, background: T.border } })
+            ),
+            /* Magic link — fallback */
+            !showMagicLink
+              ? React.createElement("button", {
+                  onClick: () => setShowMagicLink(true),
+                  style: btn({ width: "100%", padding: "12px 20px", borderRadius: 14, background: "transparent", border: `1px solid ${T.border}`, color: T.sub, fontSize: 13 })
+                }, "Continue with email instead")
+              : React.createElement("div", null,
+                  React.createElement("input", {
+                    type: "email", value: email,
+                    onChange: (e) => setEmail(e.target.value),
+                    onKeyDown: (e) => e.key === "Enter" && handleLogin(),
+                    placeholder: "your@email.com",
+                    style: { width: "100%", padding: "13px 16px", borderRadius: 12, border: `1.5px solid ${T.border}`, background: T.card2, color: T.text, fontSize: 14, marginBottom: 10, boxSizing: "border-box", outline: "none", fontFamily: "'DM Sans',sans-serif" }
+                  }),
+                  error && React.createElement("p", { style: { fontSize: 12, color: "#EF4444", margin: "0 0 10px" } }, error),
+                  React.createElement("button", {
+                    onClick: handleLogin,
+                    disabled: loading || !email.trim(),
+                    style: btnPrimary({ width: "100%", opacity: loading || !email.trim() ? 0.5 : 1, cursor: loading || !email.trim() ? "not-allowed" : "pointer" })
+                  }, loading ? "Sending…" : "Send Magic Link ✦")
+                )
+          )
+        : React.createElement("div", { style: { background: T.card, borderRadius: 24, padding: "32px 28px", border: `1px solid rgba(0,194,178,0.2)` } },
+            React.createElement("div", { style: { fontSize: 52, marginBottom: 14 } }, "📬"),
+            React.createElement("h2", { style: { fontFamily: "'Syne',sans-serif", fontSize: 18, fontWeight: 800, color: T.text, margin: "0 0 8px" } }, "Check your inbox"),
+            React.createElement("p", { style: { fontSize: 13, color: T.sub, lineHeight: 1.7, margin: "0 0 16px" } }, "Magic link sent to ", React.createElement("strong", { style: { color: T.teal } }, email), ". Click it to sign in."),
+            React.createElement("button", { onClick: () => setSent(false), style: btn({ background: "none", color: T.sub, fontSize: 13, padding: 0 }) }, "Use a different email")
+          )
+    )
+  );
 };
 const CommitmentScreen = ({ task, taskEmoji, taskColor, streak, tierCfg, onCommit, onSkip }) => {
   const [doneLooks, setDoneLooks] = useState(() => autoDoneSuggest(task));
