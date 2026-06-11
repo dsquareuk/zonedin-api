@@ -26,7 +26,9 @@
   <!-- PostHog EU Cloud — GDPR compliant, Frankfurt region -->
   <script>
     !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(a!==void 0?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return a!=="posthog"&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys getNextSurveyStep onSessionId".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
-    posthog.init('phc_yS3gvBMbLsgRe9YrUTmEUqPfHyFQP4pKuTbgfv7YdVmf', {
+    const POSTHOG_KEY = 'POSTHOG_API_KEY_PLACEHOLDER';
+    if(POSTHOG_KEY && !POSTHOG_KEY.includes('PLACEHOLDER')) {
+      posthog.init(POSTHOG_KEY, {
       api_host: 'https://eu.i.posthog.com',
       autocapture: false,
       capture_pageview: false,
@@ -37,15 +39,16 @@
         if(window.__zi_user_id) ph.identify(window.__zi_user_id);
       }
     });
+    }
 
-    // Global analytics helper — all 11 required events
+    // Global analytics helper — always defined, no-ops if PostHog not initialised
     window.zi = {
       identify: function(userId, props) {
-        try { posthog.identify(userId, props); } catch(e) {}
+        try { if(typeof posthog!=='undefined') posthog.identify(userId, props); } catch(e) {}
         window.__zi_user_id = userId;
       },
       track: function(event, props) {
-        try { posthog.capture(event, props || {}); } catch(e) {}
+        try { if(typeof posthog!=='undefined') posthog.capture(event, props || {}); } catch(e) {}
       },
       // Named event methods for each of the 11 required events
       appOpened: function(sessionCount, isFirstOpen) {
@@ -1467,9 +1470,6 @@ NEXT 7 DAYS: (2 sentences)`;
   const todayDone = completedZones.length;
   const greetMsg = greet();
   const dateStr = (/* @__PURE__ */ new Date()).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
-  if (authLoading) return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center" } }, /* @__PURE__ */ React.createElement(ZonedInMark, { size: 48 }), /* @__PURE__ */ React.createElement("p", { style: { color: T.sub, marginTop: 14, fontSize: 13 } }, "Loading\u2026")));
-  if (!user) return /* @__PURE__ */ React.createElement(AuthScreen, null);
-  if (dbLoading) return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center" } }, /* @__PURE__ */ React.createElement(ZonedInMark, { size: 48 }), /* @__PURE__ */ React.createElement("p", { style: { color: T.sub, marginTop: 14, fontSize: 13 } }, "Loading your tasks\u2026")));
   useEffect(() => {
     if(showRecovery && hasOnboarded && window.zi) {
       const last = parseInt(localStorage.getItem('zi_last_open_ts')||String(Date.now()));
@@ -1477,6 +1477,9 @@ NEXT 7 DAYS: (2 sentences)`;
       window.zi.recoveryScreenShown(days);
     }
   }, [showRecovery]);
+  if (authLoading) return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center" } }, /* @__PURE__ */ React.createElement(ZonedInMark, { size: 48 }), /* @__PURE__ */ React.createElement("p", { style: { color: T.sub, marginTop: 14, fontSize: 13 } }, "Loading\u2026")));
+  if (!user) return /* @__PURE__ */ React.createElement(AuthScreen, null);
+  if (dbLoading) return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center" } }, /* @__PURE__ */ React.createElement(ZonedInMark, { size: 48 }), /* @__PURE__ */ React.createElement("p", { style: { color: T.sub, marginTop: 14, fontSize: 13 } }, "Loading your tasks\u2026")));
   return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100vh", background: T.bg, display: "flex", flexDirection: "column", maxWidth: 480, margin: "0 auto", position: "relative" } },
     showPMF && /* @__PURE__ */ React.createElement(PMFModal, { userName, streak, sessionCount: sessionHistory.length, onAnswer: (answer, text) => {
       setShowPMF(false);
