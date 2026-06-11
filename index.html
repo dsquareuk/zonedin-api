@@ -233,7 +233,7 @@ const LS = {
     }
   }
 };
-const todayStr = () => (/* @__PURE__ */ new Date()).toDateString();
+const todayStr = () => (/* @__PURE__ */ new Date()).toISOString().split('T')[0];
 const todayShort = () => (/* @__PURE__ */ new Date()).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 const greet = () => {
   const h = (/* @__PURE__ */ new Date()).getHours();
