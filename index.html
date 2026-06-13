@@ -26,7 +26,7 @@
   <!-- PostHog EU Cloud — GDPR compliant, Frankfurt region -->
   <script>
     !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(a!==void 0?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return a!=="posthog"&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys getNextSurveyStep onSessionId".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
-    const POSTHOG_KEY = 'phc_yS3gvBMbLsgRe9YrUTmEUqPfHyFQP4pKuTbgfv7YdVmf';
+    const POSTHOG_KEY = 'POSTHOG_API_KEY_PLACEHOLDER';
     if(POSTHOG_KEY && !POSTHOG_KEY.includes('PLACEHOLDER')) {
       posthog.init(POSTHOG_KEY, {
       api_host: 'https://eu.i.posthog.com',
@@ -95,14 +95,19 @@
     input,textarea,button{font-family:'DM Sans',sans-serif;}
     input:focus,textarea:focus{outline:none;}
     #root{height:100vh;overflow:hidden;}
-    .tab-scroll{overflow-y:auto;overflow-x:hidden;}
+    .tab-scroll{overflow-y:auto!important;overflow-x:hidden;-webkit-overflow-scrolling:touch;}
     .tab-scroll::-webkit-scrollbar{width:4px;}
     .tab-scroll::-webkit-scrollbar-thumb{background:rgba(0,194,178,0.25);border-radius:99px;}
+    .focus-lock{overflow:hidden!important;touch-action:none!important;}
     @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
     @keyframes popIn{from{opacity:0;transform:scale(0.94)}to{opacity:1;transform:scale(1)}}
     @keyframes slideUp{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}
     @keyframes taskPop{0%{transform:scale(0.5) rotate(-10deg);opacity:0}60%{transform:scale(1.2) rotate(4deg)}100%{transform:scale(1);opacity:1}}
     @keyframes goldPulse{0%{box-shadow:0 0 0 0 rgba(245,158,11,0.6)}70%{box-shadow:0 0 0 20px rgba(245,158,11,0)}100%{box-shadow:0 0 0 0 rgba(245,158,11,0)}}
+    @keyframes orbitA{from{transform:rotate(0deg) translateX(52px) rotate(0deg)}to{transform:rotate(360deg) translateX(52px) rotate(-360deg)}}
+    @keyframes orbitB{from{transform:rotate(180deg) translateX(52px) rotate(-180deg)}to{transform:rotate(-180deg) translateX(52px) rotate(180deg)}}
+    .orbit-a{animation:orbitA 2.4s linear infinite;}
+    .orbit-b{animation:orbitB 2.4s linear infinite;}
     .fade-up{animation:fadeUp 0.3s ease both;}
     .pop-in{animation:popIn 0.25s ease both;}
     .slide-up{animation:slideUp 0.35s cubic-bezier(0.34,1.2,0.64,1) both;}
@@ -184,11 +189,11 @@ const getStreakTier = (cz) => {
   return "none";
 };
 const LEVELS = [
-  { name: "Novice", min: 0, badge: "\u{1F331}" },
-  { name: "Builder", min: 200, badge: "\u{1F528}" },
-  { name: "Pro", min: 600, badge: "\u26A1" },
-  { name: "Elite", min: 1400, badge: "\u{1F48E}" },
-  { name: "Master", min: 3e3, badge: "\u{1F451}" }
+  { name: "Starting Out", min: 0, badge: "\u{1F331}" },
+  { name: "Building", min: 200, badge: "\u{1F528}" },
+  { name: "In Flow", min: 600, badge: "\u26A1" },
+  { name: "Locked In", min: 1400, badge: "\u{1F48E}" },
+  { name: "Relentless", min: 3e3, badge: "\u{1F451}" }
 ];
 const getLevel = (pts) => {
   var _a;
@@ -420,6 +425,9 @@ const CommitmentScreen = ({ task, taskEmoji, taskColor, streak, tierCfg, onCommi
 const SessionLock = ({ secondsLeft, activeTask, doneLooks, onEnd, onCompleteTask, sessionDuration, isRepeatSession }) => {
   const [msgIdx, setMsgIdx] = useState(0);
   const [wakeLockNotice, setWakeLockNotice] = useState(false);
+  const [leftNotice, setLeftNotice] = useState(false);
+  const [leftSeconds, setLeftSeconds] = useState(0);
+  const leftTimeRef = useRef(null);
   const wakeLockRef = useRef(null);
   const size = Math.min(window.innerWidth, 480) * 0.72;
   const r = size / 2 - 16;
@@ -444,14 +452,25 @@ const SessionLock = ({ secondsLeft, activeTask, doneLooks, onEnd, onCompleteTask
     };
     acquire();
     const onVisible = () => {
-      if (document.visibilityState === "visible") acquire();
+      if (document.visibilityState === "visible") {
+        acquire();
+        if(leftTimeRef.current) {
+          const elapsed = Math.round((Date.now() - leftTimeRef.current) / 1000);
+          setLeftSeconds(elapsed);
+          setLeftNotice(true);
+          if(window.zi) window.zi.track('session_abandoned_mid', { seconds_away: elapsed, task: activeTask });
+          setTimeout(() => setLeftNotice(false), 5000);
+          leftTimeRef.current = null;
+        }
+      } else {
+        leftTimeRef.current = Date.now();
+      }
     };
     document.addEventListener("visibilitychange", onVisible);
     return () => {
       var _a;
       document.removeEventListener("visibilitychange", onVisible);
-      (_a = wakeLockRef.current) == null ? void 0 : _a.release().catch(() => {
-      });
+      (_a = wakeLockRef.current) == null ? void 0 : _a.release().catch(() => {});
     };
   }, []);
   useEffect(() => {
@@ -459,19 +478,21 @@ const SessionLock = ({ secondsLeft, activeTask, doneLooks, onEnd, onCompleteTask
     return () => clearInterval(id);
   }, []);
   return /* @__PURE__ */ React.createElement("div", { style: {
-    position: "fixed",
-    inset: 0,
-    zIndex: 9999,
-    background: "#060a10",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
+    position: "fixed", inset: 0, zIndex: 9999, background: "#060a10",
+    display: "flex", flexDirection: "column", alignItems: "center",
     justifyContent: "space-between",
     padding: "env(safe-area-inset-top, 48px) 24px env(safe-area-inset-bottom, 40px)",
-    overflow: "hidden",
-    touchAction: "none"
-    // prevent scroll attempts
-  } }, wakeLockNotice && /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", top: 12, left: "50%", transform: "translateX(-50%)", zIndex: 2, padding: "5px 14px", borderRadius: 50, background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.2)", whiteSpace: "nowrap" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 10, color: T.gold, fontWeight: 700 } }, "\u26A0 Keep your screen on during this session")), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", inset: 0, background: `radial-gradient(ellipse at 50% 45%,${glowColor} 0%,transparent 65%)`, pointerEvents: "none", transition: "background 2s ease" } }), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", zIndex: 1, paddingTop: 8 } }, isRepeatSession && /* @__PURE__ */ React.createElement("div", { style: { display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 50, background: "rgba(0,194,178,0.1)", border: "1px solid rgba(0,194,178,0.2)", marginBottom: 8 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 10, fontWeight: 700, color: T.teal } }, "\u{1F504} Round 2 \u2014 commitment intact")), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: nearEnd ? T.gold : T.teal, marginBottom: 8, transition: "color 1s" } }, nearEnd ? "Almost there" : "In progress"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 18, fontWeight: 800, color: T.text, maxWidth: 300, lineHeight: 1.35, margin: "0 auto" } }, activeTask), doneLooks && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 10, display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 14px", borderRadius: 50, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.18)" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase" } }, "Done when:"), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: "rgba(245,158,11,0.75)" } }, doneLooks))), /* @__PURE__ */ React.createElement("div", { style: { position: "relative", width: size, height: size, zIndex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", inset: 0, borderRadius: "50%", boxShadow: `0 0 60px ${glowColor}`, transition: "box-shadow 2s ease" } }), /* @__PURE__ */ React.createElement("svg", { width: size, height: size, viewBox: `0 0 ${size} ${size}`, style: { transform: "rotate(-90deg)", display: "block" } }, /* @__PURE__ */ React.createElement("circle", { cx: size / 2, cy: size / 2, r, fill: "none", stroke: "rgba(255,255,255,0.05)", strokeWidth: "10" }), /* @__PURE__ */ React.createElement(
+    overflow: "hidden", touchAction: "none"
+  } },
+  leftNotice && /* @__PURE__ */ React.createElement("div", { className: "slide-up", style: { position: "absolute", top: 56, left: 16, right: 16, zIndex: 10, padding: "10px 16px", borderRadius: 14, background: "rgba(226,75,74,0.12)", border: "1px solid rgba(226,75,74,0.25)", display: "flex", alignItems: "center", gap: 10 } },
+    /* @__PURE__ */ React.createElement("span", { style: { fontSize: 16 } }, "\u26A0\uFE0F"),
+    /* @__PURE__ */ React.createElement("div", null,
+      /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, fontWeight: 700, color: "#E24B4A" } }, "You left the session."),
+      /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: T.sub, marginTop: 1 } }, `Your time kept running — ${leftSeconds}s away. You're back now.`)
+    )
+  ),
+  wakeLockNotice && /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", top: 12, left: "50%", transform: "translateX(-50%)", zIndex: 2, padding: "5px 14px", borderRadius: 50, background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.2)", whiteSpace: "nowrap" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 10, color: T.gold, fontWeight: 700 } }, "\u26A0 Keep your screen on during this session")),
+  /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", inset: 0, background: `radial-gradient(ellipse at 50% 45%,${glowColor} 0%,transparent 65%)`, pointerEvents: "none", transition: "background 2s ease" } }), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", inset: 0, background: `radial-gradient(ellipse at 50% 45%,${glowColor} 0%,transparent 65%)`, pointerEvents: "none", transition: "background 2s ease" } }), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", zIndex: 1, paddingTop: 8 } }, isRepeatSession && /* @__PURE__ */ React.createElement("div", { style: { display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 50, background: "rgba(0,194,178,0.1)", border: "1px solid rgba(0,194,178,0.2)", marginBottom: 8 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 10, fontWeight: 700, color: T.teal } }, "\u{1F504} Round 2 \u2014 commitment intact")), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: nearEnd ? T.gold : T.teal, marginBottom: 8, transition: "color 1s" } }, nearEnd ? "Almost there" : "In progress"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 18, fontWeight: 800, color: T.text, maxWidth: 300, lineHeight: 1.35, margin: "0 auto" } }, activeTask), doneLooks && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 10, display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 14px", borderRadius: 50, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.18)" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase" } }, "Done when:"), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: "rgba(245,158,11,0.75)" } }, doneLooks))), /* @__PURE__ */ React.createElement("div", { style: { position: "relative", width: size, height: size, zIndex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", inset: 0, borderRadius: "50%", boxShadow: `0 0 60px ${glowColor}`, transition: "box-shadow 2s ease" } }), /* @__PURE__ */ React.createElement("svg", { width: size, height: size, viewBox: `0 0 ${size} ${size}`, style: { transform: "rotate(-90deg)", display: "block" } }, /* @__PURE__ */ React.createElement("circle", { cx: size / 2, cy: size / 2, r, fill: "none", stroke: "rgba(255,255,255,0.05)", strokeWidth: "10" }), /* @__PURE__ */ React.createElement(
     "circle",
     {
       cx: size / 2,
@@ -701,7 +722,7 @@ const computeMomentum = (sessionHistory) => {
   else timeNudge = { label: "Off-peak hours", sub: "Consider scheduling Gold for tomorrow morning", urgency: "low" };
   return { rate, total, recentCompleted, last5: last5.length, bestHour, timeNudge };
 };
-const MomentumCard = ({ sessionHistory }) => {
+const MomentumCard = ({ sessionHistory, userName }) => {
   const { rate, total, recentCompleted, last5, bestHour, timeNudge } = computeMomentum(sessionHistory);
   const uc = (timeNudge == null ? void 0 : timeNudge.urgency) === "high" ? T.gold : (timeNudge == null ? void 0 : timeNudge.urgency) === "med" ? T.teal : "#6B7280";
   const ub = (timeNudge == null ? void 0 : timeNudge.urgency) === "high" ? "rgba(245,158,11,0.08)" : (timeNudge == null ? void 0 : timeNudge.urgency) === "med" ? "rgba(0,194,178,0.08)" : "rgba(107,114,128,0.08)";
@@ -710,8 +731,63 @@ const MomentumCard = ({ sessionHistory }) => {
     const s = h % 12 || 12, e = (h + 2) % 12 || 12, ap = h < 12 ? "am" : "pm", ap2 = h + 2 < 12 ? "am" : "pm";
     return `${s}\u2013${e}${ap === ap2 ? ap2 : ap + "/" + ap2}`;
   };
-  const hasData = total >= 2;
-  return /* @__PURE__ */ React.createElement("div", { style: { margin: "0 16px 14px", borderRadius: 18, border: `1px solid ${ubr}`, background: ub, overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "10px 16px 8px", display: "flex", alignItems: "center", justifyContent: "space-between" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 6 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13 } }, "\u26A1"), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 10, fontWeight: 800, letterSpacing: 1.5, textTransform: "uppercase", color: uc } }, "Momentum Forecast")), hasData && rate !== null && /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, fontWeight: 700, color: uc, background: ub, border: `1px solid ${ubr}`, borderRadius: 50, padding: "2px 8px" } }, rate, "% Gold rate")), /* @__PURE__ */ React.createElement("div", { style: { padding: "0 16px 14px" } }, /* @__PURE__ */ React.createElement("div", { style: { marginBottom: hasData ? 10 : 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 15, fontWeight: 800, color: uc, marginBottom: 2 } }, timeNudge == null ? void 0 : timeNudge.label), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: T.sub, lineHeight: 1.5 } }, timeNudge == null ? void 0 : timeNudge.sub)), hasData && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, marginTop: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, padding: "8px 10px", borderRadius: 12, background: "rgba(255,255,255,0.04)", border: `1px solid ${T.border}` } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: T.sub, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 } }, "Last ", last5), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 3 } }, Array.from({ length: last5 }, (_, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { width: 10, height: 10, borderRadius: 3, background: i < recentCompleted ? T.gold : "rgba(255,255,255,0.08)" } }))), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: T.sub, marginTop: 4 } }, recentCompleted, "/", last5, " done")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, padding: "8px 10px", borderRadius: 12, background: "rgba(255,255,255,0.04)", border: `1px solid ${T.border}` } }, bestHour !== null ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: T.sub, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 } }, "Best window"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 14, fontWeight: 900, color: T.teal } }, fmtW(bestHour)), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: T.sub, marginTop: 2 } }, "from your data")) : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: T.sub, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 } }, "Best window"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: T.sub, fontStyle: "italic", lineHeight: 1.4 } }, "Building\u2026")))), !hasData && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: T.sub, marginTop: 6, lineHeight: 1.5 } }, total === 0 ? "Complete your first Gold to start building your forecast." : "One more Gold session to start pattern tracking.")));
+  // Progressive unlock thresholds
+  const unlockRate = total >= 5;
+  const unlockHeatmap = total >= 10;
+  const unlockBestWindow = total >= 5;
+  const unlockFull = total >= 20;
+
+  // 0-4 sessions: show identity card
+  if(total < 5) return /* @__PURE__ */ React.createElement("div", { style: { margin: "0 16px 14px", borderRadius: 18, border: `1px solid rgba(0,194,178,0.15)`, background: "rgba(0,194,178,0.04)", overflow: "hidden" } },
+    /* @__PURE__ */ React.createElement("div", { style: { padding: "10px 16px 8px", display: "flex", alignItems: "center", gap: 6 } },
+      /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13 } }, "\u26A1"),
+      /* @__PURE__ */ React.createElement("span", { style: { fontSize: 10, fontWeight: 800, letterSpacing: 1.5, textTransform: "uppercase", color: T.teal } }, "Your Focus Intelligence")
+    ),
+    /* @__PURE__ */ React.createElement("div", { style: { padding: "0 16px 14px" } },
+      /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 14, fontWeight: 800, color: T.text, marginBottom: 4, lineHeight: 1.35 } }, "Your patterns build here as you complete sessions."),
+      /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, marginTop: 10 } },
+        [5, 10, 20].map((n, i) => /* @__PURE__ */ React.createElement("div", { key: n, style: { flex: 1, padding: "7px 8px", borderRadius: 10, background: total >= n ? "rgba(0,194,178,0.1)" : "rgba(255,255,255,0.03)", border: `1px solid ${total >= n ? "rgba(0,194,178,0.25)" : T.border}`, textAlign: "center" } },
+          /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, fontWeight: 800, color: total >= n ? T.teal : T.sub } }, n, " sessions"),
+          /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9, color: T.sub, marginTop: 2, lineHeight: 1.3 } }, ["Best window", "Completion heatmap", "Full forecast"][i])
+        ))
+      ),
+      /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: T.teal, fontWeight: 600, marginTop: 10 } }, `${5 - total} more session${5 - total === 1 ? "" : "s"} to unlock your first insight.`)
+    )
+  );
+
+  // 5+ sessions: show full card
+  return /* @__PURE__ */ React.createElement("div", { style: { margin: "0 16px 14px", borderRadius: 18, border: `1px solid ${ubr}`, background: ub, overflow: "hidden" } },
+    /* @__PURE__ */ React.createElement("div", { style: { padding: "10px 16px 8px", display: "flex", alignItems: "center", justifyContent: "space-between" } },
+      /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 6 } },
+        /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13 } }, "\u26A1"),
+        /* @__PURE__ */ React.createElement("span", { style: { fontSize: 10, fontWeight: 800, letterSpacing: 1.5, textTransform: "uppercase", color: uc } }, "Your Focus Intelligence")
+      ),
+      unlockRate && rate !== null && /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, fontWeight: 700, color: uc, background: ub, border: `1px solid ${ubr}`, borderRadius: 50, padding: "2px 8px" } }, rate, "% kept")
+    ),
+    /* @__PURE__ */ React.createElement("div", { style: { padding: "0 16px 14px" } },
+      /* @__PURE__ */ React.createElement("div", { style: { marginBottom: unlockHeatmap ? 10 : 0 } },
+        /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 15, fontWeight: 800, color: uc, marginBottom: 2 } }, timeNudge == null ? void 0 : timeNudge.label),
+        /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: T.sub, lineHeight: 1.5 } }, timeNudge == null ? void 0 : timeNudge.sub)
+      ),
+      unlockHeatmap && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, marginTop: 8 } },
+        /* @__PURE__ */ React.createElement("div", { style: { flex: 1, padding: "8px 10px", borderRadius: 12, background: "rgba(255,255,255,0.04)", border: `1px solid ${T.border}` } },
+          /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: T.sub, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 } }, "Last ", last5),
+          /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 3 } }, Array.from({ length: last5 }, (_, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { width: 10, height: 10, borderRadius: 3, background: i < recentCompleted ? T.gold : "rgba(255,255,255,0.08)" } }))),
+          /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: T.sub, marginTop: 4 } }, recentCompleted, "/", last5, " done")
+        ),
+        /* @__PURE__ */ React.createElement("div", { style: { flex: 1, padding: "8px 10px", borderRadius: 12, background: "rgba(255,255,255,0.04)", border: `1px solid ${T.border}` } },
+          bestHour !== null ? /* @__PURE__ */ React.createElement(React.Fragment, null,
+            /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: T.sub, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 } }, "Best window"),
+            /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 14, fontWeight: 900, color: T.teal } }, fmtW(bestHour)),
+            /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: T.sub, marginTop: 2 } }, "from your data")
+          ) : /* @__PURE__ */ React.createElement(React.Fragment, null,
+            /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: T.sub, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 } }, "Best window"),
+            /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: T.sub, fontStyle: "italic", lineHeight: 1.4 } }, "Building\u2026")
+          )
+        )
+      )
+    )
+  );
 };
 const NextUpCard = ({ completedZones, diamondZone, platinumZone, setActiveZoneKey, setTab }) => {
   const goldDone = completedZones.includes("gold");
@@ -807,15 +883,30 @@ const PlanTab = ({ greetMsg, dateStr, userName, savingZones, needsDailyReset, ha
   setActiveZoneKey("gold");
   setTab("focus");
 }, style: btnGold({ fontSize: 13, padding: "11px 20px", whiteSpace: "nowrap" }) }, "Commit & Go for Gold \u2192")), /* @__PURE__ */ React.createElement("div", { style: { margin: "8px 16px 20px", padding: "18px 20px", borderRadius: 20, background: `linear-gradient(135deg,${tierCfg.bg},transparent)`, border: `1.5px solid ${tierCfg.border}` } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 16, marginBottom: 14 } }, /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", flexShrink: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 44, fontWeight: 900, color: streak > 0 ? tierCfg.color : T.sub, letterSpacing: -3, lineHeight: 1 } }, streak), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: T.sub, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginTop: 3 } }, "Current run")), bestStreak > 0 && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { width: 1, height: 48, background: T.border, flexShrink: 0 } }), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", flexShrink: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 28, fontWeight: 900, color: T.teal, letterSpacing: -2, lineHeight: 1 } }, bestStreak), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: T.sub, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginTop: 3 } }, "Best run"))), /* @__PURE__ */ React.createElement("div", { style: { width: 1, height: 48, background: T.border, flexShrink: 0 } }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 6, marginBottom: 6 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 14 } }, tierCfg.emoji === "\u2014" ? "\u{1F518}" : tierCfg.emoji), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, fontWeight: 800, color: tierCfg.color } }, tierCfg.label)), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: T.sub, lineHeight: 1.5 } }, streak === 0 && bestStreak === 0 && "Complete Gold today to start your first run", streak === 0 && bestStreak > 0 && `Your ${bestStreak}-day run still counts. Start the next one.`, streak === 1 && "Day 1 \u2014 the hardest one. You did it.", streak >= 2 && streak < 7 && `${streak} days in. Building momentum.`, streak >= 7 && streak < 30 && `${streak} days. This is becoming part of who you are.`, streak >= 30 && `${streak} days. You're in rare company.`))), shields > 0 && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderRadius: 12, background: "rgba(0,194,178,0.06)", border: `1px solid rgba(0,194,178,0.15)`, marginBottom: 12 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 16 } }, "\u{1F6E1}\uFE0F"), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, fontWeight: 700, color: T.teal } }, shields, " Run Shield", shields > 1 ? "s" : "", " in bank"), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: T.sub, marginLeft: 6 } }, "\u2014 absorbs a missed day"))), shields === 0 && streak >= 7 && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderRadius: 12, background: "rgba(255,255,255,0.03)", border: `1px solid ${T.border}`, marginBottom: 12 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 16, opacity: 0.4 } }, "\u{1F6E1}\uFE0F"), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: T.sub } }, "No Run Shields \u2014 earn one at your next 7-day milestone")), /* @__PURE__ */ React.createElement("div", { style: { height: 4, borderRadius: 99, background: "rgba(255,255,255,0.06)", overflow: "hidden", marginBottom: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { height: "100%", borderRadius: 99, width: `${milestonePct}%`, background: `linear-gradient(90deg,${tierCfg.color},${tierCfg.color}bb)`, transition: "width 0.6s ease" } })), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: T.teal, fontWeight: 600 } }, streak === 0 ? `Complete Gold for ${nextMilestone} days to earn your first Run Shield` : streak % 7 === 0 ? `\u{1F6E1}\uFE0F Run Shield earned at day ${streak}! Keep going.` : `Complete Gold for ${daysLeft} more ${daysLeft === 1 ? "day" : "days"} to reach day ${nextMilestone}`)));
-const FocusTab = ({ activeZone, activeZoneKey, setActiveZoneKey, ZONE_CFG, isZoneDone, sessionDuration, setSessionDuration, handleStartSession, sessionHistory, setTab }) => {
+const FocusTab = ({ activeZone, activeZoneKey, setActiveZoneKey, ZONE_CFG, isZoneDone, sessionDuration, setSessionDuration, handleStartSession, sessionHistory, setTab, completedZones, goldZone, diamondZone, streak }) => {
   var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k;
+  const goldDone = completedZones.includes("gold");
+  const noGold = !goldZone.trim();
+  const contextLine = noGold
+    ? { text: "Set your Gold task first.", sub: "Head to Plan \u2192", action: null }
+    : goldDone
+    ? { text: diamondZone.trim() ? "Gold is done. Ready for Diamond?" : "Gold is done. Perfect day ahead.", sub: null, action: null }
+    : streak > 0
+    ? { text: `Day ${streak} run. Protect it.`, sub: "Your task is waiting \u2014 pick your time.", action: null }
+    : { text: "Your task is waiting.", sub: "Pick your time and commit.", action: null };
   return /* @__PURE__ */ React.createElement("div", { className: "fade-up", style: {
     height: "calc(100vh - 76px)",
     display: "flex",
     flexDirection: "column",
     overflow: "hidden",
     padding: "0 0 8px"
-  } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "20px 20px 12px", flexShrink: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 22, fontWeight: 900, color: T.text, letterSpacing: -0.3 } }, "Zone In \u{1F525}"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: T.sub, marginTop: 2 } }, "Commit. Focus. Finish.")), /* @__PURE__ */ React.createElement("div", { style: { margin: "0 16px 10px", padding: "14px 16px", borderRadius: 18, background: ((_a = activeZone == null ? void 0 : activeZone.val) == null ? void 0 : _a.trim()) ? activeZone.bg : T.card, border: `1.5px solid ${((_b = activeZone == null ? void 0 : activeZone.val) == null ? void 0 : _b.trim()) ? activeZone.color : T.border}`, transition: "all 0.25s", flexShrink: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: ((_c = activeZone == null ? void 0 : activeZone.val) == null ? void 0 : _c.trim()) ? activeZone.color : T.sub, marginBottom: 6 } }, "Active"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 22 } }, activeZone == null ? void 0 : activeZone.emoji), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 15, fontWeight: 800, color: ((_d = activeZone == null ? void 0 : activeZone.val) == null ? void 0 : _d.trim()) ? activeZone.color : T.sub, fontStyle: ((_e = activeZone == null ? void 0 : activeZone.val) == null ? void 0 : _e.trim()) ? "normal" : "italic", lineHeight: 1.3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, ((_f = activeZone == null ? void 0 : activeZone.val) == null ? void 0 : _f.trim()) || "Nothing set \u2014 add a task in Plan"), ((_g = activeZone == null ? void 0 : activeZone.val) == null ? void 0 : _g.trim()) && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: T.sub, marginTop: 3 } }, activeZone.label, " \xB7 ", activeZone.sublabel))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, marginTop: 10 } }, ZONE_CFG.map((z) => /* @__PURE__ */ React.createElement(
+  } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "20px 20px 12px", flexShrink: 0 } },
+    /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 22, fontWeight: 900, color: T.text, letterSpacing: -0.3 } }, contextLine.text),
+    /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: T.sub, marginTop: 2, display: "flex", alignItems: "center", gap: 6 } },
+      contextLine.sub || "Your Focus Intelligence builds here.",
+      noGold && /* @__PURE__ */ React.createElement("button", { onClick: () => setTab("plan"), style: btn({ background: "none", color: T.gold, fontSize: 13, fontWeight: 700, padding: 0 }) }, "Plan tab \u2192")
+    )
+  ), /* @__PURE__ */ React.createElement("div", { style: { margin: "0 16px 10px", padding: "14px 16px", borderRadius: 18, background: ((_a = activeZone == null ? void 0 : activeZone.val) == null ? void 0 : _a.trim()) ? activeZone.bg : T.card, border: `1.5px solid ${((_b = activeZone == null ? void 0 : activeZone.val) == null ? void 0 : _b.trim()) ? activeZone.color : T.border}`, transition: "all 0.25s", flexShrink: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: ((_c = activeZone == null ? void 0 : activeZone.val) == null ? void 0 : _c.trim()) ? activeZone.color : T.sub, marginBottom: 6 } }, "Active"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 22 } }, activeZone == null ? void 0 : activeZone.emoji), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 15, fontWeight: 800, color: ((_d = activeZone == null ? void 0 : activeZone.val) == null ? void 0 : _d.trim()) ? activeZone.color : T.sub, fontStyle: ((_e = activeZone == null ? void 0 : activeZone.val) == null ? void 0 : _e.trim()) ? "normal" : "italic", lineHeight: 1.3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, ((_f = activeZone == null ? void 0 : activeZone.val) == null ? void 0 : _f.trim()) || "Nothing set \u2014 add a task in Plan"), ((_g = activeZone == null ? void 0 : activeZone.val) == null ? void 0 : _g.trim()) && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: T.sub, marginTop: 3 } }, activeZone.label, " \xB7 ", activeZone.sublabel))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, marginTop: 10 } }, ZONE_CFG.map((z) => /* @__PURE__ */ React.createElement(
     "button",
     {
       key: z.key,
@@ -952,13 +1043,56 @@ const ReflectTab = ({ wentWell, setWentWell, energy, setEnergy, mood, setMood, l
     return /* @__PURE__ */ React.createElement("div", { key: i, style: { marginBottom: 10, background: i === 0 ? `linear-gradient(135deg,rgba(0,194,178,0.07),rgba(167,139,250,0.04))` : "transparent", border: `1px solid ${i === 0 ? "rgba(0,194,178,0.18)" : T.border}`, borderRadius: 18, overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "10px 16px", background: i === 0 ? "rgba(0,194,178,0.07)" : "rgba(255,255,255,0.02)", display: "flex", alignItems: "center", gap: 8, justifyContent: "space-between" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8 } }, i === 0 && /* @__PURE__ */ React.createElement("div", { style: { width: 6, height: 6, borderRadius: "50%", background: T.teal, flexShrink: 0 } }), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, fontWeight: 700, color: i === 0 ? T.teal : T.sub, letterSpacing: 0.5 } }, i === 0 ? "Latest insight" : ins.date), ins.mood && /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13 } }, ((_a = MOOD_OPTS.find((m) => String(m.val) === ins.mood)) == null ? void 0 : _a.emoji) || ins.mood), ins.energy && /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13 } }, ((_b = ENERGY_OPTS.find((e) => e.val === ins.energy)) == null ? void 0 : _b.emoji) || "")), i === 0 && /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: T.sub } }, ins.date)), /* @__PURE__ */ React.createElement("div", { style: { padding: "12px 16px", fontSize: 13, lineHeight: 1.8, color: i === 0 ? "rgba(240,244,248,0.85)" : T.sub, whiteSpace: "pre-wrap" } }, ins.text));
   })));
 };
-const ProgressTab = ({ streak, tierCfg, milestonePct, daysLeft, nextMilestone, totalPoints, currentLevel, tierHistory, isStreakMilestone, streakReport, setStreakReport, loadingStreakReport, generateStreakReport, streakTier }) => /* @__PURE__ */ React.createElement("div", { className: "fade-up" }, /* @__PURE__ */ React.createElement("div", { style: { padding: "20px 20px 14px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 22, fontWeight: 900, color: T.text, letterSpacing: -0.3 } }, "Your Progress \u{1F3C6}"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: T.sub, marginTop: 3 } }, "Streak \xB7 Level \xB7 History")), /* @__PURE__ */ React.createElement("span", { style: { background: T.card, border: `1px solid ${T.border}`, borderRadius: 50, padding: "5px 12px", fontSize: 12, fontWeight: 700, color: T.teal, whiteSpace: "nowrap" } }, currentLevel.badge, " ", currentLevel.name)), /* @__PURE__ */ React.createElement("div", { style: { margin: "0 16px 12px", padding: "20px", borderRadius: 20, background: `linear-gradient(135deg,${tierCfg.bg},transparent)`, border: `1.5px solid ${tierCfg.border}`, display: "flex", alignItems: "center", gap: 16 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 52, fontWeight: 900, color: tierCfg.color, letterSpacing: -3, lineHeight: 1 } }, streak), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: T.sub, marginTop: 4 } }, "Day Streak")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 16, fontWeight: 800, color: tierCfg.color, marginBottom: 6 } }, tierCfg.emoji === "\u2014" ? "\u{1F518}" : tierCfg.emoji, " ", tierCfg.label), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: T.sub, marginBottom: 8 } }, streakTier === "none" && "Complete Gold to start your streak", streakTier === "gold" && "Complete Diamond too to upgrade", streakTier === "diamond" && "Complete Platinum to reach the top", streakTier === "platinum" && "\u{1F525} Perfect day \u2014 firing on all cylinders"), /* @__PURE__ */ React.createElement("div", { style: { height: 5, borderRadius: 99, background: "rgba(255,255,255,0.06)", overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { height: "100%", borderRadius: 99, width: `${milestonePct}%`, background: `linear-gradient(90deg,${tierCfg.color},${tierCfg.color}bb)`, transition: "width 0.8s ease" } })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", marginTop: 5 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: T.sub } }, "Day ", streak), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: tierCfg.color, fontWeight: 700 } }, daysLeft, "d to Day ", nextMilestone))), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", flexShrink: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", color: T.sub, marginBottom: 4 } }, "Boost"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 22, fontWeight: 900, color: tierCfg.color } }, tierCfg.multiplier, "\xD7"))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, margin: "0 16px 12px" } }, /* @__PURE__ */ React.createElement("div", { style: __spreadValues({}, card({ flex: 1, padding: "16px", textAlign: "center" })) }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 28, marginBottom: 4 } }, currentLevel.badge), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 13, fontWeight: 800, color: T.text } }, currentLevel.name), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: T.teal, fontWeight: 600, marginTop: 2 } }, totalPoints.toLocaleString(), " pts")), currentLevel.next && /* @__PURE__ */ React.createElement("div", { style: __spreadValues({}, card({ flex: 1, padding: "16px", background: "rgba(0,194,178,0.05)", border: `1px solid rgba(0,194,178,0.15)` })) }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", color: T.sub, marginBottom: 8 } }, "Next Level"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 28, marginBottom: 4 } }, currentLevel.next.badge), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 12, fontWeight: 800, color: T.teal } }, currentLevel.next.name), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: T.sub, marginTop: 2 } }, currentLevel.ptsToNext.toLocaleString(), " pts to go"), /* @__PURE__ */ React.createElement("div", { style: { height: 4, borderRadius: 99, background: T.border, marginTop: 8, overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { height: "100%", borderRadius: 99, width: `${currentLevel.pct}%`, background: `linear-gradient(90deg,${T.teal},${T.teal2})` } })))), tierHistory.length > 0 && /* @__PURE__ */ React.createElement("div", { style: __spreadProps(__spreadValues({}, card()), { margin: "0 16px 12px" }) }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: T.sub, marginBottom: 12 } }, "Last ", Math.min(tierHistory.length, 14), " Days"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap" } }, tierHistory.slice(0, 14).map((h, i) => {
-  const tc = TIER_CONFIG[h.tier] || TIER_CONFIG.none;
-  return /* @__PURE__ */ React.createElement("div", { key: i, title: `${h.date} \u2014 ${tc.label}`, style: { width: 32, height: 32, borderRadius: 9, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, background: tc.bg, border: `1.5px solid ${tc.border}`, cursor: "default" } }, tc.emoji === "\u2014" ? "\xB7" : tc.emoji);
-})), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 12, marginTop: 12, paddingTop: 10, borderTop: `1px solid ${T.border}` } }, ["platinum", "diamond", "gold", "none"].map((k) => {
-  const tc = TIER_CONFIG[k];
-  return /* @__PURE__ */ React.createElement("div", { key: k, style: { display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: T.sub } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12 } }, tc.emoji === "\u2014" ? "\xB7" : tc.emoji), k === "none" ? "Miss" : tc.label.split(" ")[0]);
-}))), isStreakMilestone && /* @__PURE__ */ React.createElement("div", { style: __spreadValues({}, card({ margin: "0 16px 12px", background: `linear-gradient(135deg,${tierCfg.bg},rgba(255,214,107,0.06))`, border: `1.5px solid ${tierCfg.border}` })) }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, marginBottom: 8 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 20 } }, "\u{1F3AF}"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Syne',sans-serif", fontWeight: 800, fontSize: 15, color: T.text } }, streak, "-Day Milestone!")), /* @__PURE__ */ React.createElement("p", { style: { fontSize: 13, color: T.sub, lineHeight: 1.6, margin: "0 0 12px" } }, "You've hit ", streak, " days. Time to analyse your performance."), !streakReport ? /* @__PURE__ */ React.createElement("button", { style: btnPrimary({ fontSize: 13, padding: "10px 20px", opacity: loadingStreakReport ? 0.6 : 1 }), onClick: generateStreakReport, disabled: loadingStreakReport }, loadingStreakReport ? "Analysing\u2026" : "Get Performance Analysis \u2726") : /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { padding: "14px", borderRadius: 12, background: T.card, border: `1px solid ${T.border}`, fontSize: 13, lineHeight: 1.8, whiteSpace: "pre-wrap", color: T.text } }, streakReport), /* @__PURE__ */ React.createElement("button", { onClick: () => setStreakReport(""), style: btn({ background: "none", color: T.teal, fontSize: 12, fontWeight: 600, marginTop: 8, padding: 0 }) }, "Refresh \u2192"))), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", padding: "8px 16px 16px" } }, /* @__PURE__ */ React.createElement("button", { onClick: () => supabase.auth.signOut(), style: btn({ background: "none", color: T.sub, fontSize: 12, padding: "8px 16px", border: `1px solid ${T.border}`, borderRadius: 50 }) }, "Sign out \u21A9")));
+const ProgressTab = ({ streak, tierCfg, milestonePct, daysLeft, nextMilestone, totalPoints, currentLevel, tierHistory, isStreakMilestone, streakReport, setStreakReport, loadingStreakReport, generateStreakReport, streakTier }) => /* @__PURE__ */ React.createElement("div", { className: "fade-up" },
+  /* @__PURE__ */ React.createElement("div", { style: { padding: "20px 20px 14px", display: "flex", justifyContent: "space-between", alignItems: "center" } },
+    /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 22, fontWeight: 900, color: T.text, letterSpacing: -0.3 } }, "Progress"),
+    /* @__PURE__ */ React.createElement("button", { onClick: () => supabase.auth.signOut(), title: "Sign out", style: btn({ background: T.card, border: `1px solid ${T.border}`, borderRadius: 50, padding: "7px 10px", fontSize: 15 }) }, "\u2699\uFE0F")
+  ),
+  /* @__PURE__ */ React.createElement("div", { style: { ...card(), margin: "0 16px 12px", background: `linear-gradient(135deg,${tierCfg.bg},transparent)`, border: `1.5px solid ${tierCfg.border}`, textAlign: "center", padding: "28px 20px" } },
+    /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 80, fontWeight: 900, color: tierCfg.color, letterSpacing: -6, lineHeight: 1 } }, streak),
+    /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: T.sub, marginTop: 6, fontWeight: 600 } }, "day run"),
+    /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginTop: 10 } },
+      /* @__PURE__ */ React.createElement("span", { style: { fontSize: 18 } }, tierCfg.emoji === "\u2014" ? "" : tierCfg.emoji),
+      /* @__PURE__ */ React.createElement("span", { style: { fontSize: 14, fontWeight: 800, color: tierCfg.color } }, tierCfg.label)
+    ),
+    /* @__PURE__ */ React.createElement("div", { style: { height: 4, borderRadius: 99, background: "rgba(255,255,255,0.06)", overflow: "hidden", margin: "16px 0 8px" } },
+      /* @__PURE__ */ React.createElement("div", { style: { height: "100%", borderRadius: 99, width: `${milestonePct}%`, background: `linear-gradient(90deg,${tierCfg.color},${tierCfg.color}bb)`, transition: "width 0.6s ease" } })
+    ),
+    /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: T.teal, fontWeight: 600 } },
+      streak === 0 ? `Complete Gold for ${nextMilestone} days to start your run` : `${daysLeft} day${daysLeft === 1 ? "" : "s"} to day ${nextMilestone}`
+    )
+  ),
+  /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, margin: "0 16px 12px" } },
+    /* @__PURE__ */ React.createElement("div", { style: { flex: 1, ...card(), textAlign: "center", padding: "14px 10px" } },
+      /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 28, fontWeight: 900, color: T.teal, letterSpacing: -1 } }, totalPoints),
+      /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: T.sub, marginTop: 2, fontWeight: 600 } }, "sessions logged")
+    ),
+    /* @__PURE__ */ React.createElement("div", { style: { flex: 1, ...card(), textAlign: "center", padding: "14px 10px" } },
+      /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 20, fontWeight: 900, color: T.text, letterSpacing: -0.5 } }, currentLevel.badge, " ", currentLevel.name),
+      /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: T.sub, marginTop: 2, fontWeight: 600 } }, "current level")
+    )
+  ),
+  isStreakMilestone && /* @__PURE__ */ React.createElement("div", { style: { ...card({ margin: "0 16px 12px", background: `linear-gradient(135deg,${tierCfg.bg},rgba(255,214,107,0.06))`, border: `1.5px solid ${tierCfg.border}` }) } },
+    /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, marginBottom: 8 } },
+      /* @__PURE__ */ React.createElement("span", { style: { fontSize: 20 } }, "\u{1F3AF}"),
+      /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Syne',sans-serif", fontWeight: 800, fontSize: 15, color: T.text } }, streak, "-Day Milestone!")
+    ),
+    /* @__PURE__ */ React.createElement("p", { style: { fontSize: 13, color: T.sub, lineHeight: 1.6, margin: "0 0 12px" } }, "You've hit ", streak, " days. View your patterns."),
+    !streakReport
+      ? /* @__PURE__ */ React.createElement("button", { style: btnPrimary({ fontSize: 13, padding: "10px 20px", opacity: loadingStreakReport ? 0.6 : 1 }), onClick: generateStreakReport, disabled: loadingStreakReport }, loadingStreakReport ? "Analysing\u2026" : "View your patterns \u2726")
+      : /* @__PURE__ */ React.createElement("div", null,
+          /* @__PURE__ */ React.createElement("div", { style: { padding: "14px", borderRadius: 12, background: T.card, border: `1px solid ${T.border}`, fontSize: 13, lineHeight: 1.8, whiteSpace: "pre-wrap", color: T.text } }, streakReport),
+          /* @__PURE__ */ React.createElement("button", { onClick: () => setStreakReport(""), style: btn({ background: "none", color: T.teal, fontSize: 12, fontWeight: 600, marginTop: 8, padding: 0 }) }, "Refresh \u2192")
+        )
+  ),
+  /* @__PURE__ */ React.createElement("div", { style: { margin: "0 16px 12px" } },
+    /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: T.sub, marginBottom: 10, padding: "0 4px" } }, "Session history"),
+    /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 6 } },
+      tierHistory.slice(0, 28).map((t, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { width: 36, height: 36, borderRadius: 10, background: t === "\u{1F3C6}" ? "rgba(167,139,250,0.15)" : t === "\u{1F48E}" ? "rgba(96,165,250,0.15)" : t === "\u{1F947}" ? "rgba(245,158,11,0.15)" : "rgba(255,255,255,0.04)", border: `1px solid ${t === "\u{1F3C6}" ? "rgba(167,139,250,0.3)" : t === "\u{1F48E}" ? "rgba(96,165,250,0.3)" : t === "\u{1F947}" ? "rgba(245,158,11,0.3)" : T.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 } }, t || ""))
+    )
+  ),
+  /* @__PURE__ */ React.createElement("div", { style: { height: 20 } })
+);
 const PMFModal = ({ userName, streak, sessionCount, onAnswer }) => {
   const [selected, setSelected] = useState(null);
   const [freeText, setFreeText] = useState("");
@@ -1441,24 +1575,28 @@ Output format — two parts, 1-2 sentences each:
   const generateStreakReport = async () => {
     var _a2;
     setLoadingStreakReport(true);
+    setStreakReport("");
     const tasks = [goldZone, diamondZone, platinumZone].filter(Boolean);
     const avg = sessionHistory.length ? Math.round(sessionHistory.reduce((a, s) => a + s.minutes, 0) / sessionHistory.length) : 0;
     const goldCommitSessions = sessionHistory.filter((s) => s.doneLooks);
     const goldCompletionRate = goldCommitSessions.length ? Math.round(goldCommitSessions.filter((s) => s.taskCompleted).length / goldCommitSessions.length * 100) : null;
-    const prompt = `ZonedIn performance coach. ${streak}-day streak.
-Data: ${sessionHistory.length} sessions, ${sessionHistory.filter((s) => s.completed).length} completed, avg ${avg}min${goldCompletionRate !== null ? `, Gold completion rate: ${goldCompletionRate}%` : ""}, tasks: ${tasks.join(", ") || "not set"}
+    const prompt = `You are a behavioural data analyst. The user has a ${streak}-day run in ZonedIn.
+Data: ${sessionHistory.length} sessions, ${sessionHistory.filter((s) => s.completed).length} completed, avg ${avg}min${goldCompletionRate !== null ? `, commitment kept rate: ${goldCompletionRate}%` : ""}, tasks: ${tasks.join(", ") || "not set"}
 
-Write 3 punchy sections:
-WHAT'S WORKING: (2 sentences)
-YOUR EDGE: (1 sentence)
-NEXT 7 DAYS: (2 sentences)`;
+Write 3 short sections. Direct, data-first, no filler:
+📊 WHAT'S WORKING: (2 sentences — state what the data shows)
+⚡ YOUR EDGE: (1 sentence — the one behavioural pattern that explains their success)
+🎯 NEXT 7 DAYS: (2 sentences — one specific recommendation based on the data)`;
     try {
       const res = await fetch("https://zonedin-api.vercel.app/api/insight", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model: "claude-haiku-4-5-20251001", max_tokens: 1e3, messages: [{ role: "user", content: prompt }] }) });
+      if(!res.ok) throw new Error(`API returned ${res.status}`);
       const data = await res.json();
       const text = ((_a2 = data.content) == null ? void 0 : _a2.map((b) => b.text || "").join("")) || "";
       if (text) setStreakReport(text.trim());
+      else setStreakReport("Analysis unavailable right now — try again after your next session.");
     } catch (e) {
-      console.error("Streak report failed");
+      console.error("Streak report failed:", e);
+      setStreakReport("Analysis unavailable right now. Check your connection and try again.");
     } finally {
       setLoadingStreakReport(false);
     }
@@ -1466,7 +1604,7 @@ NEXT 7 DAYS: (2 sentences)`;
   const { next: nextMilestone, pct: milestonePct, daysLeft } = getMilestoneProgress(streak);
   const currentLevel = getLevel(totalPoints);
   const tierCfg = (_b = TIER_CONFIG[streakTier]) != null ? _b : TIER_CONFIG.none;
-  const isStreakMilestone = streak > 0 && (MILESTONES.includes(streak) || streak > 200 && streak % 50 === 0);
+  const isStreakMilestone = streak >= 3;
   const todayDone = completedZones.length;
   const greetMsg = greet();
   const dateStr = (/* @__PURE__ */ new Date()).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
@@ -1477,9 +1615,31 @@ NEXT 7 DAYS: (2 sentences)`;
       window.zi.recoveryScreenShown(days);
     }
   }, [showRecovery]);
-  if (authLoading) return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center" } }, /* @__PURE__ */ React.createElement(ZonedInMark, { size: 48 }), /* @__PURE__ */ React.createElement("p", { style: { color: T.sub, marginTop: 14, fontSize: 13 } }, "Loading\u2026")));
+  if (authLoading) return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center" } },
+    /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center" } },
+      /* @__PURE__ */ React.createElement("div", { style: { position: "relative", width: 120, height: 120, margin: "0 auto 24px" } },
+        /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", inset: 0, borderRadius: "50%", background: "radial-gradient(circle, rgba(0,194,178,0.15) 0%, transparent 70%)" } }),
+        /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" } },
+          /* @__PURE__ */ React.createElement(ZonedInMark, { size: 96 })
+        ),
+        /* @__PURE__ */ React.createElement("div", { className: "orbit-a", style: { position: "absolute", top: "50%", left: "50%", marginTop: -5, marginLeft: -5, width: 10, height: 10, borderRadius: "50%", background: T.teal, boxShadow: `0 0 8px ${T.teal}` } }),
+        /* @__PURE__ */ React.createElement("div", { className: "orbit-b", style: { position: "absolute", top: "50%", left: "50%", marginTop: -4, marginLeft: -4, width: 8, height: 8, borderRadius: "50%", background: T.gold, boxShadow: `0 0 6px ${T.gold}` } })
+      ),
+      /* @__PURE__ */ React.createElement("p", { style: { color: T.sub, fontSize: 12, maxWidth: 240, margin: "0 auto", lineHeight: 1.6 } }, "Every kept commitment is evidence of who you\u2019re becoming.")
+    )
+  );
   if (!user) return /* @__PURE__ */ React.createElement(AuthScreen, null);
-  if (dbLoading) return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center" } }, /* @__PURE__ */ React.createElement(ZonedInMark, { size: 48 }), /* @__PURE__ */ React.createElement("p", { style: { color: T.sub, marginTop: 14, fontSize: 13 } }, "Loading your tasks\u2026")));
+  if (dbLoading) return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center" } },
+    /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center" } },
+      /* @__PURE__ */ React.createElement("div", { style: { position: "relative", width: 120, height: 120, margin: "0 auto 24px" } },
+        /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", inset: 0, borderRadius: "50%", background: "radial-gradient(circle, rgba(0,194,178,0.15) 0%, transparent 70%)" } }),
+        /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement(ZonedInMark, { size: 96 })),
+        /* @__PURE__ */ React.createElement("div", { className: "orbit-a", style: { position: "absolute", top: "50%", left: "50%", marginTop: -5, marginLeft: -5, width: 10, height: 10, borderRadius: "50%", background: T.teal, boxShadow: `0 0 8px ${T.teal}` } }),
+        /* @__PURE__ */ React.createElement("div", { className: "orbit-b", style: { position: "absolute", top: "50%", left: "50%", marginTop: -4, marginLeft: -4, width: 8, height: 8, borderRadius: "50%", background: T.gold, boxShadow: `0 0 6px ${T.gold}` } })
+      ),
+      /* @__PURE__ */ React.createElement("p", { style: { color: T.sub, fontSize: 12, maxWidth: 240, margin: "0 auto", lineHeight: 1.6 } }, "Loading your tasks\u2026")
+    )
+  );
   return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100vh", background: T.bg, display: "flex", flexDirection: "column", maxWidth: 480, margin: "0 auto", position: "relative" } },
     showPMF && /* @__PURE__ */ React.createElement(PMFModal, { userName, streak, sessionCount: sessionHistory.length, onAnswer: (answer, text) => {
       setShowPMF(false);
@@ -1526,7 +1686,7 @@ NEXT 7 DAYS: (2 sentences)`;
     if (m) setMood(m);
     setShowZonedInRating(false);
     setTab("reflect");
-  } }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { className: tab === "focus" ? "" : "tab-scroll", style: { flex: 1, overflow: tab === "focus" ? "hidden" : "auto", paddingBottom: tab === "focus" ? 0 : 80 } }, tab === "plan" && /* @__PURE__ */ React.createElement(PlanTab, { greetMsg, dateStr, userName, savingZones, needsDailyReset, handleDailyReset, notQuiteCount, completedZones, streak, bestStreak, shields, milestonePct, tierCfg, daysLeft, nextMilestone, todayDone, ZONE_CFG, activeZoneKey, setActiveZoneKey, isZoneDone, toggleZoneDone, goldZone, diamondZone, platinumZone, sessionActive, setTab }), tab === "focus" && /* @__PURE__ */ React.createElement(FocusTab, { activeZone, activeZoneKey, setActiveZoneKey, ZONE_CFG, isZoneDone, sessionDuration, setSessionDuration, handleStartSession, sessionHistory, setTab }), tab === "reflect" && /* @__PURE__ */ React.createElement(ReflectTab, { wentWell, setWentWell, energy, setEnergy, mood, setMood, loadingInsight, insightError, generateInsight, insightHistory, sessionRating }), tab === "progress" && /* @__PURE__ */ React.createElement(ProgressTab, { streak, tierCfg, milestonePct, daysLeft, nextMilestone, totalPoints, currentLevel, tierHistory, isStreakMilestone, streakReport, setStreakReport, loadingStreakReport, generateStreakReport, streakTier }))), /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 480, height: 76, background: "rgba(10,14,20,0.96)", backdropFilter: "blur(20px)", borderTop: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "space-around", padding: "0 8px 12px", zIndex: 100 } }, [{ id: "plan", icon: "\u{1F5FA}\uFE0F", label: "Plan" }, { id: "focus", icon: "\u{1F525}", label: "Focus" }, { id: "reflect", icon: "\u{1F9E0}", label: "Reflect" }, { id: "progress", icon: "\u{1F3C6}", label: "Progress" }].map((t) => /* @__PURE__ */ React.createElement("button", { key: t.id, onClick: () => setTab(t.id), style: btn({ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "8px 4px", borderRadius: 16, background: tab === t.id ? "rgba(0,194,178,0.1)" : "transparent", border: "none" }) }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 22, lineHeight: 1 } }, t.icon), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 10, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", color: tab === t.id ? T.teal : T.sub } }, t.label)))));
+  } }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { className: tab === "focus" ? "focus-lock" : "tab-scroll", style: { flex: 1, height: "100%", paddingBottom: tab === "focus" ? 0 : 80 } }, tab === "plan" && /* @__PURE__ */ React.createElement(PlanTab, { greetMsg, dateStr, userName, savingZones, needsDailyReset, handleDailyReset, notQuiteCount, completedZones, streak, bestStreak, shields, milestonePct, tierCfg, daysLeft, nextMilestone, todayDone, ZONE_CFG, activeZoneKey, setActiveZoneKey, isZoneDone, toggleZoneDone, goldZone, diamondZone, platinumZone, sessionActive, setTab }), tab === "focus" && /* @__PURE__ */ React.createElement(FocusTab, { activeZone, activeZoneKey, setActiveZoneKey, ZONE_CFG, isZoneDone, sessionDuration, setSessionDuration, handleStartSession, sessionHistory, setTab, completedZones, goldZone, diamondZone, streak }), tab === "reflect" && /* @__PURE__ */ React.createElement(ReflectTab, { wentWell, setWentWell, energy, setEnergy, mood, setMood, loadingInsight, insightError, generateInsight, insightHistory, sessionRating }), tab === "progress" && /* @__PURE__ */ React.createElement(ProgressTab, { streak, tierCfg, milestonePct, daysLeft, nextMilestone, totalPoints, currentLevel, tierHistory, isStreakMilestone, streakReport, setStreakReport, loadingStreakReport, generateStreakReport, streakTier }))), /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 480, height: 76, background: "rgba(10,14,20,0.96)", backdropFilter: "blur(20px)", borderTop: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "space-around", padding: "0 8px 12px", zIndex: 100 } }, [{ id: "plan", icon: "\u{1F5FA}\uFE0F", label: "Plan" }, { id: "focus", icon: "\u{1F525}", label: "Focus" }, { id: "reflect", icon: "\u{1F9E0}", label: "Reflect" }, { id: "progress", icon: "\u{1F3C6}", label: "Progress" }].map((t) => /* @__PURE__ */ React.createElement("button", { key: t.id, onClick: () => setTab(t.id), style: btn({ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "8px 4px", borderRadius: 16, background: tab === t.id ? "rgba(0,194,178,0.1)" : "transparent", border: "none" }) }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 22, lineHeight: 1 } }, t.icon), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 10, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", color: tab === t.id ? T.teal : T.sub } }, t.label)))));
 };
 function waitForSupabase(cb) {
   if (window.__supabaseCreateClient) cb();
