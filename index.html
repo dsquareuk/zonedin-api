@@ -236,7 +236,10 @@ const LS = {
     }
   }
 };
-const todayStr = () => (/* @__PURE__ */ new Date()).toISOString().split('T')[0];
+const todayStr = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+};
 const todayShort = () => (/* @__PURE__ */ new Date()).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 const greet = () => {
   const h = (/* @__PURE__ */ new Date()).getHours();
@@ -375,7 +378,17 @@ const AuthScreen = () => {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showMagicLink, setShowMagicLink] = useState(false);
+  const handleGoogle = async () => {
+    setGoogleLoading(true); setError("");
+    const { error: err } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: "https://zonedin-api.vercel.app" }
+    });
+    if (err) { setError(err.message); setGoogleLoading(false); }
+  };
   const handleLogin = async () => {
     if (!email.trim()) return;
     setLoading(true);
@@ -385,17 +398,57 @@ const AuthScreen = () => {
     else setSent(true);
     setLoading(false);
   };
-  return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 } }, /* @__PURE__ */ React.createElement("div", { style: { maxWidth: 360, width: "100%", textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 20, display: "flex", justifyContent: "center" } }, /* @__PURE__ */ React.createElement(ZonedInMark, { size: 56 })), /* @__PURE__ */ React.createElement("h1", { style: { fontFamily: "'Syne',sans-serif", fontSize: 30, fontWeight: 900, color: T.text, letterSpacing: -0.5, margin: "0 0 6px" } }, "ZonedIn"), /* @__PURE__ */ React.createElement("p", { style: { fontSize: 14, color: T.sub, margin: "0 0 36px" } }, "Every kept commitment is evidence of who you're becoming."), !sent ? /* @__PURE__ */ React.createElement("div", { style: { background: T.card, borderRadius: 24, padding: "32px 28px", border: `1px solid ${T.border}` } }, /* @__PURE__ */ React.createElement("h2", { style: { fontFamily: "'Syne',sans-serif", fontSize: 20, fontWeight: 800, color: T.text, margin: "0 0 8px" } }, "Welcome back"), /* @__PURE__ */ React.createElement("p", { style: { fontSize: 13, color: T.sub, lineHeight: 1.6, margin: "0 0 22px" } }, "Enter your email for a magic link \u2014 no password needed."), /* @__PURE__ */ React.createElement(
-    "input",
-    {
-      type: "email",
-      value: email,
-      onChange: (e) => setEmail(e.target.value),
-      onKeyDown: (e) => e.key === "Enter" && handleLogin(),
-      placeholder: "your@email.com",
-      style: { width: "100%", padding: "13px 16px", borderRadius: 12, border: `1.5px solid ${T.border}`, background: T.card2, color: T.text, fontSize: 14, marginBottom: 10, boxSizing: "border-box" }
-    }
-  ), error && /* @__PURE__ */ React.createElement("p", { style: { fontSize: 12, color: "#EF4444", margin: "0 0 10px" } }, error), /* @__PURE__ */ React.createElement("button", { onClick: handleLogin, disabled: loading || !email.trim(), style: btnPrimary({ width: "100%", opacity: loading || !email.trim() ? 0.5 : 1, cursor: loading || !email.trim() ? "not-allowed" : "pointer" }) }, loading ? "Sending\u2026" : "Send Magic Link \u2726")) : /* @__PURE__ */ React.createElement("div", { style: { background: T.card, borderRadius: 24, padding: "32px 28px", border: `1px solid rgba(0,194,178,0.2)` } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 52, marginBottom: 14 } }, "\u{1F4EC}"), /* @__PURE__ */ React.createElement("h2", { style: { fontFamily: "'Syne',sans-serif", fontSize: 18, fontWeight: 800, color: T.text, margin: "0 0 8px" } }, "Check your inbox"), /* @__PURE__ */ React.createElement("p", { style: { fontSize: 13, color: T.sub, lineHeight: 1.7, margin: "0 0 16px" } }, "Magic link sent to ", /* @__PURE__ */ React.createElement("strong", { style: { color: T.teal } }, email), ". Click it to sign in."), /* @__PURE__ */ React.createElement("button", { onClick: () => setSent(false), style: btn({ background: "none", color: T.sub, fontSize: 13, padding: 0 }) }, "Use a different email"))));
+  const GoogleIcon = () => React.createElement("svg", { width: 20, height: 20, viewBox: "0 0 48 48" },
+    React.createElement("path", { fill: "#EA4335", d: "M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" }),
+    React.createElement("path", { fill: "#4285F4", d: "M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" }),
+    React.createElement("path", { fill: "#FBBC05", d: "M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" }),
+    React.createElement("path", { fill: "#34A853", d: "M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" })
+  );
+  return React.createElement("div", { style: { minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 } },
+    React.createElement("div", { style: { maxWidth: 360, width: "100%", textAlign: "center" } },
+      React.createElement("div", { style: { marginBottom: 20, display: "flex", justifyContent: "center" } }, React.createElement(ZonedInMark, { size: 56 })),
+      React.createElement("h1", { style: { fontFamily: "'Syne',sans-serif", fontSize: 30, fontWeight: 900, color: T.text, letterSpacing: -0.5, margin: "0 0 6px" } }, "ZonedIn"),
+      React.createElement("p", { style: { fontSize: 14, color: T.sub, margin: "0 0 36px" } }, "Every kept commitment is evidence of who you're becoming."),
+      !sent
+        ? React.createElement("div", { style: { background: T.card, borderRadius: 24, padding: "32px 28px", border: `1px solid ${T.border}` } },
+            React.createElement("h2", { style: { fontFamily: "'Syne',sans-serif", fontSize: 20, fontWeight: 800, color: T.text, margin: "0 0 24px" } }, "Welcome"),
+            React.createElement("button", {
+              onClick: handleGoogle, disabled: googleLoading,
+              style: btn({ width: "100%", padding: "14px 20px", borderRadius: 14, background: "#fff", color: "#1a1a1a", fontSize: 15, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 16, opacity: googleLoading ? 0.7 : 1, cursor: googleLoading ? "not-allowed" : "pointer", boxShadow: "0 2px 12px rgba(0,0,0,0.4)" })
+            }, React.createElement(GoogleIcon), googleLoading ? "Connecting\u2026" : "Continue with Google"),
+            React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12, marginBottom: 16 } },
+              React.createElement("div", { style: { flex: 1, height: 1, background: T.border } }),
+              React.createElement("span", { style: { fontSize: 12, color: T.sub } }, "or"),
+              React.createElement("div", { style: { flex: 1, height: 1, background: T.border } })
+            ),
+            !showMagicLink
+              ? React.createElement("button", {
+                  onClick: () => setShowMagicLink(true),
+                  style: btn({ width: "100%", padding: "12px 20px", borderRadius: 14, background: "transparent", border: `1px solid ${T.border}`, color: T.sub, fontSize: 13 })
+                }, "Continue with email instead")
+              : React.createElement("div", null,
+                  React.createElement("input", {
+                    type: "email", value: email,
+                    onChange: (e) => setEmail(e.target.value),
+                    onKeyDown: (e) => e.key === "Enter" && handleLogin(),
+                    placeholder: "your@email.com",
+                    style: { width: "100%", padding: "13px 16px", borderRadius: 12, border: `1.5px solid ${T.border}`, background: T.card2, color: T.text, fontSize: 14, marginBottom: 10, boxSizing: "border-box", outline: "none", fontFamily: "'DM Sans',sans-serif" }
+                  }),
+                  error && React.createElement("p", { style: { fontSize: 12, color: "#EF4444", margin: "0 0 10px" } }, error),
+                  React.createElement("button", {
+                    onClick: handleLogin, disabled: loading || !email.trim(),
+                    style: btnPrimary({ width: "100%", opacity: loading || !email.trim() ? 0.5 : 1, cursor: loading || !email.trim() ? "not-allowed" : "pointer" })
+                  }, loading ? "Sending\u2026" : "Send Magic Link \u2726")
+                )
+          )
+        : React.createElement("div", { style: { background: T.card, borderRadius: 24, padding: "32px 28px", border: `1px solid rgba(0,194,178,0.2)` } },
+            React.createElement("div", { style: { fontSize: 52, marginBottom: 14 } }, "\u{1F4EC}"),
+            React.createElement("h2", { style: { fontFamily: "'Syne',sans-serif", fontSize: 18, fontWeight: 800, color: T.text, margin: "0 0 8px" } }, "Check your inbox"),
+            React.createElement("p", { style: { fontSize: 13, color: T.sub, lineHeight: 1.7, margin: "0 0 16px" } }, "Magic link sent to ", React.createElement("strong", { style: { color: T.teal } }, email), ". Click it to sign in."),
+            React.createElement("button", { onClick: () => setSent(false), style: btn({ background: "none", color: T.sub, fontSize: 13, padding: 0 }) }, "Use a different email")
+          )
+    )
+  );
 };
 const CommitmentScreen = ({ task, taskEmoji, taskColor, streak, tierCfg, identityStatement, onCommit, onSkip }) => {
   const [doneLooks, setDoneLooks] = useState(() => autoDoneSuggest(task));
@@ -1102,7 +1155,23 @@ const ProgressTab = ({ streak, tierCfg, milestonePct, daysLeft, nextMilestone, t
       })
     )
   ),
-  /* @__PURE__ */ React.createElement("div", { style: { height: 20 } })
+  /* @__PURE__ */ React.createElement("div", { style: { padding: "0 16px 20px" } },
+    /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: T.sub, marginBottom: 10 } }, "Account"),
+    /* @__PURE__ */ React.createElement("button", { onClick: () => supabase.auth.signOut(), style: btn({ width: "100%", padding: "11px", borderRadius: 12, border: `1px solid ${T.border}`, background: "transparent", color: T.sub, fontSize: 13, marginBottom: 8 }) }, "Sign out"),
+    /* @__PURE__ */ React.createElement("button", { onClick: async () => {
+      if(!window.confirm("Delete your account and all data permanently? This cannot be undone.")) return;
+      try {
+        const uid = (await supabase.auth.getUser()).data.user?.id;
+        if(uid) {
+          await supabase.from("sessions").delete().eq("user_id", uid);
+          await supabase.from("zones").delete().eq("user_id", uid);
+          await supabase.from("insights").delete().eq("user_id", uid);
+          await supabase.from("profiles").delete().eq("id", uid);
+        }
+        await supabase.auth.signOut();
+      } catch(e) { alert("Error deleting account. Please contact support."); }
+    }, style: btn({ width: "100%", padding: "11px", borderRadius: 12, border: `1px solid rgba(226,75,74,0.3)`, background: "rgba(226,75,74,0.06)", color: "#E24B4A", fontSize: 13 }) }, "Delete account & data")
+  ),
 );
 const PMFModal = ({ userName, streak, sessionCount, onAnswer }) => {
   const [selected, setSelected] = useState(null);
@@ -1262,6 +1331,24 @@ const ZonedInMVP = () => {
         setIdentityStatement((_h2 = profile.identity_statement) != null ? _h2 : "");
         setShields((_i = profile.shields_count) != null ? _i : 0);
         setBestStreak((_j = profile.best_streak) != null ? _j : 0);
+        // Shield spending — if user missed yesterday and has shields, consume one
+        const currentStreak = (_k2 = profile.streak) != null ? _k2 : 0;
+        const currentShields = (_i2 = profile.shields_count) != null ? _i2 : 0;
+        const lastDate = profile.last_streak_date;
+        const today = todayStr();
+        const yesterday = (() => { const d = new Date(); d.setDate(d.getDate()-1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
+        if(currentStreak > 0 && lastDate && lastDate !== today && lastDate !== yesterday && currentShields > 0) {
+          // Missed at least one day — spend a shield
+          const newShields = currentShields - 1;
+          setShields(newShields);
+          saveProfile({ shields_count: newShields });
+          if(window.zi) window.zi.shieldSpent(newShields, currentStreak);
+        } else if(currentStreak > 0 && lastDate && lastDate !== today && lastDate !== yesterday && currentShields === 0) {
+          // No shields — streak resets
+          setStreak(0);
+          saveProfile({ streak: 0 });
+          if(window.zi) window.zi.streakReset(currentStreak, 0);
+        }
         // PMF Day 7 check — fires once only
         if(!profile.pmf_answered && profile.onboarded) {
           const firstSession = LS.get('zi_first_session_date', null);
@@ -1291,7 +1378,7 @@ const ZonedInMVP = () => {
         setActiveZoneKey((_t = zones.active_zone_key) != null ? _t : "gold");
         setZoneLastSet((_u = zones.zone_last_set) != null ? _u : null);
       }
-      const { data: sessions } = await supabase.from("sessions").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(20);
+      const { data: sessions } = await supabase.from("sessions").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(50);
       if (sessions) setSessionHistory(sessions.map((s) => {
         var _a3;
         return { date: s.date, zone: s.zone_label, emoji: s.zone_emoji, zoneKey: s.zone_key, minutes: s.minutes, completed: s.completed, taskCompleted: s.task_completed, doneLooks: s.commitment_statement, startedAt: (_a3 = s.started_at) != null ? _a3 : null };
@@ -1430,49 +1517,27 @@ const ZonedInMVP = () => {
     setSessionActive(false);
     clearInterval(intervalRef.current);
     const completed = secondsLeft === 0, mins = Math.round((sessionDuration * 60 - secondsLeft) / 60);
-    const s = { date: todayShort(), zone: activeZoneLabel, emoji: (activeZone == null ? void 0 : activeZone.emoji) || "\u{1F947}", zoneKey: activeZoneKey, minutes: mins, completed, doneLooks: currentDoneLooks, startedAt: sessionStartedAt };
+    const s = { date: todayStr(), zone: activeZoneLabel, emoji: (activeZone == null ? void 0 : activeZone.emoji) || "\u{1F947}", zoneKey: activeZoneKey, minutes: mins, completed, doneLooks: currentDoneLooks, startedAt: sessionStartedAt };
     setPendingSession(s);
-    const t = todayStr();
-    if (lastStreakDate !== t) {
-      const ns = streak + 1;
-      const nb = Math.max(bestStreak, ns);
-      setStreak(ns);
-      setLastStreakDate(t);
-      setBestStreak(nb);
-      const newShields = ns % 7 === 0 ? Math.min(shields + 1, 1) : shields;
-      if (ns % 7 === 0) setShields(newShields);
-      saveProfile(__spreadValues({ streak: ns, last_streak_date: t, best_streak: nb }, ns % 7 === 0 ? { shields_count: newShields } : {}));
-    }
     if (isGoldSession && currentDoneLooks) {
       setShowReckoning(true);
     } else {
-      setSessionHistory((p) => [s, ...p.slice(0, 19)]);
+      setSessionHistory((p) => [s, ...p.slice(0, 49)]);
       setLastSession(s);
       saveSessionToDB(s);
     }
-    if(!LS.get('zi_first_session_date', null)) LS.set('zi_first_session_date', new Date().toISOString().split('T')[0]);
-  }, [secondsLeft, sessionDuration, activeZoneLabel, activeZone, activeZoneKey, lastStreakDate, streak, isGoldSession, currentDoneLooks, sessionStartedAt]);
+    if(!LS.get('zi_first_session_date', null)) LS.set('zi_first_session_date', todayStr());
+  }, [secondsLeft, sessionDuration, activeZoneLabel, activeZone, activeZoneKey, isGoldSession, currentDoneLooks, sessionStartedAt]);
   const completeTask = useCallback(() => {
     setSessionActive(false);
     clearInterval(intervalRef.current);
     const mins = Math.round((sessionDuration * 60 - secondsLeft) / 60);
-    const s = { date: todayShort(), zone: activeZoneLabel, emoji: (activeZone == null ? void 0 : activeZone.emoji) || "\u{1F947}", zoneKey: activeZoneKey, minutes: mins, completed: true, taskCompleted: true, doneLooks: currentDoneLooks, startedAt: sessionStartedAt };
+    const s = { date: todayStr(), zone: activeZoneLabel, emoji: (activeZone == null ? void 0 : activeZone.emoji) || "\u{1F947}", zoneKey: activeZoneKey, minutes: mins, completed: true, taskCompleted: true, doneLooks: currentDoneLooks, startedAt: sessionStartedAt };
     setPendingSession(s);
-    const t = todayStr();
-    if (lastStreakDate !== t) {
-      const ns = streak + 1;
-      const nb = Math.max(bestStreak, ns);
-      const newShields = ns % 7 === 0 ? Math.min(shields + 1, 1) : shields;
-      setStreak(ns);
-      setLastStreakDate(t);
-      setBestStreak(nb);
-      if (ns % 7 === 0) setShields(newShields);
-      saveProfile(__spreadValues({ streak: ns, last_streak_date: t, best_streak: nb }, ns % 7 === 0 ? { shields_count: newShields } : {}));
-    }
     if (isGoldSession && currentDoneLooks) {
       setShowReckoning(true);
     } else {
-      setSessionHistory((p) => [s, ...p.slice(0, 19)]);
+      setSessionHistory((p) => [s, ...p.slice(0, 49)]);
       setLastSession(s);
       saveSessionToDB(s);
       if (!completedZones.includes(activeZoneKey)) {
@@ -1485,18 +1550,30 @@ const ZonedInMVP = () => {
         saveProfile({ streak_tier: newTier, tier_history: newHist });
       }
     }
-  }, [secondsLeft, sessionDuration, activeZoneLabel, activeZone, activeZoneKey, lastStreakDate, streak, isGoldSession, currentDoneLooks, sessionStartedAt, completedZones, tierHistory, goldZone, diamondZone, platinumZone, wentWell, energy, mood, zoneLastSet]);
+  }, [secondsLeft, sessionDuration, activeZoneLabel, activeZone, activeZoneKey, isGoldSession, currentDoneLooks, sessionStartedAt, completedZones, tierHistory, goldZone, diamondZone, platinumZone, wentWell, energy, mood, zoneLastSet]);
   const handleReckoningYes = async () => {
     setShowReckoning(false);
     const s = __spreadProps(__spreadValues({}, pendingSession), { taskCompleted: true });
-    setSessionHistory((p) => [s, ...p.slice(0, 19)]);
+    setSessionHistory((p) => [s, ...p.slice(0, 49)]);
     saveSessionToDB(s);
     setNotQuiteCount(0);
     LS.set("zi_nq_count", 0);
     if(window.zi) window.zi.reckoningCompleted("yes", streak);
+    // Streak increments HERE — only on kept Gold commitment
+    const t = todayStr();
+    if (lastStreakDate !== t) {
+      const ns = streak + 1;
+      const nb = Math.max(bestStreak, ns);
+      const newShields = ns % 7 === 0 ? Math.min(shields + 1, 1) : shields;
+      setStreak(ns);
+      setLastStreakDate(t);
+      setBestStreak(nb);
+      if (ns % 7 === 0) { setShields(newShields); if(window.zi) window.zi.shieldEarned(newShields, ns); }
+      saveProfile(__spreadValues({ streak: ns, last_streak_date: t, best_streak: nb }, ns % 7 === 0 ? { shields_count: newShields } : {}));
+    }
     if (!completedZones.includes("gold")) {
-      const next = [...completedZones, "gold"], newTier = getStreakTier(next), t = todayStr();
-      const newHist = [{ date: t, tier: newTier }, ...tierHistory.filter((h) => h.date !== t)].slice(0, 30);
+      const next = [...completedZones, "gold"], newTier = getStreakTier(next), t2 = todayStr();
+      const newHist = [{ date: t2, tier: newTier }, ...tierHistory.filter((h) => h.date !== t2)].slice(0, 30);
       setCompletedZones(next);
       setStreakTier(newTier);
       setTierHistory(newHist);
@@ -1512,7 +1589,7 @@ const ZonedInMVP = () => {
     LS.set("zi_nq_count", nq);
     if(window.zi) window.zi.reckoningCompleted("not_quite", streak);
     const s = __spreadProps(__spreadValues({}, pendingSession), { taskCompleted: false });
-    setSessionHistory((p) => [s, ...p.slice(0, 19)]);
+    setSessionHistory((p) => [s, ...p.slice(0, 49)]);
     setLastSession(s);
     saveSessionToDB(s);
   };
@@ -1579,7 +1656,7 @@ Output format — two parts, 1-2 sentences each:
 📊 Pattern: [state what the data shows — a specific rate, pattern, or trend from the data above]
 ❓ Question: [end with one specific behavioural question the user must sit with — not a suggestion, not a recommendation, a question]`;
     try {
-      const res = await fetch("https://zonedin-api.vercel.app/api/insight", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model: "claude-haiku-4-5-20251001", max_tokens: 1e3, messages: [{ role: "user", content: prompt }] }) });
+      const res = await fetch("https://zonedin-api.vercel.app/api/insight", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prompt }) });
       const data = await res.json();
       if(data.error) {
         const msg = data.error.message || "";
@@ -1617,7 +1694,7 @@ Write 3 short sections. Direct, data-first, no filler:
 ⚡ YOUR EDGE: (1 sentence — the one behavioural pattern that explains their success)
 🎯 NEXT 7 DAYS: (2 sentences — one specific recommendation based on the data)`;
     try {
-      const res = await fetch("https://zonedin-api.vercel.app/api/insight", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model: "claude-haiku-4-5-20251001", max_tokens: 1e3, messages: [{ role: "user", content: prompt }] }) });
+      const res = await fetch("https://zonedin-api.vercel.app/api/insight", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prompt }) });
       if(!res.ok) throw new Error(`API returned ${res.status}`);
       const data = await res.json();
       const text = ((_a2 = data.content) == null ? void 0 : _a2.map((b) => b.text || "").join("")) || "";
