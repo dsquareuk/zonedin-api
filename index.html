@@ -102,10 +102,24 @@
     @keyframes slideUp{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}
     @keyframes taskPop{0%{transform:scale(0.5) rotate(-10deg);opacity:0}60%{transform:scale(1.2) rotate(4deg)}100%{transform:scale(1);opacity:1}}
     @keyframes goldPulse{0%{box-shadow:0 0 0 0 rgba(245,158,11,0.6)}70%{box-shadow:0 0 0 20px rgba(245,158,11,0)}100%{box-shadow:0 0 0 0 rgba(245,158,11,0)}}
-    @keyframes orbitA{from{transform:rotate(0deg) translateX(52px) rotate(0deg)}to{transform:rotate(360deg) translateX(52px) rotate(-360deg)}}
-    @keyframes orbitB{from{transform:rotate(180deg) translateX(52px) rotate(-180deg)}to{transform:rotate(-180deg) translateX(52px) rotate(180deg)}}
-    .orbit-a{animation:orbitA 2.4s linear infinite;}
-    .orbit-b{animation:orbitB 2.4s linear infinite;}
+    @keyframes orbitA{from{transform:rotate(0deg) translateX(72px) rotate(0deg)}to{transform:rotate(360deg) translateX(72px) rotate(-360deg)}}
+    @keyframes orbitB{from{transform:rotate(180deg) translateX(72px) rotate(-180deg)}to{transform:rotate(-180deg) translateX(72px) rotate(180deg)}}
+    @keyframes splashFadeIn{0%{opacity:0;transform:scale(0.92)}60%{opacity:1;transform:scale(1.02)}100%{opacity:1;transform:scale(1)}}
+    @keyframes splashTagline{0%,40%{opacity:0;transform:translateY(8px)}100%{opacity:1;transform:translateY(0)}}
+    @keyframes ringExpand{0%{opacity:0;transform:scale(0.7)}100%{opacity:1;transform:scale(1)}}
+    .orbit-a{animation:orbitA 3.6s linear infinite;}
+    .orbit-b{animation:orbitB 3.6s linear infinite;}
+    .splash-logo{animation:splashFadeIn 0.8s cubic-bezier(0.34,1.2,0.64,1) both;}
+    @keyframes stampPop{0%{opacity:0;transform:scale(0) rotate(-12deg)}60%{transform:scale(1.3) rotate(4deg)}100%{opacity:1;transform:scale(1) rotate(0deg)}}
+    @keyframes borderDraw{from{height:0}to{height:100%}}
+    @keyframes wordsFadeIn{0%{opacity:0;transform:translateY(12px)}100%{opacity:1;transform:translateY(0)}}
+    @keyframes bgPulse{0%{background:#0a0e14}50%{background:#1a1200}100%{background:#0a0e14}}
+    .stamp-pop{animation:stampPop 0.35s cubic-bezier(0.34,1.4,0.64,1) both;}
+    .border-draw{animation:borderDraw 0.4s ease both;}
+    .words-fade{animation:wordsFadeIn 0.5s ease both;}
+    .bg-pulse{animation:bgPulse 0.5s ease both;}
+    .splash-tagline{animation:splashTagline 1.2s 0.6s ease both;}
+    .splash-ring{animation:ringExpand 0.9s 0.2s cubic-bezier(0.34,1.1,0.64,1) both;}
     .fade-up{animation:fadeUp 0.3s ease both;}
     .pop-in{animation:popIn 0.25s ease both;}
     .slide-up{animation:slideUp 0.35s cubic-bezier(0.34,1.2,0.64,1) both;}
@@ -867,6 +881,96 @@ const NextUpCard = ({ completedZones, diamondZone, platinumZone, setActiveZoneKe
   }
   return null;
 };
+// ── WORDS MOMENT — full-screen commitment ritual ──────────────────────────────
+const WordsMoment = ({ goldZone, diamondZone, platinumZone, onComplete }) => {
+  const [visible, setVisible] = useState([false, false, false, false]);
+  const tasks = [goldZone, diamondZone, platinumZone].filter(Boolean);
+  useEffect(() => {
+    const timers = [];
+    tasks.forEach((_, i) => {
+      timers.push(setTimeout(() => setVisible(v => { const n=[...v]; n[i]=true; return n; }), 300 + i * 600));
+    });
+    timers.push(setTimeout(() => setVisible(v => { const n=[...v]; n[3]=true; return n; }), 300 + tasks.length * 600));
+    timers.push(setTimeout(onComplete, 300 + tasks.length * 600 + 1200));
+    return () => timers.forEach(clearTimeout);
+  }, []);
+  const tierColors = [T.gold, T.diamond, T.plat];
+  return /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", inset: 0, zIndex: 9999, background: "rgba(8,10,14,0.97)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 32px" } },
+    /* @__PURE__ */ React.createElement("div", { style: { maxWidth: 380, width: "100%", textAlign: "center" } },
+      tasks.map((task, i) => /* @__PURE__ */ React.createElement("div", { key: i, className: visible[i] ? "words-fade" : "", style: { opacity: visible[i] ? 1 : 0, marginBottom: 24, transition: "opacity 0.1s" } },
+        /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: tierColors[i], marginBottom: 6 } }, ["Gold", "Diamond", "Platinum"][i]),
+        /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 22, fontWeight: 900, color: T.text, letterSpacing: -0.3, lineHeight: 1.25 } }, task)
+      )),
+      /* @__PURE__ */ React.createElement("div", { className: visible[3] ? "words-fade" : "", style: { opacity: visible[3] ? 1 : 0, marginTop: 32, fontSize: 13, color: T.teal, fontWeight: 600, letterSpacing: 0.3, transition: "opacity 0.1s" } }, "These are your commitments for today.")
+    )
+  );
+};
+
+// ── PLAN COMMIT BUTTON — press and hold 1.5s ─────────────────────────────────
+const PlanCommitButton = ({ onCommit, disabled }) => {
+  const [holding, setHolding] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const HOLD_MS = 1500;
+  const intervalRef = useRef(null);
+  const startRef = useRef(null);
+  const playChime = () => {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator(), gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = "sine"; osc.frequency.setValueAtTime(528, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.6);
+      gain.gain.setValueAtTime(0, ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.15, ctx.currentTime + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.9);
+      osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.9);
+    } catch(e) {}
+  };
+  const startHold = (e) => {
+    e.preventDefault();
+    if (disabled) return;
+    setHolding(true);
+    setProgress(0);
+    startRef.current = Date.now();
+    intervalRef.current = setInterval(() => {
+      const elapsed = Date.now() - startRef.current;
+      const pct = Math.min(100, (elapsed / HOLD_MS) * 100);
+      setProgress(pct);
+      if (pct >= 100) {
+        clearInterval(intervalRef.current);
+        setHolding(false);
+        setProgress(0);
+        playChime();
+        onCommit();
+      }
+    }, 16);
+  };
+  const cancelHold = () => {
+    clearInterval(intervalRef.current);
+    setHolding(false);
+    setProgress(0);
+  };
+  const r = 26, circ = 2 * Math.PI * r;
+  const dash = circ - (progress / 100) * circ;
+  return /* @__PURE__ */ React.createElement("div", { style: { position: "relative", display: "inline-flex", alignItems: "center", justifyContent: "center", width: "100%" } },
+    /* @__PURE__ */ React.createElement("button", {
+      onPointerDown: startHold,
+      onPointerUp: cancelHold,
+      onPointerLeave: cancelHold,
+      disabled,
+      style: btn({ width: "100%", padding: "15px 20px", borderRadius: 14, border: `1.5px solid ${holding ? T.gold : T.teal}`, background: holding ? "rgba(245,158,11,0.08)" : "transparent", color: holding ? T.gold : T.teal, fontSize: 14, fontWeight: 700, userSelect: "none", WebkitUserSelect: "none", transition: "all 0.15s", cursor: disabled ? "not-allowed" : "pointer", opacity: disabled ? 0.4 : 1, position: "relative", overflow: "hidden" })
+    },
+      holding
+        ? /* @__PURE__ */ React.createElement("span", null, "Committing\u2026 ", Math.round(progress), "%")
+        : /* @__PURE__ */ React.createElement("span", null, "Hold to commit to plan")
+    ),
+    /* @__PURE__ */ React.createElement("svg", { style: { position: "absolute", right: 16, top: "50%", transform: "translateY(-50%) rotate(-90deg)", pointerEvents: "none" }, width: 60, height: 60, viewBox: "0 0 60 60" },
+      /* @__PURE__ */ React.createElement("circle", { cx: 30, cy: 30, r, fill: "none", stroke: "rgba(255,255,255,0.08)", strokeWidth: 3 }),
+      /* @__PURE__ */ React.createElement("circle", { cx: 30, cy: 30, r, fill: "none", stroke: T.gold, strokeWidth: 3, strokeDasharray: circ, strokeDashoffset: dash, strokeLinecap: "round", style: { transition: "stroke-dashoffset 0.05s linear", opacity: holding ? 1 : 0 } })
+    )
+  );
+};
+
 const PlanTab = ({ greetMsg, dateStr, userName, identityStatement, savingZones, needsDailyReset, handleDailyReset, notQuiteCount, completedZones, streak, bestStreak, shields, milestonePct, tierCfg, daysLeft, nextMilestone, todayDone, ZONE_CFG, activeZoneKey, setActiveZoneKey, isZoneDone, toggleZoneDone, goldZone, diamondZone, platinumZone, sessionActive, setTab, planSetToday, setPlanSetToday, sessionHistory }) => /* @__PURE__ */ React.createElement("div", { className: "fade-up" }, /* @__PURE__ */ React.createElement("div", { style: { padding: "20px 20px 12px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 22, fontWeight: 900, color: T.text, letterSpacing: -0.3 } }, greetMsg, userName ? `, ${userName}` : "", " \u{1F44B}"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: identityStatement ? T.teal : T.sub, marginTop: 3, fontWeight: identityStatement ? 600 : 400 } }, identityStatement ? `Becoming: ${identityStatement}` : dateStr)), savingZones && /* @__PURE__ */ React.createElement("span", { style: { fontSize: 10, color: T.teal, fontWeight: 700, marginTop: 6 } }, "saving\u2026")), needsDailyReset && /* @__PURE__ */ React.createElement("div", { className: "pop-in", style: { margin: "0 16px 12px", padding: "14px 18px", borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, background: "rgba(245,158,11,0.08)", border: "1.5px solid rgba(245,158,11,0.25)" } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontWeight: 700, fontSize: 14, color: T.text } }, "\u{1F305} New day"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: T.sub, marginTop: 2 } }, "Ready to set today's tasks?")), /* @__PURE__ */ React.createElement("button", { onClick: handleDailyReset, style: btn({ background: T.gold, color: "#1a1200", padding: "8px 16px", fontSize: 13, borderRadius: 50, flexShrink: 0, fontWeight: 800 }) }, "Reset \u2192")), notQuiteCount >= 2 && !completedZones.includes("gold") && /* @__PURE__ */ React.createElement("div", { className: "pop-in", style: { margin: "0 16px 12px", padding: "14px 18px", borderRadius: 16, background: "rgba(167,139,250,0.08)", border: "1px solid rgba(167,139,250,0.2)" } }, /* @__PURE__ */ React.createElement("div", { style: { fontWeight: 700, fontSize: 13, color: T.plat, marginBottom: 4 } }, "\u{1F9E9} Pattern spotted"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: T.sub, lineHeight: 1.6 } }, `You've said "not quite" `, notQuiteCount, " times on this Gold task. Worth breaking it into a smaller first step?")), (() => {
   const allDone = todayDone === 3;
   const goldDone = completedZones.includes("gold");
@@ -937,11 +1041,14 @@ const PlanTab = ({ greetMsg, dateStr, userName, identityStatement, savingZones, 
     )))
   );
 })), /* @__PURE__ */ React.createElement(NextUpCard, { completedZones, diamondZone, platinumZone, setActiveZoneKey, setTab }), goldZone.trim() && !sessionActive && /* @__PURE__ */ React.createElement("div", { style: { margin: "4px 16px 16px", display: "flex", flexDirection: "column", gap: 8 } },
-  !completedZones.includes("gold") && !planSetToday && /* @__PURE__ */ React.createElement("button", {
-    onClick: () => { setPlanSetToday(true); if(window.zi) window.zi.track("plan_committed", {}); },
-    style: btn({ width: "100%", padding: "12px 20px", borderRadius: 14, border: `1.5px solid ${T.teal}`, background: "transparent", color: T.teal, fontSize: 14, fontWeight: 700 })
-  }, "Commit to plan"),
-  planSetToday && !completedZones.includes("gold") && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: T.teal, fontWeight: 600, textAlign: "center", padding: "4px 0" } }, "Plan committed \u2713 \u2014 edit anytime"),
+  !completedZones.includes("gold") && !planSetToday && goldZone.trim() && /* @__PURE__ */ React.createElement(PlanCommitButton, {
+    disabled: !goldZone.trim(),
+    onCommit: () => { setShowWordsMoment(true); }
+  }),
+  planSetToday && !completedZones.includes("gold") && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px 0" } },
+    /* @__PURE__ */ React.createElement("span", { className: "stamp-pop", style: { fontSize: 16, color: T.gold } }, "\u2713"),
+    /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: T.teal, fontWeight: 700 } }, "Committed for today")
+  ),
   (() => {
     const gDone = completedZones.includes("gold");
     const dDone = completedZones.includes("diamond");
@@ -1259,17 +1366,13 @@ const ZonedInMVP = () => {
   var _a, _b;
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const SPLASH_MIN_MS = 2800; // minimum splash duration in ms
   useEffect(() => {
-    // Timeout fallback — if Supabase doesn't respond in 6s, unblock the UI
-    const timeout = setTimeout(() => {
-      console.warn("Supabase auth timeout — unblocking UI");
-      setAuthLoading(false);
-    }, 6000);
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      var _a2;
-      clearTimeout(timeout);
-      const u = (_a2 = session == null ? void 0 : session.user) != null ? _a2 : null;
-      setUser(u);
+    const splashStart = Date.now();
+    const finishLoading = (u) => {
+      const elapsed = Date.now() - splashStart;
+      const remaining = Math.max(0, SPLASH_MIN_MS - elapsed);
+      setTimeout(() => setAuthLoading(false), remaining);
       if(u && window.zi) {
         const sc = parseInt(localStorage.getItem('zi_app_opens')||'0') + 1;
         localStorage.setItem('zi_app_opens', sc);
@@ -1277,16 +1380,25 @@ const ZonedInMVP = () => {
         window.zi.identify(u.id, {email: u.email});
         window.zi.appOpened(sc, sc === 1);
       }
+    };
+    const timeout = setTimeout(() => {
+      console.warn("Supabase auth timeout — unblocking UI");
       setAuthLoading(false);
+    }, 8000);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      var _a2;
+      clearTimeout(timeout);
+      const u = (_a2 = session == null ? void 0 : session.user) != null ? _a2 : null;
+      setUser(u);
+      finishLoading(u);
     }).catch(err => {
       clearTimeout(timeout);
       console.error("Auth error:", err);
-      setAuthLoading(false);
+      finishLoading(null);
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
       var _a2;
       setUser((_a2 = session == null ? void 0 : session.user) != null ? _a2 : null);
-      setAuthLoading(false);
     });
     return () => { subscription.unsubscribe(); clearTimeout(timeout); };
   }, []);
@@ -1303,6 +1415,7 @@ const ZonedInMVP = () => {
   const [showRecovery, setShowRecovery] = useState(false);
   const [showPMF, setShowPMF] = useState(false);
   const [planSetToday, setPlanSetToday] = useState(() => LS.get("zi_plan_set_" + todayStr(), false));
+  const [showWordsMoment, setShowWordsMoment] = useState(false);
   const [goldZone, setGoldZone] = useState("");
   const [diamondZone, setDiamondZone] = useState("");
   const [platinumZone, setPlatinumZone] = useState("");
@@ -1443,12 +1556,20 @@ const ZonedInMVP = () => {
   const updateLastSession = useCallback(async (difficulty, confidence) => {
     if (!user || (!difficulty && !confidence)) return;
     const today = todayStr();
-    await supabase.from("sessions")
-      .update({ difficulty: difficulty || null, confidence_before: confidence || null })
+    // Step 1 — SELECT the id of the most recent session today
+    const { data } = await supabase
+      .from("sessions")
+      .select("id")
       .eq("user_id", user.id)
       .eq("date", today)
       .order("started_at", { ascending: false })
-      .limit(1);
+      .limit(1)
+      .single();
+    // Step 2 — UPDATE by id
+    if (data?.id) await supabase
+      .from("sessions")
+      .update({ difficulty: difficulty || null, confidence_before: confidence || null })
+      .eq("id", data.id);
   }, [user]);
   const saveInsightToDB = useCallback(async (i) => {
     if (!user) return;
@@ -1753,17 +1874,20 @@ Write 3 short sections. Direct, data-first, no filler:
       window.zi.recoveryScreenShown(days);
     }
   }, [showRecovery]);
-  if (authLoading) return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center" } },
-    /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center" } },
-      /* @__PURE__ */ React.createElement("div", { style: { position: "relative", width: 120, height: 120, margin: "0 auto 24px" } },
-        /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", inset: 0, borderRadius: "50%", background: "radial-gradient(circle, rgba(0,194,178,0.15) 0%, transparent 70%)" } }),
+  if (authLoading) return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100vh", background: T.bg, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24 } },
+    /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center" } },
+      /* @__PURE__ */ React.createElement("div", { className: "splash-logo", style: { position: "relative", width: 180, height: 180, margin: "0 auto 0" } },
+        /* @__PURE__ */ React.createElement("div", { className: "splash-ring", style: { position: "absolute", inset: -16, borderRadius: "50%", background: "radial-gradient(circle, rgba(0,194,178,0.18) 0%, rgba(0,194,178,0.04) 50%, transparent 70%)" } }),
         /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" } },
-          /* @__PURE__ */ React.createElement(ZonedInMark, { size: 96 })
+          /* @__PURE__ */ React.createElement(ZonedInMark, { size: 144 })
         ),
-        /* @__PURE__ */ React.createElement("div", { className: "orbit-a", style: { position: "absolute", top: "50%", left: "50%", marginTop: -5, marginLeft: -5, width: 10, height: 10, borderRadius: "50%", background: T.teal, boxShadow: `0 0 8px ${T.teal}` } }),
-        /* @__PURE__ */ React.createElement("div", { className: "orbit-b", style: { position: "absolute", top: "50%", left: "50%", marginTop: -4, marginLeft: -4, width: 8, height: 8, borderRadius: "50%", background: T.gold, boxShadow: `0 0 6px ${T.gold}` } })
+        /* @__PURE__ */ React.createElement("div", { className: "orbit-a", style: { position: "absolute", top: "50%", left: "50%", marginTop: -6, marginLeft: -6, width: 12, height: 12, borderRadius: "50%", background: T.teal, boxShadow: `0 0 12px ${T.teal}, 0 0 24px rgba(0,194,178,0.4)` } }),
+        /* @__PURE__ */ React.createElement("div", { className: "orbit-b", style: { position: "absolute", top: "50%", left: "50%", marginTop: -5, marginLeft: -5, width: 10, height: 10, borderRadius: "50%", background: T.gold, boxShadow: `0 0 10px ${T.gold}, 0 0 20px rgba(245,158,11,0.4)` } })
       ),
-      /* @__PURE__ */ React.createElement("p", { style: { color: T.sub, fontSize: 12, maxWidth: 240, margin: "0 auto", lineHeight: 1.6 } }, "Every kept commitment is evidence of who you\u2019re becoming.")
+      /* @__PURE__ */ React.createElement("div", { className: "splash-tagline", style: { marginTop: 36 } },
+        /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 28, fontWeight: 900, color: T.text, letterSpacing: -0.5, marginBottom: 10 } }, "ZonedIn"),
+        /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, color: T.sub, lineHeight: 1.65, maxWidth: 260 } }, "Every kept commitment is evidence", /* @__PURE__ */ React.createElement("br", null), "of who you\u2019re becoming.")
+      )
     )
   );
   if (!user) return /* @__PURE__ */ React.createElement(AuthScreen, null);
@@ -1783,6 +1907,14 @@ Write 3 short sections. Direct, data-first, no filler:
       setShowPMF(false);
       saveProfile({ pmf_answered: true });
     } }),
+    showWordsMoment && /* @__PURE__ */ React.createElement(WordsMoment, {
+      goldZone, diamondZone, platinumZone,
+      onComplete: () => {
+        setShowWordsMoment(false);
+        setPlanSetToday(true);
+        if(window.zi) window.zi.track("plan_committed", { task_count: [goldZone, diamondZone, platinumZone].filter(v => v && v.trim()).length });
+      }
+    }),
     showRecovery && hasOnboarded && /* @__PURE__ */ React.createElement(RecoveryScreen, {
       bestStreak,
       userName,
