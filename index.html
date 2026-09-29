@@ -178,6 +178,26 @@ const T = {
   plat: "#A78BFA",
   platBg: "rgba(167,139,250,0.10)"
 };
+// ═══════════════════════════════════════════════════════════════════════
+// ZONEDIN SHARE CARDS — v3 integrated
+// ═══════════════════════════════════════════════════════════════════════
+const SC={bg:'#0a0e14',gold:'#F59E0B',teal:'#00C2B2',plat:'#A78BFA',text:'#F0F4F8'};
+function scBg(ctx,W,H,glow){const bg=ctx.createLinearGradient(0,0,W,H);bg.addColorStop(0,'#0a0e14');bg.addColorStop(.5,'#0c1018');bg.addColorStop(1,'#0a0e14');ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);const gr=ctx.createRadialGradient(W/2,H*.4,0,W/2,H*.4,W*.65);gr.addColorStop(0,glow);gr.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=gr;ctx.fillRect(0,0,W,H);ctx.save();ctx.strokeStyle='rgba(255,255,255,0.022)';ctx.lineWidth=1;const s=W/13.5;for(let i=s;i<W;i+=s){ctx.beginPath();ctx.moveTo(i,0);ctx.lineTo(i,H);ctx.stroke();}for(let i=s;i<H;i+=s){ctx.beginPath();ctx.moveTo(0,i);ctx.lineTo(W,i);ctx.stroke();}ctx.restore();}
+function scStripe(ctx,W,c){ctx.fillStyle=c;ctx.fillRect(0,0,W,10);}
+function scZ(ctx,cx,cy,sz,c,op=.82){ctx.save();ctx.globalAlpha=op;ctx.strokeStyle=c;ctx.lineWidth=sz*.155;ctx.lineCap='round';ctx.lineJoin='round';ctx.beginPath();ctx.moveTo(cx-sz*.42,cy-sz*.42);ctx.lineTo(cx+sz*.42,cy-sz*.42);ctx.stroke();ctx.beginPath();ctx.moveTo(cx+sz*.42,cy-sz*.42);ctx.lineTo(cx-sz*.42,cy+sz*.42);ctx.stroke();ctx.beginPath();ctx.moveTo(cx-sz*.42,cy+sz*.42);ctx.lineTo(cx+sz*.42,cy+sz*.42);ctx.stroke();ctx.restore();}
+function scBrand(ctx,W,H,c){const fs=W*.029,zs=W*.028,y=H-H*.052;ctx.font=`700 ${fs}px DM Sans,system-ui,sans-serif`;ctx.textAlign='center';const tw=ctx.measureText('ZonedIn').width;const sx=W/2-(zs*2+W*.01+tw)/2;scZ(ctx,sx+zs,y,zs,c,.82);ctx.save();ctx.globalAlpha=.82;ctx.fillStyle=c;ctx.font=`700 ${fs}px DM Sans,system-ui,sans-serif`;ctx.textAlign='left';ctx.fillText('ZonedIn',sx+zs*2+W*.014,y+fs*.36);ctx.restore();}
+function scWrap(ctx,txt,mW){const ws=txt.split(' ');let l='',ls=[];for(const w of ws){const t=l+w+' ';if(ctx.measureText(t).width>mW&&l){ls.push(l.trimEnd());l=w+' ';}else l=t;}ls.push(l.trimEnd());return ls;}
+function scPill(ctx,cx,cy,txt,bg,stroke,tc,W){const fs=W*.03;ctx.font=`700 ${fs}px DM Sans,system-ui,sans-serif`;ctx.textAlign='center';const tw=ctx.measureText(txt).width;const pw=tw+W*.072,ph=W*.068;const rx=cx-pw/2,ry=cy-ph/2;ctx.fillStyle=bg;ctx.beginPath();ctx.roundRect(rx,ry,pw,ph,ph/2);ctx.fill();ctx.strokeStyle=stroke;ctx.lineWidth=2;ctx.beginPath();ctx.roundRect(rx,ry,pw,ph,ph/2);ctx.stroke();ctx.fillStyle=tc;ctx.fillText(txt,cx,cy+fs*.37);}
+function scCommitment(ctx,W,H,{task,identity,date}){scBg(ctx,W,H,'rgba(245,158,11,0.12)');scStripe(ctx,W,SC.gold);ctx.textAlign='center';ctx.fillStyle='rgba(245,158,11,0.72)';ctx.font=`700 ${W*.044}px DM Sans,system-ui,sans-serif`;ctx.fillText('TODAY I AM COMMITTING TO',W/2,H*.145);ctx.strokeStyle='rgba(245,158,11,0.2)';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(W*.15,H*.178);ctx.lineTo(W*.85,H*.178);ctx.stroke();ctx.font=`900 ${W*.068}px Syne,system-ui,sans-serif`;const tl=scWrap(ctx,`\u201c${task}\u201d`,W*.83);const th=tl.length*W*.085;const ty=H/2-th/2+W*.005;ctx.fillStyle=SC.text;tl.forEach((l,i)=>ctx.fillText(l,W/2,ty+i*W*.085));if(date){ctx.fillStyle='rgba(245,158,11,0.5)';ctx.font=`500 ${W*.025}px DM Sans,system-ui,sans-serif`;ctx.fillText(date,W/2,H*.72);}if(identity){ctx.fillStyle=SC.teal;ctx.font=`500 ${W*.03}px DM Sans,system-ui,sans-serif`;ctx.fillText(`I am becoming: ${identity}`,W/2,H*.775);}ctx.fillStyle='rgba(240,244,248,0.42)';ctx.font=`400 italic ${W*.027}px DM Sans,system-ui,sans-serif`;ctx.fillText('The gap between who I am and who I said I\u2019d be closes today.',W/2,H*.835);ctx.fillStyle=SC.teal;ctx.font=`700 ${W*.026}px DM Sans,system-ui,sans-serif`;ctx.fillText('#ZonedIn',W/2,H*.882);scBrand(ctx,W,H,'rgba(245,158,11,0.75)');}
+function scEvidence(ctx,W,H,{task,doneLooks,streak,identity}){scBg(ctx,W,H,'rgba(245,158,11,0.15)');scStripe(ctx,W,SC.gold);ctx.textAlign='center';const ey=H*.195;ctx.save();ctx.strokeStyle='rgba(245,158,11,0.18)';ctx.lineWidth=W*.006;for(let a=0;a<360;a+=45){const r1=W*.1,r2=W*.135,rad=(a*Math.PI)/180;ctx.beginPath();ctx.moveTo(W/2+r1*Math.cos(rad),ey+r1*Math.sin(rad));ctx.lineTo(W/2+r2*Math.cos(rad),ey+r2*Math.sin(rad));ctx.stroke();}ctx.restore();ctx.font=`${W*.115}px serif`;ctx.fillText('\uD83E\uDD47',W/2,ey+W*.04);ctx.fillStyle=SC.gold;ctx.font=`900 ${W*.088}px Syne,system-ui,sans-serif`;ctx.fillText('EVIDENCE ADDED',W/2,H*.35);let at=H*.39;const dt=doneLooks||task;if(doneLooks){ctx.fillStyle='rgba(245,158,11,0.5)';ctx.font=`700 ${W*.022}px DM Sans,system-ui,sans-serif`;ctx.fillText('DONE WHEN:',W/2,at+W*.01);ctx.fillStyle='rgba(240,244,248,0.82)';ctx.font=`500 italic ${W*.034}px DM Sans,system-ui,sans-serif`;const dl=scWrap(ctx,`\u201c${dt}\u201d`,W*.8);dl.forEach((l,i)=>ctx.fillText(l,W/2,at+W*.045+i*W*.046));at+=W*.045+dl.length*W*.046+W*.02;}else{ctx.fillStyle=SC.text;ctx.font=`500 ${W*.038}px DM Sans,system-ui,sans-serif`;const tl=scWrap(ctx,`\u201c${dt}\u201d`,W*.82);tl.forEach((l,i)=>ctx.fillText(l,W/2,at+W*.01+i*W*.052));at+=W*.01+tl.length*W*.052+W*.02;}const py=Math.min(at+W*.04,H*.66);scPill(ctx,W/2,py,`\uD83D\uDD25 ${streak} day streak`,'rgba(245,158,11,0.1)','rgba(245,158,11,0.38)',SC.gold,W);if(identity){ctx.fillStyle=SC.teal;ctx.font=`500 ${W*.027}px DM Sans,system-ui,sans-serif`;ctx.fillText(`Becoming: ${identity}`,W/2,py+W*.094);}ctx.fillStyle='rgba(245,158,11,0.88)';ctx.font=`400 italic ${W*.029}px DM Sans,system-ui,sans-serif`;const tg=scWrap(ctx,"Every kept commitment is evidence of who you\u2019re becoming.",W*.78);tg.forEach((l,i)=>ctx.fillText(l,W/2,H*.835+i*W*.04));scBrand(ctx,W,H,'rgba(245,158,11,0.75)');}
+function scMilestone(ctx,W,H,{days}){const big=days>=30;scBg(ctx,W,H,big?'rgba(0,194,178,0.18)':'rgba(0,194,178,0.1)');scStripe(ctx,W,SC.teal);ctx.textAlign='center';const ax=W/2,ay=H*.44,ar=W*.33,as=Math.PI*.72,af=big?.95:.26;ctx.save();ctx.strokeStyle='rgba(0,194,178,0.08)';ctx.lineWidth=W*.018;ctx.lineCap='butt';ctx.beginPath();ctx.arc(ax,ay,ar,Math.PI*.72,Math.PI*.72+Math.PI*1.56);ctx.stroke();ctx.strokeStyle=SC.teal;ctx.lineWidth=W*.016;ctx.lineCap='round';ctx.beginPath();ctx.arc(ax,ay,ar,as,as+Math.PI*1.56*af);ctx.stroke();ctx.restore();ctx.fillStyle=SC.text;ctx.font=`900 ${big?W*.27:W*.24}px Syne,system-ui,sans-serif`;ctx.fillText(String(days),W/2,ay+W*.095);ctx.fillStyle=SC.teal;ctx.font=`700 ${W*.036}px DM Sans,system-ui,sans-serif`;ctx.fillText('DAYS KEPT',W/2,ay+W*.16);ctx.strokeStyle='rgba(0,194,178,0.22)';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(W*.22,H*.695);ctx.lineTo(W*.78,H*.695);ctx.stroke();const cp=big?'30 days. One month of keeping my word.':`${days} days in. Just getting started.`;ctx.fillStyle='rgba(240,244,248,0.82)';ctx.font=`500 ${W*.036}px DM Sans,system-ui,sans-serif`;const cl=scWrap(ctx,cp,W*.76);cl.forEach((l,i)=>ctx.fillText(l,W/2,H*.735+i*W*.05));ctx.fillStyle='rgba(0,194,178,0.65)';ctx.font=`400 italic ${W*.029}px DM Sans,system-ui,sans-serif`;ctx.fillText(big?"That\u2019s a month of evidence.":"The first 7 are the hardest.",W/2,H*.81);ctx.fillStyle='rgba(0,194,178,0.5)';ctx.font=`700 ${W*.024}px DM Sans,system-ui,sans-serif`;ctx.fillText('#ZonedIn',W/2,H*.868);scBrand(ctx,W,H,SC.teal);}
+function scRecovery(ctx,W,H,{best,identity}){scBg(ctx,W,H,'rgba(167,139,250,0.12)');scStripe(ctx,W,SC.plat);ctx.textAlign='center';const by=H*.26;ctx.fillStyle=SC.text;ctx.font=`900 ${W*.11}px Syne,system-ui,sans-serif`;ctx.fillText(`${best} days.`,W/2,by);ctx.fillStyle='rgba(167,139,250,0.72)';ctx.font=`500 ${W*.038}px DM Sans,system-ui,sans-serif`;ctx.fillText('That was my run.',W/2,by+W*.125);ctx.strokeStyle='rgba(167,139,250,0.18)';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(W*.38,by+W*.168);ctx.lineTo(W*.62,by+W*.168);ctx.stroke();ctx.fillStyle='rgba(240,244,248,0.55)';ctx.font=`400 ${W*.036}px DM Sans,system-ui,sans-serif`;ctx.fillText('I missed yesterday.',W/2,by+W*.215);ctx.fillStyle=SC.text;ctx.font=`900 ${W*.082}px Syne,system-ui,sans-serif`;ctx.fillText('Back today.',W/2,by+W*.315);if(identity){ctx.fillStyle='rgba(167,139,250,0.82)';ctx.font=`500 ${W*.028}px DM Sans,system-ui,sans-serif`;ctx.fillText(`Still becoming: ${identity}`,W/2,H*.745);}ctx.fillStyle='rgba(167,139,250,0.55)';ctx.font=`400 italic ${W*.026}px DM Sans,system-ui,sans-serif`;const pl=scWrap(ctx,"ZonedIn doesn\u2019t count missed days. It counts kept commitments.",W*.78);pl.forEach((l,i)=>ctx.fillText(l,W/2,H*.81+i*W*.038));scBrand(ctx,W,H,'rgba(167,139,250,0.7)');}
+function scRate(ctx,W,H,{kept,of}){const pct=Math.round((kept/of)*100);const col=pct>=80?SC.teal:pct>=60?SC.gold:'rgba(240,244,248,0.5)';scBg(ctx,W,H,pct>=80?'rgba(0,194,178,0.11)':'rgba(245,158,11,0.1)');scStripe(ctx,W,col);ctx.textAlign='center';ctx.fillStyle=`${col}99`;ctx.font=`700 ${W*.026}px DM Sans,system-ui,sans-serif`;ctx.fillText('MY COMMITMENT RATE',W/2,H*.155);ctx.strokeStyle=`${col}33`;ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(W*.18,H*.185);ctx.lineTo(W*.82,H*.185);ctx.stroke();ctx.fillStyle=col;ctx.font=`900 ${W*.26}px Syne,system-ui,sans-serif`;ctx.fillText(`${pct}%`,W/2,H*.52);ctx.fillStyle='rgba(240,244,248,0.65)';ctx.font=`500 ${W*.034}px DM Sans,system-ui,sans-serif`;ctx.fillText('of my commitments kept this week',W/2,H*.575);scPill(ctx,W/2,H*.648,`${kept} of ${of} commitments`,`${col}14`,`${col}44`,col,W);ctx.strokeStyle=`${col}22`;ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(W*.22,H*.71);ctx.lineTo(W*.78,H*.71);ctx.stroke();const m=kept===of?'Perfect week. Every word kept.':pct>=80?'My word means something.':pct>=60?'Getting better. That\u2019s the whole point.':'Honest is better than comfortable.';ctx.fillStyle='rgba(240,244,248,0.78)';ctx.font=`500 ${W*.038}px DM Sans,system-ui,sans-serif`;ctx.fillText(m,W/2,H*.765);ctx.fillStyle=`${col}88`;ctx.font=`700 ${W*.024}px DM Sans,system-ui,sans-serif`;ctx.fillText('#ZonedIn',W/2,H*.862);scBrand(ctx,W,H,`${col}bb`);}
+function scGetText(type,data){switch(type){case'commitment':return`Today I\u2019m committing to: ${data.task}. Holding myself to it. #ZonedIn`;case'evidence':return`\uD83E\uDD47 Evidence Added. \u201c${data.task}\u201d. ${data.streak}-day streak. Every kept commitment is evidence of who you\u2019re becoming. #ZonedIn`;case'milestone':return`${data.days} days of keeping my word to myself. #ZonedIn`;case'recovery':return`My ${data.best}-day run still counts. Back today. #ZonedIn`;case'rate':return`${Math.round((data.kept/data.of)*100)}% of my commitments kept this week. My word means something. #ZonedIn`;default:return'ZonedIn \u2014 every kept commitment is evidence of who you\u2019re becoming.';}}
+async function generateShareCard(type,data){return new Promise(resolve=>{const c=document.createElement('canvas');c.width=1080;c.height=1080;const ctx=c.getContext('2d');switch(type){case'commitment':scCommitment(ctx,1080,1080,data);break;case'evidence':scEvidence(ctx,1080,1080,data);break;case'milestone':scMilestone(ctx,1080,1080,data);break;case'recovery':scRecovery(ctx,1080,1080,data);break;case'rate':scRate(ctx,1080,1080,data);break;}c.toBlob(b=>resolve(b),'image/png',1.0);});}
+async function shareZonedInCard(type,data){try{const blob=await generateShareCard(type,data);const file=new File([blob],`zonedin-${type}.png`,{type:'image/png'});if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:'ZonedIn'});}else if(navigator.share){await navigator.share({text:scGetText(type,data),url:'https://zonedin.app'});}else{await navigator.clipboard.writeText(scGetText(type,data)+'\n\nhttps://zonedin.app');}}catch(e){if(e.name!=='AbortError')console.warn('Share:',e);}}
+// ═══════════════════════════════════════════════════════════════════════
+
 const MILESTONES = [7, 14, 30, 60, 90, 120, 150, 200];
 const getMilestoneProgress = (s) => {
   var _a;
@@ -609,29 +629,19 @@ const SessionLock = ({ secondsLeft, activeTask, doneLooks, onEnd, onCompleteTask
   ))));
 };
 const ReckoningScreen = ({ doneLooks, task, onYes, onNotQuite }) => /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", inset: 0, zIndex: 9998, background: "rgba(0,0,0,0.88)", display: "flex", alignItems: "flex-end", justifyContent: "center", padding: 16 } }, /* @__PURE__ */ React.createElement("div", { className: "slide-up", style: { background: T.card, borderRadius: 28, padding: "36px 24px 28px", maxWidth: 420, width: "100%", textAlign: "center", border: `1px solid rgba(245,158,11,0.2)`, position: "relative", overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", inset: 0, background: "radial-gradient(ellipse at 50% 0%,rgba(245,158,11,0.08) 0%,transparent 65%)", pointerEvents: "none" } }), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: T.gold, marginBottom: 16 } }, "The Reckoning"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: T.sub, marginBottom: 8 } }, "You committed to being done when:"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 18, fontWeight: 800, color: T.text, marginBottom: 24, padding: "12px 16px", background: T.card2, borderRadius: 14, border: `1px solid ${T.border}` } }, '"', doneLooks || task, '"'), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 20, fontWeight: 900, color: T.text, marginBottom: 28 } }, "You made a commitment to yourself. Did you keep it?"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: onYes, style: btnGold({ flex: 1, fontSize: 16 }) }, "Yes, done \u2713"), /* @__PURE__ */ React.createElement("button", { onClick: onNotQuite, style: btn({ flex: 1, padding: "16px", border: `1.5px solid ${T.border2}`, background: "transparent", color: T.sub, fontSize: 14 }) }, "Not quite"))));
-const GoldCompleteScreen = ({ goldTask, streak, identityStatement, onDismiss }) => {
+const GoldCompleteScreen = ({ goldTask, streak, identityStatement, doneLooks, onDismiss }) => {
   const [showShare, setShowShare] = useState(false);
   useEffect(() => {
     playGoldSound();
     setTimeout(() => setShowShare(true), 1200);
   }, []);
   const handleShare = async () => {
-    const text = `\u{1F947} Gold complete.
-
-"${goldTask}"
-
-${streak} day streak on ZonedIn
-Every kept commitment is evidence of who you're becoming.`;
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: "ZonedIn \u2014 Evidence Added", text });
-      } catch (e) {
-      }
-    } else {
-      await navigator.clipboard.writeText(text).catch(() => {
-      });
-      alert("Copied to clipboard!");
-    }
+    await shareZonedInCard('evidence', {
+      task: goldTask,
+      doneLooks: doneLooks || null,
+      streak: streak,
+      identity: identityStatement || null,
+    });
   };
   return /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", inset: 0, zIndex: 9998, background: "rgba(0,0,0,0.92)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 } }, /* @__PURE__ */ React.createElement("div", { className: "pop-in", style: { maxWidth: 380, width: "100%", textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { background: "linear-gradient(160deg,#1a1200 0%,#0a0e14 60%,#001a10 100%)", borderRadius: 28, padding: "40px 28px 32px", border: "1.5px solid rgba(245,158,11,0.3)", marginBottom: 16, position: "relative", overflow: "hidden", boxShadow: "0 32px 80px rgba(0,0,0,0.6)" } }, /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", inset: 0, background: "radial-gradient(ellipse at 50% 20%,rgba(245,158,11,0.15) 0%,transparent 70%)", pointerEvents: "none" } }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "center", marginBottom: 20 } }, /* @__PURE__ */ React.createElement(ZonedInMark, { size: 36 })), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 64, marginBottom: 12, display: "inline-block", animation: "taskPop 0.5s cubic-bezier(0.34,1.56,0.64,1) both" } }, "\u{1F947}"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 28, fontWeight: 900, color: T.gold, letterSpacing: -0.5, marginBottom: 4 } }, "Evidence Added"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: "rgba(245,158,11,0.6)", marginBottom: 20, letterSpacing: 1 } }, "Every kept commitment is evidence of who you're becoming."),
   identityStatement ? /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: T.teal, fontWeight: 600, marginBottom: 16, fontStyle: "italic" } }, "Another vote for: ", identityStatement) : null, /* @__PURE__ */ React.createElement("div", { style: { background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.15)", borderRadius: 14, padding: "12px 16px", marginBottom: 20 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 700, color: T.text, textDecoration: "line-through", textDecorationColor: "rgba(245,158,11,0.5)" } }, goldTask)), /* @__PURE__ */ React.createElement("div", { style: { display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: 50, padding: "6px 16px" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 14 } }, "\u{1F525}"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Syne',sans-serif", fontSize: 18, fontWeight: 900, color: T.gold } }, streak), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: "rgba(245,158,11,0.7)", fontWeight: 600 } }, "day streak")), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 20, fontSize: 11, color: "rgba(245,158,11,0.3)", letterSpacing: 2, textTransform: "uppercase", fontWeight: 700 } }, "ZonedIn")), showShare && /* @__PURE__ */ React.createElement("div", { className: "fade-up", style: { display: "flex", gap: 10, marginBottom: 12 } }, /* @__PURE__ */ React.createElement("button", { onClick: handleShare, style: btnGold({ flex: 1, fontSize: 15 }) }, "Share \u2726"), /* @__PURE__ */ React.createElement("button", { onClick: onDismiss, style: btn({ flex: 1, padding: "16px", border: `1.5px solid ${T.border2}`, background: "transparent", color: T.sub, fontSize: 14 }) }, "Continue \u2192")), !showShare && /* @__PURE__ */ React.createElement("div", { style: { height: 56, display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { width: 6, height: 6, borderRadius: "50%", background: T.gold, animation: "goldPulse 1s ease-in-out infinite" } }))));
@@ -882,7 +892,7 @@ const NextUpCard = ({ completedZones, diamondZone, platinumZone, setActiveZoneKe
   return null;
 };
 // ── WORDS MOMENT — full-screen commitment ritual ──────────────────────────────
-const WordsMoment = ({ goldZone, diamondZone, platinumZone, onComplete }) => {
+const WordsMoment = ({ goldZone, diamondZone, platinumZone, onComplete, identityStatement }) => {
   const [visible, setVisible] = useState([false, false, false, false]);
   const tasks = [goldZone, diamondZone, platinumZone].filter(Boolean);
   useEffect(() => {
@@ -891,17 +901,26 @@ const WordsMoment = ({ goldZone, diamondZone, platinumZone, onComplete }) => {
       timers.push(setTimeout(() => setVisible(v => { const n=[...v]; n[i]=true; return n; }), 300 + i * 600));
     });
     timers.push(setTimeout(() => setVisible(v => { const n=[...v]; n[3]=true; return n; }), 300 + tasks.length * 600));
-    timers.push(setTimeout(onComplete, 300 + tasks.length * 600 + 1200));
+    timers.push(setTimeout(onComplete, 300 + tasks.length * 600 + 1800));
     return () => timers.forEach(clearTimeout);
   }, []);
   const tierColors = [T.gold, T.diamond, T.plat];
+  const handleShareCommitment = () => shareZonedInCard('commitment', {
+    task: goldZone,
+    identity: identityStatement || null,
+    date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }),
+  });
   return /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", inset: 0, zIndex: 9999, background: "rgba(8,10,14,0.97)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 32px" } },
     /* @__PURE__ */ React.createElement("div", { style: { maxWidth: 380, width: "100%", textAlign: "center" } },
       tasks.map((task, i) => /* @__PURE__ */ React.createElement("div", { key: i, className: visible[i] ? "words-fade" : "", style: { opacity: visible[i] ? 1 : 0, marginBottom: 24, transition: "opacity 0.1s" } },
         /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: tierColors[i], marginBottom: 6 } }, ["Gold", "Diamond", "Platinum"][i]),
         /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 22, fontWeight: 900, color: T.text, letterSpacing: -0.3, lineHeight: 1.25 } }, task)
       )),
-      /* @__PURE__ */ React.createElement("div", { className: visible[3] ? "words-fade" : "", style: { opacity: visible[3] ? 1 : 0, marginTop: 32, fontSize: 13, color: T.teal, fontWeight: 600, letterSpacing: 0.3, transition: "opacity 0.1s" } }, "These are your commitments for today.")
+      /* @__PURE__ */ React.createElement("div", { className: visible[3] ? "words-fade" : "", style: { opacity: visible[3] ? 1 : 0, marginTop: 32, fontSize: 13, color: T.teal, fontWeight: 600, letterSpacing: 0.3, transition: "opacity 0.1s" } }, "These are your commitments for today."),
+      visible[3] && /* @__PURE__ */ React.createElement("button", {
+        onClick: handleShareCommitment,
+        style: { marginTop: 28, padding: "11px 28px", borderRadius: 99, border: "1.5px solid rgba(0,194,178,0.4)", background: "transparent", color: T.teal, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }
+      }, "Share my commitment ✦")
     )
   );
 };
@@ -1245,7 +1264,7 @@ const ReflectTab = ({ wentWell, setWentWell, energy, setEnergy, mood, setMood, l
     return /* @__PURE__ */ React.createElement("div", { key: i, style: { marginBottom: 10, background: i === 0 ? `linear-gradient(135deg,rgba(0,194,178,0.07),rgba(167,139,250,0.04))` : "transparent", border: `1px solid ${i === 0 ? "rgba(0,194,178,0.18)" : T.border}`, borderRadius: 18, overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "10px 16px", background: i === 0 ? "rgba(0,194,178,0.07)" : "rgba(255,255,255,0.02)", display: "flex", alignItems: "center", gap: 8, justifyContent: "space-between" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8 } }, i === 0 && /* @__PURE__ */ React.createElement("div", { style: { width: 6, height: 6, borderRadius: "50%", background: T.teal, flexShrink: 0 } }), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, fontWeight: 700, color: i === 0 ? T.teal : T.sub, letterSpacing: 0.5 } }, i === 0 ? "Latest insight" : ins.date), ins.mood && /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13 } }, ((_a = MOOD_OPTS.find((m) => String(m.val) === ins.mood)) == null ? void 0 : _a.emoji) || ins.mood), ins.energy && /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13 } }, ((_b = ENERGY_OPTS.find((e) => e.val === ins.energy)) == null ? void 0 : _b.emoji) || "")), i === 0 && /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: T.sub } }, ins.date)), /* @__PURE__ */ React.createElement("div", { style: { padding: "12px 16px", fontSize: 13, lineHeight: 1.8, color: i === 0 ? "rgba(240,244,248,0.85)" : T.sub, whiteSpace: "pre-wrap" } }, ins.text));
   })));
 };
-const ProgressTab = ({ streak, tierCfg, milestonePct, daysLeft, nextMilestone, totalPoints, currentLevel, tierHistory, isStreakMilestone, streakReport, setStreakReport, loadingStreakReport, generateStreakReport, streakTier }) => /* @__PURE__ */ React.createElement("div", { className: "fade-up" },
+const ProgressTab = ({ streak, tierCfg, milestonePct, daysLeft, nextMilestone, totalPoints, currentLevel, tierHistory, isStreakMilestone, streakReport, setStreakReport, loadingStreakReport, generateStreakReport, streakTier, sessionHistory }) => { const rcS = (sessionHistory||[]).filter(s=>s.doneLooks).slice(0,10); const rcK = rcS.filter(s=>s.taskCompleted).length; const rcP = rcS.length>=3 ? Math.round((rcK/rcS.length)*100) : null; return /* @__PURE__ */ React.createElement("div", { className: "fade-up" },
   /* @__PURE__ */ React.createElement("div", { style: { padding: "20px 20px 14px", display: "flex", justifyContent: "space-between", alignItems: "center" } },
     /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 22, fontWeight: 900, color: T.text, letterSpacing: -0.3 } }, "Progress"),
     /* @__PURE__ */ React.createElement("button", { onClick: () => supabase.auth.signOut(), title: "Sign out", style: btn({ background: T.card, border: `1px solid ${T.border}`, borderRadius: 50, padding: "7px 10px", fontSize: 15 }) }, "\u2699\uFE0F")
@@ -1298,8 +1317,7 @@ const ProgressTab = ({ streak, tierCfg, milestonePct, daysLeft, nextMilestone, t
       })
     )
   ),
-  /* @__PURE__ */ React.createElement("div", { style: { padding: "0 16px 20px" } },
-    /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: T.sub, marginBottom: 10 } }, "Account"),
+  /* @__PURE__ */ React.createElement("div", { style: { padding: "0 16px 20px" } }, rcP !== null && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 12, padding: "14px 16px", borderRadius: 16, background: "rgba(0,194,178,0.06)", border: "1px solid rgba(0,194,178,0.15)", textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: T.teal, marginBottom: 6 } }, "Commitment rate"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 36, fontWeight: 900, color: T.text, letterSpacing: -1, lineHeight: 1, marginBottom: 4 } }, rcP + "%"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: T.sub, marginBottom: 10 } }, rcK + " of " + rcS.length + " commitments kept"), /* @__PURE__ */ React.createElement("button", { onClick: () => shareZonedInCard("rate", { kept: rcK, of: rcS.length }), style: btn({ padding: "9px 20px", borderRadius: 99, border: "1.5px solid rgba(0,194,178,0.3)", background: "transparent", color: T.teal, fontSize: 13, fontWeight: 700 }) }, "Share " + rcP + "% rate ✦") ), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: T.sub, marginBottom: 10 } }, "Account"),
     /* @__PURE__ */ React.createElement("button", { onClick: () => supabase.auth.signOut(), style: btn({ width: "100%", padding: "11px", borderRadius: 12, border: `1px solid ${T.border}`, background: "transparent", color: T.sub, fontSize: 13, marginBottom: 8 }) }, "Sign out"),
     /* @__PURE__ */ React.createElement("button", { onClick: async () => {
       if(!window.confirm("Delete your account and all data permanently? This cannot be undone.")) return;
@@ -1315,7 +1333,7 @@ const ProgressTab = ({ streak, tierCfg, milestonePct, daysLeft, nextMilestone, t
       } catch(e) { alert("Error deleting account. Please contact support."); }
     }, style: btn({ width: "100%", padding: "11px", borderRadius: 12, border: `1px solid rgba(226,75,74,0.3)`, background: "rgba(226,75,74,0.06)", color: "#E24B4A", fontSize: 13 }) }, "Delete account & data")
   ),
-);
+); };
 const PMFModal = ({ userName, streak, sessionCount, onAnswer }) => {
   const [selected, setSelected] = useState(null);
   const [freeText, setFreeText] = useState("");
@@ -1368,7 +1386,7 @@ const PMFModal = ({ userName, streak, sessionCount, onAnswer }) => {
     )
   );
 };
-const RecoveryScreen = ({ bestStreak, userName, onStart, onDismiss }) => /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", inset: 0, zIndex: 9998, background: T.bg, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 28 } }, /* @__PURE__ */ React.createElement("div", { style: { maxWidth: 380, width: "100%", textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 52, marginBottom: 20 } }, "\u{1F6E1}\uFE0F"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 26, fontWeight: 900, color: T.text, letterSpacing: -0.5, marginBottom: 12, lineHeight: 1.2 } }, userName ? `${userName}, your run` : "Your run", " still counts."), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, color: T.sub, lineHeight: 1.7, marginBottom: 28 } }, "You built a ", bestStreak, "-day run. That doesn't disappear. Today is day 1 of your next one."), /* @__PURE__ */ React.createElement("div", { style: { padding: "18px 20px", borderRadius: 18, background: T.card, border: `1px solid ${T.border}`, marginBottom: 28 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: T.sub, marginBottom: 8 } }, "Your personal best"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 48, fontWeight: 900, color: T.teal, letterSpacing: -3, lineHeight: 1 } }, bestStreak), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: T.sub, marginTop: 4 } }, "days. You've done it before. You'll do it again.")), /* @__PURE__ */ React.createElement("button", { onClick: onStart, style: btnGold({ width: "100%", fontSize: 17, padding: "17px", marginBottom: 12 }) }, "Start today's Gold \u2192"), /* @__PURE__ */ React.createElement("button", { onClick: onDismiss, style: btn({ width: "100%", background: "none", color: T.sub, fontSize: 13, padding: "8px" }) }, "Go to Plan tab")));
+const RecoveryScreen = ({ bestStreak, userName, onStart, onDismiss, identityStatement }) => /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", inset: 0, zIndex: 9998, background: T.bg, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 28 } }, /* @__PURE__ */ React.createElement("div", { style: { maxWidth: 380, width: "100%", textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 52, marginBottom: 20 } }, "\u{1F6E1}\uFE0F"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 26, fontWeight: 900, color: T.text, letterSpacing: -0.5, marginBottom: 12, lineHeight: 1.2 } }, userName ? `${userName}, your run` : "Your run", " still counts."), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, color: T.sub, lineHeight: 1.7, marginBottom: 28 } }, "You built a ", bestStreak, "-day run. That doesn't disappear. Today is day 1 of your next one."), /* @__PURE__ */ React.createElement("div", { style: { padding: "18px 20px", borderRadius: 18, background: T.card, border: `1px solid ${T.border}`, marginBottom: 28 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: T.sub, marginBottom: 8 } }, "Your personal best"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 48, fontWeight: 900, color: T.teal, letterSpacing: -3, lineHeight: 1 } }, bestStreak), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: T.sub, marginTop: 4 } }, "days. You've done it before. You'll do it again.")), /* @__PURE__ */ React.createElement("button", { onClick: onStart, style: btnGold({ width: "100%", fontSize: 17, padding: "17px", marginBottom: 10 }) }, "Start today's Gold \u2192"), /* @__PURE__ */ React.createElement("button", { onClick: () => shareZonedInCard("recovery", { best: bestStreak, identity: identityStatement || null }), style: btn({ width: "100%", padding: "13px", borderRadius: 12, border: "1.5px solid rgba(167,139,250,0.3)", background: "transparent", color: "#A78BFA", fontSize: 14, fontWeight: 700, marginBottom: 10 }) }, "Share my comeback \u2726"), /* @__PURE__ */ React.createElement("button", { onClick: onDismiss, style: btn({ width: "100%", background: "none", color: T.sub, fontSize: 13, padding: "8px" }) }, "Go to Plan tab")));
 const ZonedInMVP = () => {
   var _a, _b;
   const [user, setUser] = useState(null);
@@ -1421,7 +1439,9 @@ const ZonedInMVP = () => {
   const [bestStreak, setBestStreak] = useState(0);
   const [showRecovery, setShowRecovery] = useState(false);
   const [showPMF, setShowPMF] = useState(false);
-  const [planSetToday, setPlanSetToday] = useState(false);
+  const [planSetToday, setPlanSetToday] = useState(() => LS.get("zi_plan_set_" + todayStr(), false));
+  const [milestoneShare, setMilestoneShare] = useState(null);
+  const [lastMilestoneShown, setLastMilestoneShown] = useState(() => LS.get("zi_last_milestone", 0));
   const [showWordsMoment, setShowWordsMoment] = useState(false);
   const [goldZone, setGoldZone] = useState("");
   const [diamondZone, setDiamondZone] = useState("");
@@ -1527,7 +1547,6 @@ const ZonedInMVP = () => {
         setMood((_s = zones.mood) != null ? _s : null);
         setActiveZoneKey((_t = zones.active_zone_key) != null ? _t : "gold");
         setZoneLastSet((_u = zones.zone_last_set) != null ? _u : null);
-        if (zones.plan_committed) setPlanSetToday(true);
       }
       const { data: sessions } = await supabase.from("sessions").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(50);
       if (sessions) setSessionHistory(sessions.map((s) => {
@@ -1584,14 +1603,9 @@ const ZonedInMVP = () => {
     await supabase.from("insights").insert({ user_id: user.id, date: i.date, text: i.text, energy: i.energy, mood: i.mood });
   }, [user]);
   const needsDailyReset = zoneLastSet && zoneLastSet !== todayStr();
-  useEffect(() => {
-    if(planSetToday && user) {
-      supabase.from("zones").upsert({ user_id: user.id, date: todayStr(), plan_committed: true }, { onConflict: "user_id,date" });
-    }
-  }, [planSetToday, user]);
+  useEffect(() => { if(planSetToday) LS.set("zi_plan_set_" + todayStr(), true); }, [planSetToday]);
   const handleDailyReset = async () => {
     setPlanSetToday(false);
-    if(user) supabase.from("zones").upsert({ user_id: user.id, date: todayStr(), plan_committed: false }, { onConflict: "user_id,date" });
     setGoldZone("");
     setDiamondZone("");
     setPlatinumZone("");
@@ -1887,6 +1901,11 @@ Write 3 short sections. Direct, data-first, no filler:
       window.zi.recoveryScreenShown(days);
     }
   }, [showRecovery]);
+  useEffect(() => {
+    const SHARE_MILESTONES = [7, 14, 30, 60, 90];
+    const hit = SHARE_MILESTONES.find(d => streak === d && d > lastMilestoneShown);
+    if (hit) { setLastMilestoneShown(hit); LS.set("zi_last_milestone", hit); setMilestoneShare(hit); }
+  }, [streak]);
   if (authLoading) return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100vh", background: T.bg, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24 } },
     /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center" } },
       /* @__PURE__ */ React.createElement("div", { className: "splash-logo", style: { position: "relative", width: 180, height: 180, margin: "0 auto 0" } },
@@ -1921,16 +1940,26 @@ Write 3 short sections. Direct, data-first, no filler:
       saveProfile({ pmf_answered: true });
     } }),
     showWordsMoment && /* @__PURE__ */ React.createElement(WordsMoment, {
-      goldZone, diamondZone, platinumZone,
+      goldZone, diamondZone, platinumZone, identityStatement,
       onComplete: () => {
         setShowWordsMoment(false);
         setPlanSetToday(true);
         if(window.zi) window.zi.track("plan_committed", { task_count: [goldZone, diamondZone, platinumZone].filter(v => v && v.trim()).length });
       }
     }),
+    milestoneShare && /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", inset: 0, zIndex: 9997, background: "rgba(0,0,0,0.88)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 } },
+      /* @__PURE__ */ React.createElement("div", { style: { background: T.card, borderRadius: 24, padding: "32px 24px", maxWidth: 380, width: "100%", textAlign: "center", border: "1px solid rgba(0,194,178,0.2)" } },
+        /* @__PURE__ */ React.createElement("div", { style: { fontSize: 52, marginBottom: 12 } }, "\uD83D\uDD25"),
+        /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 28, fontWeight: 900, color: T.teal, marginBottom: 8 } }, milestoneShare + " days kept"),
+        /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, color: T.sub, marginBottom: 24, lineHeight: 1.6 } }, milestoneShare >= 30 ? "One month of keeping your word. That's evidence." : "The habit is forming. Keep going."),
+        /* @__PURE__ */ React.createElement("button", { onClick: async () => { await shareZonedInCard("milestone", { days: milestoneShare }); setMilestoneShare(null); }, style: btnPrimary({ width: "100%", fontSize: 15, marginBottom: 10 }) }, "Share this \u2726"),
+        /* @__PURE__ */ React.createElement("button", { onClick: () => setMilestoneShare(null), style: btn({ width: "100%", background: "none", color: T.sub, fontSize: 13, padding: "8px" }) }, "Continue \u2192")
+      )
+    ),
     showRecovery && hasOnboarded && /* @__PURE__ */ React.createElement(RecoveryScreen, {
       bestStreak,
       userName,
+      identityStatement,
       onStart: () => {
         setShowRecovery(false);
         setTab("focus");
@@ -1962,7 +1991,7 @@ Write 3 short sections. Direct, data-first, no filler:
       onSkip: handleSkipCommit,
       onBack: () => { setShowCommitment(false); setTab("focus"); }
     }
-  ), sessionActive && /* @__PURE__ */ React.createElement(SessionLock, { secondsLeft, activeTask: activeZoneLabel, doneLooks: currentDoneLooks, onEnd: endSession, onCompleteTask: completeTask, sessionDuration, isRepeatSession }), showReckoning && /* @__PURE__ */ React.createElement(ReckoningScreen, { doneLooks: currentDoneLooks, task: goldZone, onYes: handleReckoningYes, onNotQuite: handleReckoningNotQuite }), showGoldComplete && /* @__PURE__ */ React.createElement(GoldCompleteScreen, { goldTask: goldZone, streak: streak + 1, identityStatement, onDismiss: handleGoldCompleteDismiss }), lastSession && !sessionActive && !showReckoning && !showGoldComplete && /* @__PURE__ */ React.createElement(SessionComplete, { session: lastSession, onDismiss: () => {
+  ), sessionActive && /* @__PURE__ */ React.createElement(SessionLock, { secondsLeft, activeTask: activeZoneLabel, doneLooks: currentDoneLooks, onEnd: endSession, onCompleteTask: completeTask, sessionDuration, isRepeatSession }), showReckoning && /* @__PURE__ */ React.createElement(ReckoningScreen, { doneLooks: currentDoneLooks, task: goldZone, onYes: handleReckoningYes, onNotQuite: handleReckoningNotQuite }), showGoldComplete && /* @__PURE__ */ React.createElement(GoldCompleteScreen, { goldTask: goldZone, streak: streak + 1, identityStatement, doneLooks: currentDoneLooks, onDismiss: handleGoldCompleteDismiss }), lastSession && !sessionActive && !showReckoning && !showGoldComplete && /* @__PURE__ */ React.createElement(SessionComplete, { session: lastSession, onDismiss: () => {
     setLastSession(null);
     setShowZonedInRating(true);
   } }), showZonedInRating && /* @__PURE__ */ React.createElement(PostSessionFlow, { onComplete: ({ rating, energy: e, mood: m, difficulty: d, confidence: c }) => {
@@ -1972,7 +2001,7 @@ Write 3 short sections. Direct, data-first, no filler:
     if (d || c) updateLastSession(d, c);
     setShowZonedInRating(false);
     setTab("reflect");
-  } }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { className: tab === "focus" ? "focus-lock" : "tab-scroll", style: { flex: 1, minHeight: 0, height: "100%", paddingBottom: tab === "focus" ? 0 : 100 } }, tab === "plan" && /* @__PURE__ */ React.createElement(PlanTab, { greetMsg, dateStr, userName, identityStatement, savingZones, needsDailyReset, handleDailyReset, notQuiteCount, completedZones, streak, bestStreak, shields, milestonePct, tierCfg, daysLeft, nextMilestone, todayDone, ZONE_CFG, activeZoneKey, setActiveZoneKey, isZoneDone, toggleZoneDone, goldZone, diamondZone, platinumZone, sessionActive, setTab, planSetToday, setPlanSetToday, sessionHistory }), tab === "focus" && /* @__PURE__ */ React.createElement(FocusTab, { activeZone, activeZoneKey, setActiveZoneKey, ZONE_CFG, isZoneDone, sessionDuration, setSessionDuration, handleStartSession, sessionHistory, setTab, completedZones, goldZone, diamondZone, streak }), tab === "reflect" && /* @__PURE__ */ React.createElement(ReflectTab, { wentWell, setWentWell, energy, setEnergy, mood, setMood, loadingInsight, insightError, generateInsight, insightHistory, sessionRating }), tab === "progress" && /* @__PURE__ */ React.createElement(ProgressTab, { streak, tierCfg, milestonePct, daysLeft, nextMilestone, totalPoints, currentLevel, tierHistory, isStreakMilestone, streakReport, setStreakReport, loadingStreakReport, generateStreakReport, streakTier }))), /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 480, height: 80, background: "rgba(10,14,20,0.96)", backdropFilter: "blur(20px)", borderTop: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "space-around", padding: "0 8px env(safe-area-inset-bottom, 16px)", zIndex: 100, paddingBottom: "max(16px, env(safe-area-inset-bottom, 16px))" } }, [{ id: "plan", icon: "\u{1F5FA}\uFE0F", label: "Plan" }, { id: "focus", icon: "\u{1F525}", label: "Focus" }, { id: "reflect", icon: "\u{1F9E0}", label: "Reflect" }, { id: "progress", icon: "\u{1F3C6}", label: "Progress" }].map((t) => /* @__PURE__ */ React.createElement("button", { key: t.id, onClick: () => setTab(t.id), style: btn({ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "8px 4px", borderRadius: 16, background: tab === t.id ? "rgba(0,194,178,0.1)" : "transparent", border: "none" }) }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 22, lineHeight: 1 } }, t.icon), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 10, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", color: tab === t.id ? T.teal : T.sub } }, t.label)))));
+  } }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { className: tab === "focus" ? "focus-lock" : "tab-scroll", style: { flex: 1, minHeight: 0, height: "100%", paddingBottom: tab === "focus" ? 0 : 100 } }, tab === "plan" && /* @__PURE__ */ React.createElement(PlanTab, { greetMsg, dateStr, userName, identityStatement, savingZones, needsDailyReset, handleDailyReset, notQuiteCount, completedZones, streak, bestStreak, shields, milestonePct, tierCfg, daysLeft, nextMilestone, todayDone, ZONE_CFG, activeZoneKey, setActiveZoneKey, isZoneDone, toggleZoneDone, goldZone, diamondZone, platinumZone, sessionActive, setTab, planSetToday, setPlanSetToday, sessionHistory }), tab === "focus" && /* @__PURE__ */ React.createElement(FocusTab, { activeZone, activeZoneKey, setActiveZoneKey, ZONE_CFG, isZoneDone, sessionDuration, setSessionDuration, handleStartSession, sessionHistory, setTab, completedZones, goldZone, diamondZone, streak }), tab === "reflect" && /* @__PURE__ */ React.createElement(ReflectTab, { wentWell, setWentWell, energy, setEnergy, mood, setMood, loadingInsight, insightError, generateInsight, insightHistory, sessionRating }), tab === "progress" && /* @__PURE__ */ React.createElement(ProgressTab, { streak, tierCfg, milestonePct, daysLeft, nextMilestone, totalPoints, currentLevel, tierHistory, isStreakMilestone, streakReport, setStreakReport, loadingStreakReport, generateStreakReport, streakTier, sessionHistory }))), /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 480, height: 80, background: "rgba(10,14,20,0.96)", backdropFilter: "blur(20px)", borderTop: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "space-around", padding: "0 8px env(safe-area-inset-bottom, 16px)", zIndex: 100, paddingBottom: "max(16px, env(safe-area-inset-bottom, 16px))" } }, [{ id: "plan", icon: "\u{1F5FA}\uFE0F", label: "Plan" }, { id: "focus", icon: "\u{1F525}", label: "Focus" }, { id: "reflect", icon: "\u{1F9E0}", label: "Reflect" }, { id: "progress", icon: "\u{1F3C6}", label: "Progress" }].map((t) => /* @__PURE__ */ React.createElement("button", { key: t.id, onClick: () => setTab(t.id), style: btn({ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "8px 4px", borderRadius: 16, background: tab === t.id ? "rgba(0,194,178,0.1)" : "transparent", border: "none" }) }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 22, lineHeight: 1 } }, t.icon), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 10, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", color: tab === t.id ? T.teal : T.sub } }, t.label)))));
 };
 function waitForSupabase(cb) {
   if (window.__supabaseCreateClient) cb();
