@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ZonedIn — Keep your word to yourself.</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0a0e14;
+  --card:#111720;
+  --card2:#161d28;
+  --border:rgba(255,255,255,0.07);
+  --border2:rgba(255,255,255,0.12);
+  --text:#F0F4F8;
+  --sub:rgba(240,244,248,0.5);
+  --teal:#00C2B2;
+  --teal2:#00E5D4;
+  --gold:#F59E0B;
+  --gold2:#FCD34D;
+  --plat:#A78BFA;
+  --red:#E24B4A;
+}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);overflow-x:hidden;}
+
+/* ── NOISE TEXTURE OVERLAY ── */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.035'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:0;opacity:0.4;
+}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes glow{0%,100%{box-shadow:0 0 20px rgba(0,194,178,0.3)}50%{box-shadow:0 0 40px rgba(0,194,178,0.6)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes shimmer{0%{background-position:-200% center}100%{background-position:200% center}}
+
+.fade-up{animation:fadeUp 0.7s ease both;}
+.fade-up-1{animation:fadeUp 0.7s 0.1s ease both;}
+.fade-up-2{animation:fadeUp 0.7s 0.2s ease both;}
+.fade-up-3{animation:fadeUp 0.7s 0.3s ease both;}
+.fade-up-4{animation:fadeUp 0.7s 0.4s ease both;}
+.fade-up-5{animation:fadeUp 0.7s 0.5s ease both;}
+
+/* ── NAV ── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  padding:16px 24px;
+  display:flex;align-items:center;justify-content:space-between;
+  background:rgba(10,14,20,0.85);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  max-width:100%;
+}
+.nav-logo{display:flex;align-items:center;gap:10px;}
+.nav-logo-mark{
+  width:32px;height:32px;
+  background:var(--card);border:1px solid var(--border2);
+  border-radius:9px;display:flex;align-items:center;justify-content:center;
+}
+.nav-logo-z{
+  font-family:'Syne',sans-serif;font-size:16px;font-weight:900;
+  color:var(--text);
+}
+.nav-name{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--text);}
+.nav-cta{
+  background:linear-gradient(135deg,var(--gold),var(--gold2));
+  color:#1a1200;padding:9px 20px;border-radius:50px;
+  font-family:'DM Sans',sans-serif;font-size:13px;font-weight:800;
+  text-decoration:none;
+  transition:all 0.2s;
+  box-shadow:0 4px 16px rgba(245,158,11,0.3);
+}
+.nav-cta:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(245,158,11,0.4);}
+
+/* ── HERO ── */
+.hero{
+  min-height:100vh;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:120px 24px 80px;
+  position:relative;
+  text-align:center;
+}
+
+/* Radial glow behind hero */
+.hero::after{
+  content:'';
+  position:absolute;
+  top:20%;left:50%;transform:translateX(-50%);
+  width:600px;height:400px;
+  background:radial-gradient(ellipse,rgba(0,194,178,0.12) 0%,transparent 70%);
+  pointer-events:none;
+}
+
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:6px 16px;border-radius:50px;
+  background:rgba(0,194,178,0.08);border:1px solid rgba(0,194,178,0.2);
+  font-size:12px;font-weight:700;color:var(--teal);
+  letter-spacing:0.5px;text-transform:uppercase;
+  margin-bottom:28px;
+}
+.hero-eyebrow-dot{
+  width:6px;height:6px;border-radius:50%;
+  background:var(--teal);animation:pulse 2s ease-in-out infinite;
+}
+
+.hero-headline{
+  font-family:'Syne',sans-serif;
+  font-size:clamp(36px,6vw,72px);
+  font-weight:900;
+  line-height:1.05;
+  letter-spacing:-2px;
+  color:var(--text);
+  max-width:820px;
+  margin-bottom:12px;
+  position:relative;z-index:1;
+}
+.hero-headline .gold{color:var(--gold);}
+.hero-headline .teal{color:var(--teal);}
+
+.hero-sub{
+  font-size:clamp(16px,2.5vw,20px);
+  color:var(--sub);
+  max-width:560px;
+  line-height:1.65;
+  margin-bottom:40px;
+  position:relative;z-index:1;
+}
+.hero-sub strong{color:var(--text);font-weight:600;}
+
+.hero-cta-group{
+  display:flex;flex-direction:column;align-items:center;gap:12px;
+  position:relative;z-index:1;
+}
+.cta-primary{
+  display:inline-flex;align-items:center;gap:10px;
+  background:linear-gradient(135deg,var(--gold),var(--gold2));
+  color:#1a1200;
+  padding:17px 36px;border-radius:50px;
+  font-size:17px;font-weight:900;
+  text-decoration:none;
+  box-shadow:0 8px 32px rgba(245,158,11,0.4);
+  transition:all 0.25s;
+  animation:glow 3s ease-in-out infinite;
+}
+.cta-primary:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(245,158,11,0.5);}
+.cta-primary svg{transition:transform 0.2s;}
+.cta-primary:hover svg{transform:translateX(3px);}
+
+.cta-trust{font-size:12px;color:var(--sub);}
+.cta-trust span{color:var(--teal);}
+
+/* ── SOCIAL PROOF BAR ── */
+.proof-bar{
+  padding:20px 24px;
+  border-top:1px solid var(--border);
+  border-bottom:1px solid var(--border);
+  background:rgba(17,23,32,0.5);
+  display:flex;align-items:center;justify-content:center;gap:32px;
+  flex-wrap:wrap;
+  position:relative;z-index:1;
+}
+.proof-item{
+  display:flex;align-items:center;gap:8px;
+  font-size:13px;color:var(--sub);
+}
+.proof-item strong{color:var(--text);font-weight:700;}
+.proof-dot{width:4px;height:4px;border-radius:50%;background:var(--border2);}
+
+/* ── SECTION WRAPPER ── */
+section{padding:80px 24px;max-width:1100px;margin:0 auto;position:relative;z-index:1;}
+.section-eyebrow{
+  font-size:11px;font-weight:700;letter-spacing:2px;
+  text-transform:uppercase;color:var(--teal);
+  margin-bottom:12px;
+}
+.section-title{
+  font-family:'Syne',sans-serif;
+  font-size:clamp(28px,4vw,44px);
+  font-weight:900;
+  letter-spacing:-1px;
+  color:var(--text);
+  line-height:1.1;
+  margin-bottom:16px;
+}
+.section-sub{
+  font-size:17px;color:var(--sub);
+  line-height:1.65;max-width:560px;
+  margin-bottom:48px;
+}
+
+/* ── PROBLEM SECTION ── */
+.problem-section{
+  padding:80px 24px;
+  background:linear-gradient(180deg,var(--bg) 0%,rgba(17,23,32,0.5) 100%);
+  position:relative;z-index:1;
+}
+.problem-inner{max-width:800px;margin:0 auto;text-align:center;}
+.problem-quote{
+  font-family:'Syne',sans-serif;
+  font-size:clamp(22px,3.5vw,36px);
+  font-weight:800;
+  line-height:1.3;
+  color:var(--text);
+  margin-bottom:24px;
+  letter-spacing:-0.5px;
+}
+.problem-quote .highlight{
+  background:linear-gradient(135deg,var(--gold),var(--gold2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.problem-sub{font-size:17px;color:var(--sub);line-height:1.7;max-width:600px;margin:0 auto;}
+
+/* ── HOW IT WORKS ── */
+.steps-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:16px;
+  margin-top:48px;
+}
+@media(max-width:680px){.steps-grid{grid-template-columns:1fr;}}
+.step-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:28px 24px;
+  position:relative;
+  overflow:hidden;
+  transition:all 0.3s;
+}
+.step-card:hover{border-color:var(--border2);transform:translateY(-2px);}
+.step-card::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% 0%,rgba(0,194,178,0.06) 0%,transparent 70%);
+  pointer-events:none;
+}
+.step-num{
+  font-family:'Syne',sans-serif;
+  font-size:11px;font-weight:800;
+  letter-spacing:2px;text-transform:uppercase;
+  color:var(--teal);margin-bottom:16px;
+}
+.step-icon{font-size:32px;margin-bottom:14px;display:block;animation:float 4s ease-in-out infinite;}
+.step-icon-2{animation-delay:0.5s;}
+.step-icon-3{animation-delay:1s;}
+.step-title{
+  font-family:'Syne',sans-serif;
+  font-size:20px;font-weight:900;
+  color:var(--text);margin-bottom:10px;letter-spacing:-0.3px;
+}
+.step-body{font-size:14px;color:var(--sub);line-height:1.7;}
+.step-callout{
+  margin-top:14px;padding:10px 14px;
+  border-radius:10px;
+  background:rgba(245,158,11,0.08);
+  border:1px solid rgba(245,158,11,0.15);
+  font-size:12px;color:rgba(245,158,11,0.85);
+  font-style:italic;line-height:1.55;
+}
+
+/* ── PRODUCT SCREENSHOTS ── */
+.screens-section{
+  padding:80px 24px;
+  background:linear-gradient(180deg,var(--bg),rgba(17,23,32,0.3),var(--bg));
+  position:relative;z-index:1;
+  overflow:hidden;
+}
+.screens-section::before{
+  content:'';position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  width:800px;height:800px;
+  background:radial-gradient(circle,rgba(0,194,178,0.06) 0%,transparent 65%);
+  pointer-events:none;
+}
+.screens-inner{max-width:1100px;margin:0 auto;text-align:center;}
+.screens-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:12px;
+  margin-top:48px;
+}
+@media(max-width:900px){.screens-grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:480px){.screens-grid{grid-template-columns:1fr 1fr;}}
+
+.screen-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:16px;
+  overflow:hidden;
+  transition:all 0.3s;
+}
+.screen-card:hover{border-color:rgba(0,194,178,0.25);transform:translateY(-4px);box-shadow:0 16px 40px rgba(0,0,0,0.4);}
+.screen-mockup{
+  aspect-ratio:9/16;
+  background:var(--card2);
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:16px;
+  position:relative;
+  overflow:hidden;
+}
+/* Gold Task Screen */
+.mock-gold{background:linear-gradient(160deg,#1a1200,#0a0e14);}
+.mock-gold::before{
+  content:'';position:absolute;top:-30%;left:-30%;
+  width:160%;height:80%;
+  background:radial-gradient(ellipse,rgba(245,158,11,0.15) 0%,transparent 65%);
+}
+/* Timer Screen */
+.mock-timer{background:linear-gradient(160deg,#060a10,#0d1a10);}
+.mock-timer::before{
+  content:'';position:absolute;
+  top:50%;left:50%;transform:translate(-50%,-50%);
+  width:180px;height:180px;border-radius:50%;
+  box-shadow:0 0 60px rgba(0,194,178,0.25);
+}
+/* Commitment Screen */
+.mock-commit{background:linear-gradient(160deg,#0f1a0a,#0a0e14);}
+/* Insight Screen */
+.mock-insight{background:linear-gradient(160deg,#0a0e1a,#0e0a14);}
+.mock-insight::before{
+  content:'';position:absolute;top:-20%;left:-20%;
+  width:140%;height:70%;
+  background:radial-gradient(ellipse,rgba(0,194,178,0.08) 0%,transparent 65%);
+}
+
+.mock-label{
+  position:absolute;bottom:0;left:0;right:0;
+  padding:10px 12px;
+  background:linear-gradient(0deg,rgba(10,14,20,0.95),transparent);
+  font-size:11px;font-weight:700;color:var(--sub);
+  text-align:left;letter-spacing:0.5px;text-transform:uppercase;
+}
+
+/* Screen contents */
+.mock-content{position:relative;z-index:1;width:100%;}
+.mock-tag{
+  font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--gold);margin-bottom:8px;text-align:center;
+}
+.mock-task{
+  background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);
+  border-radius:10px;padding:10px 12px;
+  font-family:'Syne',sans-serif;font-size:12px;font-weight:800;
+  color:var(--text);margin-bottom:10px;text-align:left;
+}
+.mock-btn{
+  width:100%;padding:10px;border-radius:50px;
+  background:linear-gradient(135deg,var(--gold),var(--gold2));
+  font-size:11px;font-weight:900;color:#1a1200;text-align:center;
+  font-family:'Syne',sans-serif;
+}
+.mock-ring{
+  width:100px;height:100px;border-radius:50%;
+  border:6px solid var(--teal);
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 10px;
+  box-shadow:0 0 24px rgba(0,194,178,0.4);
+  position:relative;
+}
+.mock-ring::before{
+  content:'';position:absolute;inset:-8px;border-radius:50%;
+  border:2px solid rgba(0,194,178,0.15);
+}
+.mock-time{
+  font-family:'Syne',sans-serif;font-size:20px;font-weight:900;
+  color:var(--text);letter-spacing:-1px;text-align:center;
+}
+.mock-remaining{font-size:9px;color:var(--teal);font-weight:700;letter-spacing:2px;text-transform:uppercase;text-align:center;}
+.mock-commit-box{
+  background:rgba(255,255,255,0.04);border:1px solid var(--border);
+  border-radius:10px;padding:10px 12px;margin-bottom:10px;
+}
+.mock-commit-label{font-size:9px;color:var(--sub);font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;}
+.mock-commit-text{font-size:11px;color:var(--text);line-height:1.5;}
+.mock-insight-box{
+  background:rgba(0,194,178,0.07);border:1px solid rgba(0,194,178,0.2);
+  border-radius:10px;padding:10px 12px;
+}
+.mock-insight-label{
+  font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  color:var(--teal);margin-bottom:6px;display:flex;align-items:center;gap:5px;
+}
+.mock-insight-dot{width:5px;height:5px;border-radius:50%;background:var(--teal);}
+.mock-insight-text{font-size:10px;color:rgba(240,244,248,0.75);line-height:1.55;}
+
+/* ── WHO IT'S FOR ── */
+.for-section{padding:80px 24px;position:relative;z-index:1;}
+.for-inner{max-width:1100px;margin:0 auto;}
+.for-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:16px;margin-top:48px;
+}
+@media(max-width:680px){.for-grid{grid-template-columns:1fr;}}
+.for-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:20px;padding:24px;
+  position:relative;overflow:hidden;
+  transition:all 0.3s;
+}
+.for-card:hover{border-color:var(--border2);transform:translateY(-2px);}
+.for-card-accent{
+  position:absolute;top:0;left:0;right:0;height:3px;
+  border-radius:20px 20px 0 0;
+}
+.for-emoji{font-size:28px;margin-bottom:14px;display:block;}
+.for-title{
+  font-family:'Syne',sans-serif;font-size:16px;font-weight:800;
+  color:var(--text);margin-bottom:8px;
+}
+.for-body{font-size:13px;color:var(--sub);line-height:1.7;}
+
+/* ── PERSONA CALLOUT ── */
+.persona-callout{
+  max-width:760px;margin:0 auto 48px;
+  background:linear-gradient(135deg,rgba(0,194,178,0.07),rgba(167,139,250,0.04));
+  border:1px solid rgba(0,194,178,0.18);
+  border-radius:20px;padding:28px 32px;
+  text-align:center;
+}
+.persona-text{
+  font-family:'Syne',sans-serif;
+  font-size:clamp(18px,2.5vw,22px);
+  font-weight:800;color:var(--text);
+  line-height:1.4;letter-spacing:-0.3px;
+}
+.persona-text em{color:var(--teal);font-style:normal;}
+
+/* ── FEATURES ── */
+.features-grid{
+  display:grid;grid-template-columns:repeat(2,1fr);
+  gap:16px;margin-top:48px;
+}
+@media(max-width:680px){.features-grid{grid-template-columns:1fr;}}
+.feature-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:16px;padding:22px 24px;
+  display:flex;gap:16px;
+  transition:all 0.3s;
+}
+.feature-card:hover{border-color:var(--border2);}
+.feature-icon{
+  width:42px;height:42px;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;flex-shrink:0;
+}
+.feature-title{
+  font-family:'Syne',sans-serif;font-size:15px;font-weight:800;
+  color:var(--text);margin-bottom:5px;
+}
+.feature-body{font-size:13px;color:var(--sub);line-height:1.6;}
+
+/* ── COMMITMENT LOOP HIGHLIGHT ── */
+.loop-section{
+  padding:80px 24px;
+  background:linear-gradient(180deg,var(--bg),rgba(17,23,32,0.6),var(--bg));
+  position:relative;z-index:1;
+}
+.loop-inner{max-width:760px;margin:0 auto;text-align:center;}
+.loop-steps{
+  display:flex;flex-direction:column;gap:0;
+  margin-top:40px;position:relative;
+}
+.loop-steps::before{
+  content:'';position:absolute;left:50%;top:0;bottom:0;
+  width:1px;background:linear-gradient(180deg,transparent,var(--teal),var(--gold),var(--plat),transparent);
+  transform:translateX(-50%);
+}
+.loop-step{
+  display:flex;align-items:center;gap:20px;
+  padding:20px 0;
+}
+.loop-step:nth-child(odd){flex-direction:row;}
+.loop-step:nth-child(even){flex-direction:row-reverse;}
+@media(max-width:580px){
+  .loop-steps::before{left:24px;}
+  .loop-step,.loop-step:nth-child(even){flex-direction:row;padding-left:60px;}
+}
+.loop-node{
+  width:48px;height:48px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;flex-shrink:0;
+  border:2px solid;
+  position:relative;z-index:1;
+  background:var(--bg);
+}
+.loop-text{flex:1;text-align:left;}
+.loop-step:nth-child(even) .loop-text{text-align:right;}
+@media(max-width:580px){
+  .loop-step:nth-child(even) .loop-text{text-align:left;}
+}
+.loop-step-title{
+  font-family:'Syne',sans-serif;font-size:16px;font-weight:800;
+  color:var(--text);margin-bottom:4px;
+}
+.loop-step-body{font-size:13px;color:var(--sub);line-height:1.6;}
+
+/* ── FINAL CTA ── */
+.final-cta{
+  padding:100px 24px;
+  text-align:center;
+  position:relative;z-index:1;
+}
+.final-cta::before{
+  content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:800px;height:600px;
+  background:radial-gradient(ellipse,rgba(245,158,11,0.08) 0%,transparent 65%);
+  pointer-events:none;
+}
+.final-title{
+  font-family:'Syne',sans-serif;
+  font-size:clamp(32px,5vw,60px);
+  font-weight:900;letter-spacing:-1.5px;
+  line-height:1.05;
+  color:var(--text);
+  max-width:700px;margin:0 auto 20px;
+  position:relative;z-index:1;
+}
+.final-title .gold{color:var(--gold);}
+.final-sub{
+  font-size:17px;color:var(--sub);
+  max-width:480px;margin:0 auto 40px;
+  line-height:1.65;position:relative;z-index:1;
+}
+
+/* ── FOOTER ── */
+footer{
+  padding:32px 24px;
+  border-top:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:12px;
+  position:relative;z-index:1;
+}
+.footer-brand{
+  font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:var(--text);
+}
+.footer-tagline{font-size:12px;color:var(--sub);}
+.footer-links{display:flex;gap:20px;}
+.footer-links a{font-size:12px;color:var(--sub);text-decoration:none;transition:color 0.2s;}
+.footer-links a:hover{color:var(--teal);}
+
+/* ── SHIMMER TEXT ── */
+.shimmer{
+  background:linear-gradient(90deg,var(--gold) 0%,var(--gold2) 40%,#fff 50%,var(--gold2) 60%,var(--gold) 100%);
+  background-size:200% auto;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  animation:shimmer 4s linear infinite;
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">
+    <div class="nav-logo-mark"><span class="nav-logo-z">Z</span></div>
+    <span class="nav-name">ZonedIn</span>
+  </div>
+  <a href="https://zonedin-api.vercel.app" class="nav-cta">Start my first Gold task →</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero" style="max-width:100%;padding-top:140px;">
+  <div class="hero-eyebrow fade-up">
+    <span class="hero-eyebrow-dot"></span>
+    Execution tool for solo founders &amp; indie hackers
+  </div>
+
+  <h1 class="hero-headline fade-up-1">
+    You know exactly what<br>
+    <span class="gold">you need to build today.</span><br>
+    ZonedIn makes sure<br>
+    <span class="teal">you actually build it.</span>
+  </h1>
+
+  <p class="hero-sub fade-up-2">
+    Pick <strong>one task</strong>. Make a specific commitment before you start.
+    Do the reckoning after. Repeat. Built for founders who ship.
+  </p>
+
+  <div class="hero-cta-group fade-up-3">
+    <a href="https://zonedin-api.vercel.app" class="cta-primary">
+      Commit to my one thing today
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </a>
+    <p class="cta-trust">No card required. <span>Free to start.</span> Your data stays yours.</p>
+  </div>
+</section>
+
+<!-- PROOF BAR -->
+<div class="proof-bar fade-up-4">
+  <div class="proof-item">
+    <span>🔥</span>
+    <span><strong>Streak system</strong> that rewards consistency</span>
+  </div>
+  <span class="proof-dot"></span>
+  <div class="proof-item">
+    <span>🤖</span>
+    <span><strong>Claude AI</strong> daily insights</span>
+  </div>
+  <span class="proof-dot"></span>
+  <div class="proof-item">
+    <span>📱</span>
+    <span><strong>PWA</strong> — works on any device</span>
+  </div>
+  <span class="proof-dot"></span>
+  <div class="proof-item">
+    <span>🛡️</span>
+    <span><strong>Run Shields</strong> protect your streak</span>
+  </div>
+</div>
+
+<!-- PROBLEM -->
+<div class="problem-section">
+  <div class="problem-inner">
+    <p class="section-eyebrow" style="text-align:center;">The problem</p>
+    <p class="problem-quote fade-up">
+      Most productivity apps help you <span class="highlight">organise</span> your day.<br>
+      None of them help you <span class="highlight">execute</span> it.
+    </p>
+    <p class="problem-sub fade-up-1">
+      You've tried the to-do lists. The time-blocking. The planners. You still end the day knowing exactly what you should have done — and didn't. ZonedIn is built for that gap.
+    </p>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<section>
+  <p class="section-eyebrow">How it works</p>
+  <h2 class="section-title">Three moves. Every day.</h2>
+  <p class="section-sub">No complex system to learn. No ten-step morning routine. Three deliberate actions that turn intention into execution.</p>
+
+  <div class="steps-grid">
+    <div class="step-card fade-up">
+      <div class="step-num">Step 01</div>
+      <span class="step-icon">🥇</span>
+      <h3 class="step-title">Commit</h3>
+      <p class="step-body">Set your Gold task — the one thing that must get done today. Then define exactly what done looks like before you start. No vague intentions.</p>
+      <div class="step-callout">"I commit to this task. I'm done when: Proposal sent to client."</div>
+    </div>
+    <div class="step-card fade-up-1">
+      <div class="step-num">Step 02</div>
+      <span class="step-icon step-icon-2">🔥</span>
+      <h3 class="step-title">Focus</h3>
+      <p class="step-body">Lock into a timed session. Full-screen hero timer. Screen stays awake. No distractions, no scrolling out of the session. Just you and the work.</p>
+      <div class="step-callout" style="border-color:rgba(0,194,178,0.2);background:rgba(0,194,178,0.06);color:rgba(0,194,178,0.8);">The timer fills your screen. Tapping out isn't an option.</div>
+    </div>
+    <div class="step-card fade-up-2">
+      <div class="step-num">Step 03</div>
+      <span class="step-icon step-icon-3">⚖️</span>
+      <h3 class="step-title">Reckon</h3>
+      <p class="step-body">When the session ends, one question: "Did you get there?" You answer for it. Yes or not quite. That accountability is what makes tomorrow different.</p>
+      <div class="step-callout" style="border-color:rgba(167,139,250,0.2);background:rgba(167,139,250,0.06);color:rgba(167,139,250,0.8);">Then Claude tells you what worked — and what to try tomorrow.</div>
+    </div>
+  </div>
+</section>
+
+<!-- PRODUCT SCREENSHOTS -->
+<div class="screens-section">
+  <div class="screens-inner">
+    <p class="section-eyebrow fade-up">The product</p>
+    <h2 class="section-title fade-up-1">Built for doing, not planning</h2>
+    <p class="section-sub fade-up-2" style="margin:0 auto 0;max-width:500px;">Every screen in ZonedIn exists to move you one step closer to finishing your most important task.</p>
+
+    <div class="screens-grid">
+      <!-- Screen 1: Gold Task -->
+      <div class="screen-card fade-up">
+        <div class="screen-mockup mock-gold">
+          <div class="mock-content">
+            <div class="mock-tag">🥇 Your Gold today</div>
+            <div class="mock-task">Finish the client proposal</div>
+            <div class="mock-commit-box">
+              <div class="mock-commit-label">Done when</div>
+              <div class="mock-commit-text" style="font-size:10px;color:rgba(245,158,11,0.8);">Proposal sent and delivery confirmed</div>
+            </div>
+            <div class="mock-btn">Commit & Go for Gold →</div>
+          </div>
+          <div class="mock-label">Commitment screen</div>
+        </div>
+      </div>
+
+      <!-- Screen 2: Hero Timer -->
+      <div class="screen-card fade-up-1">
+        <div class="screen-mockup mock-timer">
+          <div class="mock-content">
+            <div style="font-size:9px;color:var(--teal);font-weight:700;letter-spacing:2px;text-transform:uppercase;text-align:center;margin-bottom:12px;">In progress</div>
+            <div class="mock-ring">
+              <div>
+                <div class="mock-time">24:07</div>
+                <div class="mock-remaining">remaining</div>
+              </div>
+            </div>
+            <div style="font-size:10px;color:var(--sub);text-align:center;margin-bottom:12px;font-style:italic;">"Deep work is the competitive advantage."</div>
+            <div class="mock-btn" style="background:linear-gradient(135deg,var(--teal),var(--teal2));color:#fff;">✓ Done</div>
+          </div>
+          <div class="mock-label">Hero timer</div>
+        </div>
+      </div>
+
+      <!-- Screen 3: Gold Complete -->
+      <div class="screen-card fade-up-2">
+        <div class="screen-mockup mock-commit">
+          <div class="mock-content">
+            <div style="text-align:center;margin-bottom:10px;font-size:36px;">🥇</div>
+            <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:900;color:var(--gold);text-align:center;margin-bottom:4px;">Gold Complete</div>
+            <div style="font-size:9px;color:rgba(245,158,11,0.5);text-align:center;letter-spacing:1px;margin-bottom:12px;">KEEP YOUR WORD TO YOURSELF</div>
+            <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.15);border-radius:8px;padding:8px 10px;margin-bottom:10px;">
+              <div style="font-size:10px;color:var(--sub);text-decoration:line-through;text-decoration-color:rgba(245,158,11,0.4);">Finish the client proposal</div>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:center;gap:6px;background:rgba(245,158,11,0.1);border-radius:50px;padding:4px 12px;">
+              <span style="font-size:12px;">🔥</span>
+              <span style="font-family:'Syne',sans-serif;font-size:14px;font-weight:900;color:var(--gold);">8</span>
+              <span style="font-size:10px;color:rgba(245,158,11,0.6);">day run</span>
+            </div>
+          </div>
+          <div class="mock-label">Gold complete</div>
+        </div>
+      </div>
+
+      <!-- Screen 4: Claude Insight -->
+      <div class="screen-card fade-up-3">
+        <div class="screen-mockup mock-insight">
+          <div class="mock-content">
+            <div class="mock-tag" style="color:var(--teal);">🧠 Close the Loop</div>
+            <div class="mock-insight-box">
+              <div class="mock-insight-label">
+                <span class="mock-insight-dot"></span>
+                Claude Insight
+              </div>
+              <div class="mock-insight-text">✅ What worked: You committed before starting — your completion rate is 40% higher on sessions with a defined finish line.<br><br>🔧 What to try: Start tomorrow's Gold before 10am — your focus window data shows 74% completion rate in the morning.</div>
+            </div>
+          </div>
+          <div class="mock-label">AI insight</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- WHO IT'S FOR -->
+<section class="for-section">
+  <div class="for-inner">
+    <p class="section-eyebrow">Who it's for</p>
+    <h2 class="section-title">Built for founders who end too many days having handled everything except the thing that actually mattered.</h2>
+
+    <div class="persona-callout fade-up">
+      <p class="persona-text">
+        ZonedIn is for <em>solo founders and indie hackers</em> who know exactly what they need to ship — and still don't. Not because they lacked a system. Because no system has ever made them accountable to their own commitments.
+      </p>
+    </div>
+
+    <div class="for-grid">
+      <div class="for-card fade-up">
+        <div class="for-card-accent" style="background:linear-gradient(90deg,var(--gold),var(--gold2));"></div>
+        <span class="for-emoji">🚀</span>
+        <h3 class="for-title">The solo founder</h3>
+        <p class="for-body">No manager, no sprint board, no standup. Just you and the work. ZonedIn replaces external accountability with a commitment you make to yourself — before the session starts.</p>
+      </div>
+      <div class="for-card fade-up-1">
+        <div class="for-card-accent" style="background:linear-gradient(90deg,var(--teal),var(--teal2));"></div>
+        <span class="for-emoji">⚡</span>
+        <h3 class="for-title">The indie hacker</h3>
+        <p class="for-body">You're building in the margins — before work, after work, weekends. Every session counts. ZonedIn makes sure the hour you carved out goes to the one thing that actually moves the needle.</p>
+      </div>
+      <div class="for-card fade-up-2">
+        <div class="for-card-accent" style="background:linear-gradient(90deg,var(--plat),#c084fc);"></div>
+        <span class="for-emoji">🧠</span>
+        <h3 class="for-title">The deep work builder</h3>
+        <p class="for-body">You know the theory. You know one hour of real focus beats six hours of distracted effort. You need a tool that actually enforces it — with a commitment, a timer, and a reckoning.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMMITMENT LOOP DETAIL -->
+<div class="loop-section">
+  <div class="loop-inner">
+    <p class="section-eyebrow">The commitment loop</p>
+    <h2 class="section-title fade-up">The only productivity mechanic<br>that actually changes behaviour</h2>
+    <p class="section-sub fade-up-1" style="margin:0 auto 0;text-align:center;">Most apps track your tasks. ZonedIn makes you answer for them. That's the difference.</p>
+
+    <div class="loop-steps fade-up-2">
+      <div class="loop-step">
+        <div class="loop-node" style="border-color:var(--gold);color:var(--gold);">🥇</div>
+        <div class="loop-text">
+          <div class="loop-step-title">Set your Gold task</div>
+          <div class="loop-step-body">One non-negotiable. The thing that matters most today — not the easiest thing on the list.</div>
+        </div>
+      </div>
+      <div class="loop-step">
+        <div class="loop-text">
+          <div class="loop-step-title">Define done</div>
+          <div class="loop-step-body">"I'm done when..." — a specific, concrete finish line before the session starts. Vague goals don't get done.</div>
+        </div>
+        <div class="loop-node" style="border-color:var(--teal);color:var(--teal);">✍️</div>
+      </div>
+      <div class="loop-step">
+        <div class="loop-node" style="border-color:var(--teal);color:var(--teal);">⏱️</div>
+        <div class="loop-text">
+          <div class="loop-step-title">Lock in and focus</div>
+          <div class="loop-step-body">Full-screen timer. Your commitment stays visible throughout. No way to quietly give up.</div>
+        </div>
+      </div>
+      <div class="loop-step">
+        <div class="loop-text">
+          <div class="loop-step-title">The Reckoning</div>
+          <div class="loop-step-body">Did you get there? One honest answer. Yes or not quite. That accountability is what makes tomorrow different from today.</div>
+        </div>
+        <div class="loop-node" style="border-color:var(--plat);color:var(--plat);">⚖️</div>
+      </div>
+      <div class="loop-step">
+        <div class="loop-node" style="border-color:rgba(0,194,178,0.5);color:var(--teal);">🤖</div>
+        <div class="loop-text">
+          <div class="loop-step-title">Claude closes the loop</div>
+          <div class="loop-step-body">One specific observation. One concrete suggestion for tomorrow. Built from your actual pattern — not generic advice.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section>
+  <p class="section-eyebrow">Everything included</p>
+  <h2 class="section-title">Built to keep you coming back</h2>
+
+  <div class="features-grid">
+    <div class="feature-card fade-up">
+      <div class="feature-icon" style="background:rgba(245,158,11,0.1);">🥇</div>
+      <div>
+        <div class="feature-title">Gold → Diamond → Platinum</div>
+        <p class="feature-body">Three-tier task system. Gold is your non-negotiable. Diamond builds momentum. Platinum is your breakthrough goal. All three in one focused day.</p>
+      </div>
+    </div>
+    <div class="feature-card fade-up-1">
+      <div class="feature-icon" style="background:rgba(0,194,178,0.1);">🔥</div>
+      <div>
+        <div class="feature-title">Current run + Best run</div>
+        <p class="feature-body">Your streak is called your "run" — because a missed day pauses it, not ends it. Your best run stays visible always. Evidence of what you're capable of.</p>
+      </div>
+    </div>
+    <div class="feature-card fade-up-2">
+      <div class="feature-icon" style="background:rgba(0,194,178,0.1);">🛡️</div>
+      <div>
+        <div class="feature-title">Run Shields</div>
+        <p class="feature-body">Earn one every 7 days. A shield absorbs a missed day so your run stays intact. Earned assets — not free passes. Rewards consistency, forgives life.</p>
+      </div>
+    </div>
+    <div class="feature-card fade-up-3">
+      <div class="feature-icon" style="background:rgba(167,139,250,0.1);">⚡</div>
+      <div>
+        <div class="feature-title">Momentum Forecast</div>
+        <p class="feature-body">Learns from your session history. Tells you when your focus window is open. "Your best focus window: 9–11am — from your data." Gets smarter every session.</p>
+      </div>
+    </div>
+    <div class="feature-card fade-up">
+      <div class="feature-icon" style="background:rgba(245,158,11,0.1);">🧠</div>
+      <div>
+        <div class="feature-title">Claude AI insight</div>
+        <p class="feature-body">One specific observation. One concrete suggestion. Based on your reflection, your energy, your session rating. A coach that knows your patterns.</p>
+      </div>
+    </div>
+    <div class="feature-card fade-up-1">
+      <div class="feature-icon" style="background:rgba(96,165,250,0.1);">📊</div>
+      <div>
+        <div class="feature-title">Post-session flow</div>
+        <p class="feature-body">"Were you Zoned In?" — three quick taps after every session. Energy. Mood. That data feeds your AI insights and your Momentum Forecast.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<div class="final-cta">
+  <h2 class="final-title fade-up">
+    Stop intending.<br>
+    <span class="shimmer">Start doing.</span>
+  </h2>
+  <p class="final-sub fade-up-1">
+    Your Gold task is waiting. The only question is whether today is the day you actually finish it.
+  </p>
+  <div style="position:relative;z-index:1;" class="fade-up-2">
+    <a href="https://zonedin-api.vercel.app" class="cta-primary" style="margin-bottom:12px;display:inline-flex;">
+      Start my first Gold task
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </a>
+    <p class="cta-trust" style="margin-top:12px;">No card required. Free to start. Your data stays yours.</p>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div>
+    <div class="footer-brand">ZonedIn</div>
+    <div class="footer-tagline">Keep your word to yourself.</div>
+  </div>
+  <div class="footer-links">
+    <a href="#">Privacy</a>
+    <a href="#">Terms</a>
+    <a href="https://zonedin-api.vercel.app">Open App</a>
+  </div>
+</footer>
+
+</body>
+</html>
