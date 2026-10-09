@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover"/>
-  <title>ZonedIn — Keep your word to yourself.</title>
+  <title>ZonedIn — Clarity beats chaos.</title>
   <link rel="manifest" href="/manifest.json"/>
   <meta name="apple-mobile-web-app-capable" content="yes"/>
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
@@ -190,13 +190,13 @@ function scBrand(ctx,W,H,c){const fs=W*.029,zs=W*.028,y=H-H*.052;ctx.font=`700 $
 function scWrap(ctx,txt,mW){const ws=txt.split(' ');let l='',ls=[];for(const w of ws){const t=l+w+' ';if(ctx.measureText(t).width>mW&&l){ls.push(l.trimEnd());l=w+' ';}else l=t;}ls.push(l.trimEnd());return ls;}
 function scPill(ctx,cx,cy,txt,bg,stroke,tc,W){const fs=W*.03;ctx.font=`700 ${fs}px DM Sans,system-ui,sans-serif`;ctx.textAlign='center';const tw=ctx.measureText(txt).width;const pw=tw+W*.072,ph=W*.068;const rx=cx-pw/2,ry=cy-ph/2;ctx.fillStyle=bg;ctx.beginPath();ctx.roundRect(rx,ry,pw,ph,ph/2);ctx.fill();ctx.strokeStyle=stroke;ctx.lineWidth=2;ctx.beginPath();ctx.roundRect(rx,ry,pw,ph,ph/2);ctx.stroke();ctx.fillStyle=tc;ctx.fillText(txt,cx,cy+fs*.37);}
 function scCommitment(ctx,W,H,{task,identity,date}){scBg(ctx,W,H,'rgba(245,158,11,0.12)');scStripe(ctx,W,SC.gold);ctx.textAlign='center';ctx.fillStyle='rgba(245,158,11,0.72)';ctx.font=`700 ${W*.044}px DM Sans,system-ui,sans-serif`;ctx.fillText('TODAY I AM COMMITTING TO',W/2,H*.145);ctx.strokeStyle='rgba(245,158,11,0.2)';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(W*.15,H*.178);ctx.lineTo(W*.85,H*.178);ctx.stroke();ctx.font=`900 ${W*.068}px Syne,system-ui,sans-serif`;const tl=scWrap(ctx,`\u201c${task}\u201d`,W*.83);const th=tl.length*W*.085;const ty=H/2-th/2+W*.005;ctx.fillStyle=SC.text;tl.forEach((l,i)=>ctx.fillText(l,W/2,ty+i*W*.085));if(date){ctx.fillStyle='rgba(245,158,11,0.5)';ctx.font=`500 ${W*.025}px DM Sans,system-ui,sans-serif`;ctx.fillText(date,W/2,H*.72);}if(identity){ctx.fillStyle=SC.teal;ctx.font=`500 ${W*.03}px DM Sans,system-ui,sans-serif`;ctx.fillText(`I am becoming: ${identity}`,W/2,H*.775);}ctx.fillStyle='rgba(240,244,248,0.42)';ctx.font=`400 italic ${W*.027}px DM Sans,system-ui,sans-serif`;ctx.fillText('The gap between who I am and who I said I\u2019d be closes today.',W/2,H*.835);ctx.fillStyle=SC.teal;ctx.font=`700 ${W*.026}px DM Sans,system-ui,sans-serif`;ctx.fillText('#ZonedIn',W/2,H*.882);scBrand(ctx,W,H,'rgba(245,158,11,0.75)');}
-function scEvidence(ctx,W,H,{task,doneLooks,streak,identity}){scBg(ctx,W,H,'rgba(245,158,11,0.15)');scStripe(ctx,W,SC.gold);ctx.textAlign='center';const ey=H*.195;ctx.save();ctx.strokeStyle='rgba(245,158,11,0.18)';ctx.lineWidth=W*.006;for(let a=0;a<360;a+=45){const r1=W*.1,r2=W*.135,rad=(a*Math.PI)/180;ctx.beginPath();ctx.moveTo(W/2+r1*Math.cos(rad),ey+r1*Math.sin(rad));ctx.lineTo(W/2+r2*Math.cos(rad),ey+r2*Math.sin(rad));ctx.stroke();}ctx.restore();ctx.strokeStyle=SC.teal;ctx.lineWidth=W*.012;ctx.lineCap='round';ctx.lineJoin='round';ctx.beginPath();ctx.arc(W/2,ey,W*.075,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.moveTo(W/2-W*.035,ey);ctx.lineTo(W/2-W*.008,ey+W*.027);ctx.lineTo(W/2+W*.04,ey-W*.03);ctx.stroke();ctx.fillStyle=SC.gold;ctx.font=`900 ${W*.088}px Syne,system-ui,sans-serif`;ctx.fillText('EVIDENCE ADDED',W/2,H*.35);let at=H*.39;const dt=doneLooks||task;if(doneLooks){ctx.fillStyle='rgba(245,158,11,0.5)';ctx.font=`700 ${W*.022}px DM Sans,system-ui,sans-serif`;ctx.fillText('DONE WHEN:',W/2,at+W*.01);ctx.fillStyle='rgba(240,244,248,0.82)';ctx.font=`500 italic ${W*.034}px DM Sans,system-ui,sans-serif`;const dl=scWrap(ctx,`\u201c${dt}\u201d`,W*.8);dl.forEach((l,i)=>ctx.fillText(l,W/2,at+W*.045+i*W*.046));at+=W*.045+dl.length*W*.046+W*.02;}else{ctx.fillStyle=SC.text;ctx.font=`500 ${W*.038}px DM Sans,system-ui,sans-serif`;const tl=scWrap(ctx,`\u201c${dt}\u201d`,W*.82);tl.forEach((l,i)=>ctx.fillText(l,W/2,at+W*.01+i*W*.052));at+=W*.01+tl.length*W*.052+W*.02;}const py=Math.min(at+W*.04,H*.66);if(streak>=2)scPill(ctx,W/2,py,`${streak} days Gold kept`,'rgba(245,158,11,0.1)','rgba(245,158,11,0.38)',SC.gold,W);if(identity){ctx.fillStyle=SC.teal;ctx.font=`500 ${W*.027}px DM Sans,system-ui,sans-serif`;ctx.fillText(`Becoming: ${identity}`,W/2,py+W*.094);}ctx.fillStyle='rgba(245,158,11,0.88)';ctx.font=`400 italic ${W*.029}px DM Sans,system-ui,sans-serif`;const tg=scWrap(ctx,"I kept my word. Keep your word to yourself.",W*.78);tg.forEach((l,i)=>ctx.fillText(l,W/2,H*.835+i*W*.04));scBrand(ctx,W,H,'rgba(245,158,11,0.75)');}
+function scEvidence(ctx,W,H,{task,doneLooks,streak,identity}){scBg(ctx,W,H,'rgba(245,158,11,0.15)');scStripe(ctx,W,SC.gold);ctx.textAlign='center';const ey=H*.195;ctx.save();ctx.strokeStyle='rgba(245,158,11,0.18)';ctx.lineWidth=W*.006;for(let a=0;a<360;a+=45){const r1=W*.1,r2=W*.135,rad=(a*Math.PI)/180;ctx.beginPath();ctx.moveTo(W/2+r1*Math.cos(rad),ey+r1*Math.sin(rad));ctx.lineTo(W/2+r2*Math.cos(rad),ey+r2*Math.sin(rad));ctx.stroke();}ctx.restore();ctx.strokeStyle=SC.teal;ctx.lineWidth=W*.012;ctx.lineCap='round';ctx.lineJoin='round';ctx.beginPath();ctx.arc(W/2,ey,W*.075,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.moveTo(W/2-W*.035,ey);ctx.lineTo(W/2-W*.008,ey+W*.027);ctx.lineTo(W/2+W*.04,ey-W*.03);ctx.stroke();ctx.fillStyle=SC.gold;ctx.font=`900 ${W*.088}px Syne,system-ui,sans-serif`;ctx.fillText('EVIDENCE ADDED',W/2,H*.35);let at=H*.39;const dt=doneLooks||task;if(doneLooks){ctx.fillStyle='rgba(245,158,11,0.5)';ctx.font=`700 ${W*.022}px DM Sans,system-ui,sans-serif`;ctx.fillText('DONE WHEN:',W/2,at+W*.01);ctx.fillStyle='rgba(240,244,248,0.82)';ctx.font=`500 italic ${W*.034}px DM Sans,system-ui,sans-serif`;const dl=scWrap(ctx,`\u201c${dt}\u201d`,W*.8);dl.forEach((l,i)=>ctx.fillText(l,W/2,at+W*.045+i*W*.046));at+=W*.045+dl.length*W*.046+W*.02;}else{ctx.fillStyle=SC.text;ctx.font=`500 ${W*.038}px DM Sans,system-ui,sans-serif`;const tl=scWrap(ctx,`\u201c${dt}\u201d`,W*.82);tl.forEach((l,i)=>ctx.fillText(l,W/2,at+W*.01+i*W*.052));at+=W*.01+tl.length*W*.052+W*.02;}const py=Math.min(at+W*.04,H*.66);if(streak>=2)scPill(ctx,W/2,py,`${streak} days Gold kept`,'rgba(245,158,11,0.1)','rgba(245,158,11,0.38)',SC.gold,W);if(identity){ctx.fillStyle=SC.teal;ctx.font=`500 ${W*.027}px DM Sans,system-ui,sans-serif`;ctx.fillText(`Becoming: ${identity}`,W/2,py+W*.094);}ctx.fillStyle='rgba(245,158,11,0.88)';ctx.font=`400 italic ${W*.029}px DM Sans,system-ui,sans-serif`;const tg=scWrap(ctx,"Every kept commitment is evidence of who you\u2019re becoming.",W*.78);tg.forEach((l,i)=>ctx.fillText(l,W/2,H*.835+i*W*.04));scBrand(ctx,W,H,'rgba(245,158,11,0.75)');}
 function scMilestone(ctx,W,H,{days}){const big=days>=30;scBg(ctx,W,H,big?'rgba(0,194,178,0.18)':'rgba(0,194,178,0.1)');scStripe(ctx,W,SC.teal);ctx.textAlign='center';const ax=W/2,ay=H*.44,ar=W*.33,as=Math.PI*.72,af=big?.95:.26;ctx.save();ctx.strokeStyle='rgba(0,194,178,0.08)';ctx.lineWidth=W*.018;ctx.lineCap='butt';ctx.beginPath();ctx.arc(ax,ay,ar,Math.PI*.72,Math.PI*.72+Math.PI*1.56);ctx.stroke();ctx.strokeStyle=SC.teal;ctx.lineWidth=W*.016;ctx.lineCap='round';ctx.beginPath();ctx.arc(ax,ay,ar,as,as+Math.PI*1.56*af);ctx.stroke();ctx.restore();ctx.fillStyle=SC.text;ctx.font=`900 ${big?W*.27:W*.24}px Syne,system-ui,sans-serif`;ctx.fillText(String(days),W/2,ay+W*.095);ctx.fillStyle=SC.teal;ctx.font=`700 ${W*.036}px DM Sans,system-ui,sans-serif`;ctx.fillText('DAYS KEPT',W/2,ay+W*.16);ctx.strokeStyle='rgba(0,194,178,0.22)';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(W*.22,H*.695);ctx.lineTo(W*.78,H*.695);ctx.stroke();const cp=big?'30 days. One month of keeping my word.':`${days} days in. Just getting started.`;ctx.fillStyle='rgba(240,244,248,0.82)';ctx.font=`500 ${W*.036}px DM Sans,system-ui,sans-serif`;const cl=scWrap(ctx,cp,W*.76);cl.forEach((l,i)=>ctx.fillText(l,W/2,H*.735+i*W*.05));ctx.fillStyle='rgba(0,194,178,0.65)';ctx.font=`400 italic ${W*.029}px DM Sans,system-ui,sans-serif`;ctx.fillText(big?"That\u2019s a month of evidence.":"The first 7 are the hardest.",W/2,H*.81);ctx.fillStyle='rgba(0,194,178,0.5)';ctx.font=`700 ${W*.024}px DM Sans,system-ui,sans-serif`;ctx.fillText('#ZonedIn',W/2,H*.868);scBrand(ctx,W,H,SC.teal);}
-function scRecovery(ctx,W,H,{best,identity}){scBg(ctx,W,H,'rgba(167,139,250,0.12)');scStripe(ctx,W,SC.plat);ctx.textAlign='center';const by=H*.26;ctx.fillStyle=SC.text;ctx.font=`900 ${W*.11}px Syne,system-ui,sans-serif`;ctx.fillText(`${best} days.`,W/2,by);ctx.fillStyle='rgba(167,139,250,0.72)';ctx.font=`500 ${W*.038}px DM Sans,system-ui,sans-serif`;ctx.fillText('That was my run.',W/2,by+W*.125);ctx.strokeStyle='rgba(167,139,250,0.18)';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(W*.38,by+W*.168);ctx.lineTo(W*.62,by+W*.168);ctx.stroke();ctx.fillStyle='rgba(240,244,248,0.55)';ctx.font=`400 ${W*.036}px DM Sans,system-ui,sans-serif`;ctx.fillText('I missed yesterday.',W/2,by+W*.215);ctx.fillStyle=SC.text;ctx.font=`900 ${W*.082}px Syne,system-ui,sans-serif`;ctx.fillText('Back today.',W/2,by+W*.315);if(identity){ctx.fillStyle='rgba(167,139,250,0.82)';ctx.font=`500 ${W*.028}px DM Sans,system-ui,sans-serif`;ctx.fillText(`Still becoming: ${identity}`,W/2,H*.745);}ctx.fillStyle='rgba(167,139,250,0.55)';ctx.font=`400 italic ${W*.026}px DM Sans,system-ui,sans-serif`;const pl=scWrap(ctx,"ZonedIn doesn\u2019t count missed days. It counts kept commitments.",W*.78);pl.forEach((l,i)=>ctx.fillText(l,W/2,H*.81+i*W*.038));scBrand(ctx,W,H,'rgba(167,139,250,0.7)');}
-function scRate(ctx,W,H,{kept,of}){const pct=Math.round((kept/of)*100);const col=pct>=80?SC.teal:pct>=60?SC.gold:'rgba(240,244,248,0.5)';scBg(ctx,W,H,pct>=80?'rgba(0,194,178,0.11)':'rgba(245,158,11,0.1)');scStripe(ctx,W,col);ctx.textAlign='center';ctx.fillStyle=`${col}99`;ctx.font=`700 ${W*.026}px DM Sans,system-ui,sans-serif`;ctx.fillText('MY COMMITMENT RATE',W/2,H*.155);ctx.strokeStyle=`${col}33`;ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(W*.18,H*.185);ctx.lineTo(W*.82,H*.185);ctx.stroke();ctx.fillStyle=col;ctx.font=`900 ${W*.26}px Syne,system-ui,sans-serif`;ctx.fillText(`${pct}%`,W/2,H*.52);ctx.fillStyle='rgba(240,244,248,0.65)';ctx.font=`500 ${W*.034}px DM Sans,system-ui,sans-serif`;ctx.fillText('of my commitments kept this week',W/2,H*.575);scPill(ctx,W/2,H*.648,`${kept} of ${of} commitments`,`${col}14`,`${col}44`,col,W);ctx.strokeStyle=`${col}22`;ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(W*.22,H*.71);ctx.lineTo(W*.78,H*.71);ctx.stroke();const m=kept===of?'Perfect week. Every word kept.':pct>=80?'My word means something.':pct>=60?'Getting better. That\u2019s the whole point.':'Honest is better than comfortable.';ctx.fillStyle='rgba(240,244,248,0.78)';ctx.font=`500 ${W*.038}px DM Sans,system-ui,sans-serif`;ctx.fillText(m,W/2,H*.765);ctx.fillStyle=`${col}88`;ctx.font=`700 ${W*.024}px DM Sans,system-ui,sans-serif`;ctx.fillText('#ZonedIn',W/2,H*.862);scBrand(ctx,W,H,`${col}bb`);}
+function scRecovery(ctx,W,H,{best,identity}){scBg(ctx,W,H,'rgba(167,139,250,0.12)');scStripe(ctx,W,SC.plat);ctx.textAlign='center';const by=H*.26;ctx.fillStyle=SC.text;ctx.font=`900 ${W*.11}px Syne,system-ui,sans-serif`;ctx.fillText(`${best} days.`,W/2,by);ctx.fillStyle='rgba(167,139,250,0.72)';ctx.font=`500 ${W*.038}px DM Sans,system-ui,sans-serif`;ctx.fillText('That was my run.',W/2,by+W*.125);ctx.strokeStyle='rgba(167,139,250,0.18)';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(W*.38,by+W*.168);ctx.lineTo(W*.62,by+W*.168);ctx.stroke();ctx.fillStyle='rgba(240,244,248,0.55)';ctx.font=`400 ${W*.036}px DM Sans,system-ui,sans-serif`;ctx.fillText('Yesterday slipped.',W/2,by+W*.215);ctx.fillStyle=SC.text;ctx.font=`900 ${W*.082}px Syne,system-ui,sans-serif`;ctx.fillText('Back today.',W/2,by+W*.315);if(identity){ctx.fillStyle='rgba(167,139,250,0.82)';ctx.font=`500 ${W*.028}px DM Sans,system-ui,sans-serif`;ctx.fillText(`Still becoming: ${identity}`,W/2,H*.745);}ctx.fillStyle='rgba(167,139,250,0.55)';ctx.font=`400 italic ${W*.026}px DM Sans,system-ui,sans-serif`;const pl=scWrap(ctx,"ZonedIn counts kept commitments, not the days in between.",W*.78);pl.forEach((l,i)=>ctx.fillText(l,W/2,H*.81+i*W*.038));scBrand(ctx,W,H,'rgba(167,139,250,0.7)');}
+function scRate(ctx,W,H,{kept,of}){const pct=Math.round((kept/of)*100);const col=pct>=80?SC.teal:pct>=60?SC.gold:'rgba(240,244,248,0.5)';scBg(ctx,W,H,pct>=80?'rgba(0,194,178,0.11)':'rgba(245,158,11,0.1)');scStripe(ctx,W,col);ctx.textAlign='center';ctx.fillStyle=`${col}99`;ctx.font=`700 ${W*.026}px DM Sans,system-ui,sans-serif`;ctx.fillText('MY ZONEDIN RATE',W/2,H*.155);ctx.strokeStyle=`${col}33`;ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(W*.18,H*.185);ctx.lineTo(W*.82,H*.185);ctx.stroke();ctx.fillStyle=col;ctx.font=`900 ${W*.26}px Syne,system-ui,sans-serif`;ctx.fillText(`${pct}%`,W/2,H*.52);ctx.fillStyle='rgba(240,244,248,0.65)';ctx.font=`500 ${W*.034}px DM Sans,system-ui,sans-serif`;ctx.fillText('of my commitments kept this week',W/2,H*.575);scPill(ctx,W/2,H*.648,`${kept} of ${of} commitments`,`${col}14`,`${col}44`,col,W);ctx.strokeStyle=`${col}22`;ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(W*.22,H*.71);ctx.lineTo(W*.78,H*.71);ctx.stroke();const m=kept===of?'Perfect week. Every commitment kept.':pct>=80?'My word means something.':pct>=60?'Getting better. That\u2019s the whole point.':'Every week is a fresh start.';ctx.fillStyle='rgba(240,244,248,0.78)';ctx.font=`500 ${W*.038}px DM Sans,system-ui,sans-serif`;ctx.fillText(m,W/2,H*.765);ctx.fillStyle=`${col}88`;ctx.font=`700 ${W*.024}px DM Sans,system-ui,sans-serif`;ctx.fillText('#ZonedIn',W/2,H*.862);scBrand(ctx,W,H,`${col}bb`);}
 function scFit(ctx,txt,mW){if(ctx.measureText(txt).width<=mW)return txt;let t=txt;while(t.length>1&&ctx.measureText(t+'…').width>mW)t=t.slice(0,-1);return t.trimEnd()+'…';}
-function scDay(ctx,W,H,{kept,committed,line,tasks,date}){const all=kept===committed&&committed>0;const col=all?SC.teal:kept>0?SC.gold:'rgba(240,244,248,0.62)';scBg(ctx,W,H,all?'rgba(0,194,178,0.13)':kept>0?'rgba(245,158,11,0.10)':'rgba(240,244,248,0.05)');scStripe(ctx,W,col);ctx.textAlign='center';ctx.fillStyle='rgba(240,244,248,0.5)';ctx.font=`700 ${W*.026}px DM Sans,system-ui,sans-serif`;ctx.fillText(String(date||'').toUpperCase(),W/2,H*.12);ctx.fillStyle=col;ctx.font=`900 ${W*.21}px Syne,system-ui,sans-serif`;ctx.fillText(`${kept}/${committed}`,W/2,H*.335);ctx.fillStyle=SC.text;ctx.font=`700 ${W*.044}px DM Sans,system-ui,sans-serif`;const ll=scWrap(ctx,line||'',W*.8);ll.forEach((l,i)=>ctx.fillText(l,W/2,H*.415+i*W*.055));const tc={gold:SC.gold,diamond:'#60A5FA',platinum:SC.plat};let y=H*.5+(ll.length-1)*W*.05;const rh=W*.09,x0=W*.1,x1=W*.9;(tasks||[]).forEach(t=>{ctx.fillStyle='rgba(255,255,255,0.04)';ctx.beginPath();ctx.roundRect(x0,y,x1-x0,rh,W*.022);ctx.fill();ctx.strokeStyle='rgba(255,255,255,0.08)';ctx.lineWidth=2;ctx.beginPath();ctx.roundRect(x0,y,x1-x0,rh,W*.022);ctx.stroke();ctx.fillStyle=t.kept?SC.teal:'rgba(240,244,248,0.55)';ctx.font=`900 ${W*.04}px DM Sans,system-ui,sans-serif`;ctx.textAlign='center';ctx.fillText(t.kept?'✓':'✕',x0+W*.05,y+rh*.64);ctx.textAlign='left';ctx.fillStyle=tc[t.tier]||SC.gold;ctx.font=`700 ${W*.019}px DM Sans,system-ui,sans-serif`;ctx.fillText(String(t.tier||'').toUpperCase(),x0+W*.095,y+rh*.36);ctx.fillStyle=SC.text;ctx.font=`600 ${W*.031}px DM Sans,system-ui,sans-serif`;ctx.fillText(scFit(ctx,t.text||'',x1-x0-W*.13),x0+W*.095,y+rh*.75);y+=rh+W*.018;});ctx.textAlign='center';ctx.fillStyle='rgba(0,194,178,0.75)';ctx.font=`400 italic ${W*.028}px DM Sans,system-ui,sans-serif`;ctx.fillText('Keep your word to yourself.',W/2,H*.905);scBrand(ctx,W,H,col);}
-function scGetText(type,data){switch(type){case'commitment':return`Today I\u2019m committing to: ${data.task}. Holding myself to it. #ZonedIn`;case'evidence':return`Kept my word: \u201c${data.task}\u201d.${data.streak>=2?` ${data.streak} days Gold kept.`:''} #ZonedIn`;case'milestone':return`${data.days} days of keeping my word to myself. #ZonedIn`;case'recovery':return`My ${data.best}-day run still counts. Back today. #ZonedIn`;case'day':return`${data.kept}/${data.committed}. ${data.line||'My word held today.'} #ZonedIn`;case'rate':return`${Math.round((data.kept/data.of)*100)}% of my commitments kept this week. My word means something. #ZonedIn`;default:return'ZonedIn \u2014 every kept commitment is evidence of who you\u2019re becoming.';}}
+function scDay(ctx,W,H,{kept,committed,line,tasks,date}){const all=kept===committed&&committed>0;const col=all?SC.teal:kept>0?SC.gold:'rgba(240,244,248,0.62)';scBg(ctx,W,H,all?'rgba(0,194,178,0.13)':kept>0?'rgba(245,158,11,0.10)':'rgba(240,244,248,0.05)');scStripe(ctx,W,col);ctx.textAlign='center';ctx.fillStyle='rgba(240,244,248,0.5)';ctx.font=`700 ${W*.026}px DM Sans,system-ui,sans-serif`;ctx.fillText(String(date||'').toUpperCase(),W/2,H*.12);ctx.fillStyle=col;ctx.font=`900 ${W*.21}px Syne,system-ui,sans-serif`;ctx.fillText(`${kept}/${committed}`,W/2,H*.335);ctx.fillStyle=SC.text;ctx.font=`700 ${W*.044}px DM Sans,system-ui,sans-serif`;const ll=scWrap(ctx,line||'',W*.8);ll.forEach((l,i)=>ctx.fillText(l,W/2,H*.415+i*W*.055));const tc={gold:SC.gold,diamond:'#60A5FA',platinum:SC.plat};let y=H*.5+(ll.length-1)*W*.05;const rh=W*.09,x0=W*.1,x1=W*.9;(tasks||[]).forEach(t=>{ctx.fillStyle='rgba(255,255,255,0.04)';ctx.beginPath();ctx.roundRect(x0,y,x1-x0,rh,W*.022);ctx.fill();ctx.strokeStyle='rgba(255,255,255,0.08)';ctx.lineWidth=2;ctx.beginPath();ctx.roundRect(x0,y,x1-x0,rh,W*.022);ctx.stroke();ctx.fillStyle=t.kept?SC.teal:'rgba(240,244,248,0.55)';ctx.font=`900 ${W*.04}px DM Sans,system-ui,sans-serif`;ctx.textAlign='center';ctx.fillText(t.kept?'✓':'✕',x0+W*.05,y+rh*.64);ctx.textAlign='left';ctx.fillStyle=tc[t.tier]||SC.gold;ctx.font=`700 ${W*.019}px DM Sans,system-ui,sans-serif`;ctx.fillText(String(t.tier||'').toUpperCase(),x0+W*.095,y+rh*.36);ctx.fillStyle=SC.text;ctx.font=`600 ${W*.031}px DM Sans,system-ui,sans-serif`;ctx.fillText(scFit(ctx,t.text||'',x1-x0-W*.13),x0+W*.095,y+rh*.75);y+=rh+W*.018;});ctx.textAlign='center';ctx.fillStyle='rgba(0,194,178,0.75)';ctx.font=`400 italic ${W*.028}px DM Sans,system-ui,sans-serif`;ctx.fillText('Clarity beats chaos.',W/2,H*.905);scBrand(ctx,W,H,col);}
+function scGetText(type,data){switch(type){case'commitment':return`Today I\u2019m committing to: ${data.task}. Holding myself to it. #ZonedIn`;case'evidence':return`Kept my word: \u201c${data.task}\u201d.${data.streak>=2?` ${data.streak} days Gold kept.`:''} #ZonedIn`;case'milestone':return`${data.days} days of keeping my word to myself. #ZonedIn`;case'recovery':return`${data.best} days Gold kept still count. Back today. #ZonedIn`;case'day':return`${data.kept}/${data.committed}. ${data.line||'I kept my word today.'} #ZonedIn`;case'rate':return`${Math.round((data.kept/data.of)*100)}% of my commitments kept this week. My word means something. #ZonedIn`;default:return'ZonedIn \u2014 every kept commitment is evidence of who you\u2019re becoming.';}}
 async function generateShareCard(type,data){return new Promise(resolve=>{const c=document.createElement('canvas');c.width=1080;c.height=1080;const ctx=c.getContext('2d');switch(type){case'commitment':scCommitment(ctx,1080,1080,data);break;case'evidence':scEvidence(ctx,1080,1080,data);break;case'milestone':scMilestone(ctx,1080,1080,data);break;case'recovery':scRecovery(ctx,1080,1080,data);break;case'rate':scRate(ctx,1080,1080,data);break;case'day':scDay(ctx,1080,1080,data);break;}c.toBlob(b=>resolve(b),'image/png',1.0);});}
 async function shareZonedInCard(type,data){try{const blob=await generateShareCard(type,data);const file=new File([blob],`zonedin-${type}.png`,{type:'image/png'});if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:'ZonedIn'});}else if(navigator.share){await navigator.share({text:scGetText(type,data),url:'https://zonedin.app'});}else{await navigator.clipboard.writeText(scGetText(type,data)+'\n\nhttps://zonedin.app');}}catch(e){if(e.name!=='AbortError')console.warn('Share:',e);}}
 // ═══════════════════════════════════════════════════════════════════════
@@ -336,11 +336,11 @@ const autoDoneSuggest = (task) => {
   }
   return "I have completed this task to my satisfaction";
 };
-const MOTIVATIONAL = ["One task. Full focus. Stay locked.", "Clarity is earned one minute at a time.", "Momentum builds in silence.", "Every second here is a second ahead.", "Deep work is the competitive advantage.", "Zone in. The world can wait."];
+const MOTIVATIONAL = ["One task. Full focus. Stay locked.", "Clarity is earned one minute at a time.", "Clarity beats chaos.", "You committed to this. See it through.", "Every kept commitment is evidence of who you\u2019re becoming.", "Zone in. The world can wait."];
 const OB_DEFAULT_IDENTITIES = ["a person who keeps their word", "someone who ships what they say they will", "someone who follows through"];
 const OB_DURATION_HEADING = "How long will you focus, starting now?";
 const OB_DURATION_HELPER = "The timer starts when you tap. You\u2019ll do the work now.";
-const obDurationCta = (m) => `Start my ${m}-minute session \u2192`;
+const obDurationCta = (m) => `Get ZonedIn \u00B7 ${m} min \u2192`;
 const obTrack = (event, props) => { try { if (window.zi) window.zi.track(event, props || {}); } catch (e) {} };
 
 // ── ONBOARDING FLOW — OB-01 to OB-05 (promise → gold → done-when → commit → duration) ──
@@ -367,9 +367,9 @@ const OnboardingFlow = ({ day, form, onCommitDay, onStartFirstSession }) => {
   // OB-01 — Promise (kept), CTA now leads into Today's Three
   if (step === "promise") return shell(
     ce("div", { style: { display: "flex", justifyContent: "center", marginBottom: 28 } }, ce(ZonedInMark, { size: 56 })),
-    heading("Keep your word to yourself.", 26),
+    heading("Clarity beats chaos.", 26),
     ce("div", { style: { display: "flex", flexDirection: "column", gap: 12, margin: "0 auto 34px", maxWidth: 280 } },
-      ["Pick one thing.", "Decide what done looks like.", "Do it.", "Be honest about it."].map((line, i) =>
+      ["Choose what matters.", "Decide what done looks like.", "Commit to it.", "See it through."].map((line, i) =>
         ce("div", { key: i, style: { display: "flex", alignItems: "center", gap: 12 } },
           ce("span", { style: { width: 22, height: 22, borderRadius: 11, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, color: T.gold, background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.3)" } }, i + 1),
           ce("span", { style: { fontSize: 16, fontWeight: 600, color: T.text } }, line)))),
@@ -426,14 +426,14 @@ const IdentityNameScreen = ({ kept, initialName, onSave }) => {
     ce("div", { className: "fade-up", style: { maxWidth: 380, width: "100%" } },
       ce("div", { style: { display: "flex", justifyContent: "center", marginBottom: 14, color: T.teal } }, kept ? ce(CheckMark, { size: 34, color: T.teal }) : ce(TierMark, { tier: "gold", size: 34 })),
       ce("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 23, fontWeight: 900, color: T.text, letterSpacing: -0.4, lineHeight: 1.25, textAlign: "center", marginBottom: 22 } },
-        kept ? "You just kept your word. Who is that person becoming?" : "You showed up and were honest. Who are you becoming?"),
+        kept ? "You just kept your word. Who is that person becoming?" : "You showed up and checked in. Who are you becoming?"),
       ce("div", { style: { fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: T.teal, marginBottom: 10 } }, "I am becoming\u2026"),
       ce("div", { style: { display: "flex", flexDirection: "column", gap: 8, marginBottom: 10 } },
         OB_DEFAULT_IDENTITIES.map((d) => ce("button", { key: d, onClick: () => setIdentity(d), style: btn({ width: "100%", textAlign: "left", padding: "11px 14px", borderRadius: 12, fontSize: 14, fontWeight: 600, border: `1.5px solid ${identity === d ? T.teal : T.border}`, background: identity === d ? "rgba(0,194,178,0.1)" : "transparent", color: identity === d ? T.teal : T.text }) }, d))),
       ce("input", { type: "text", value: identity, onChange: (e) => setIdentity(e.target.value.slice(0, 60)), onFocus: () => setFocus("id"), onBlur: () => setFocus(null), placeholder: "or write your own", style: { ...inputStyle("id"), marginBottom: 22 } }),
       ce("div", { style: { fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: T.sub, marginBottom: 10 } }, "What should we call you?"),
       ce("input", { type: "text", value: name, maxLength: 16, onChange: (e) => setName(e.target.value.slice(0, 16)), onKeyDown: (e) => e.key === "Enter" && save(), onFocus: () => setFocus("name"), onBlur: () => setFocus(null), placeholder: "Your first name", style: { ...inputStyle("name"), marginBottom: 22 } }),
-      ce("button", { onClick: save, disabled: !ok, style: btnPrimary({ width: "100%", fontSize: 16, padding: "16px", opacity: ok ? 1 : 0.35, cursor: ok ? "pointer" : "not-allowed" }) }, ok ? "Let\u2019s go \u2726" : "Choose who you\u2019re becoming")
+      ce("button", { onClick: save, disabled: !ok, style: btnPrimary({ width: "100%", fontSize: 16, padding: "16px", opacity: ok ? 1 : 0.35, cursor: ok ? "pointer" : "not-allowed" }) }, ok ? "Let\u2019s go" : "Choose who you\u2019re becoming")
     )
   );
 };
@@ -513,16 +513,16 @@ const AuthScreen = () => {
     React.createElement("div", { style: { maxWidth: 360, width: "100%", textAlign: "center" } },
       React.createElement("div", { style: { marginBottom: 20, display: "flex", justifyContent: "center" } }, React.createElement(ZonedInMark, { size: 56 })),
       React.createElement("h1", { style: { fontFamily: "'Syne',sans-serif", fontSize: 30, fontWeight: 900, color: T.text, letterSpacing: -0.5, margin: "0 0 6px" } }, "ZonedIn"),
-      React.createElement("p", { style: { fontSize: 14, color: T.sub, margin: "0 0 20px" } }, "Keep your word to yourself."),
-      !sent ? React.createElement("div", { "aria-label": "Example of a ZonedIn promise", style: { textAlign: "left", background: "#07090d", borderRadius: 20, padding: "18px 18px 14px", border: `1px solid ${T.border2}`, marginBottom: 16 } },
-        React.createElement("div", { style: { fontSize: 11, fontWeight: 700, letterSpacing: 1.1, textTransform: "uppercase", color: T.gold, marginBottom: 6 } }, "Today, I said I would"),
+      React.createElement("p", { style: { fontSize: 14, color: T.sub, margin: "0 0 20px" } }, "Clarity beats chaos. Commit to your top three. See them through."),
+      !sent ? React.createElement("div", { "aria-label": "Example of a ZonedIn commitment", style: { textAlign: "left", background: "#07090d", borderRadius: 20, padding: "18px 18px 14px", border: `1px solid ${T.border2}`, marginBottom: 16 } },
+        React.createElement("div", { style: { fontSize: 11, fontWeight: 700, letterSpacing: 1.1, textTransform: "uppercase", color: T.gold, marginBottom: 6 } }, "Today, I’m committed to"),
         React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 19, fontWeight: 900, color: T.text, lineHeight: 1.25, marginBottom: 8 } }, "Send the proposal to Sarah"),
         React.createElement("div", { style: { fontSize: 13, color: T.sub, marginBottom: 3 } }, "Done when: ", React.createElement("span", { style: { color: T.text } }, "Proposal sent to Sarah")),
         React.createElement("div", { style: { fontSize: 13, color: T.teal, fontStyle: "italic", marginBottom: 12 } }, "Because it unlocks the deal"),
-        React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, paddingTop: 10, borderTop: `1px solid ${T.border}`, fontSize: 13, color: T.teal, fontWeight: 700 } }, React.createElement(CheckMark, { size: 15, color: T.teal }), "Kept \u00B7 Your word held today.")) : null,
+        React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, paddingTop: 10, borderTop: `1px solid ${T.border}`, fontSize: 13, color: T.teal, fontWeight: 700 } }, React.createElement(CheckMark, { size: 15, color: T.teal }), "Kept \u00B7 You kept your word.")) : null,
       !sent
         ? React.createElement("div", { style: { background: T.card, borderRadius: 24, padding: "24px 22px", border: `1px solid ${T.border}` } },
-            React.createElement("h2", { style: { fontFamily: "'Syne',sans-serif", fontSize: 19, fontWeight: 800, color: T.text, margin: "0 0 18px" } }, "Make your first promise"),
+            React.createElement("h2", { style: { fontFamily: "'Syne',sans-serif", fontSize: 19, fontWeight: 800, color: T.text, margin: "0 0 18px" } }, "Make your first commitment"),
             React.createElement("button", {
               onClick: handleGoogle, disabled: googleLoading,
               style: btn({ width: "100%", padding: "14px 20px", borderRadius: 14, background: "#fff", color: "#1a1a1a", fontSize: 15, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 16, opacity: googleLoading ? 0.7 : 1, cursor: googleLoading ? "not-allowed" : "pointer", boxShadow: "0 2px 12px rgba(0,0,0,0.4)" })
@@ -549,7 +549,7 @@ const AuthScreen = () => {
                   React.createElement("button", {
                     onClick: handleLogin, disabled: loading || !email.trim(),
                     style: btnPrimary({ width: "100%", opacity: loading || !email.trim() ? 0.5 : 1, cursor: loading || !email.trim() ? "not-allowed" : "pointer" })
-                  }, loading ? "Sending\u2026" : "Send Magic Link \u2726")
+                  }, loading ? "Sending\u2026" : "Email me a sign-in link")
                 )
           )
         : React.createElement("div", { style: { background: T.card, borderRadius: 24, padding: "32px 28px", border: `1px solid rgba(0,194,178,0.2)` } },
@@ -626,7 +626,7 @@ const SessionLock = ({ secondsLeft, activeTask, doneLooks, tier, why, onEnd, onC
     )
   ),
   wakeLockNotice && /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", top: 12, left: "50%", transform: "translateX(-50%)", zIndex: 2, padding: "5px 14px", borderRadius: 50, background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.2)", whiteSpace: "nowrap" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 10, color: T.gold, fontWeight: 700 } }, "\u26A0 Keep your screen on during this session")),
-  /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", inset: 0, background: `radial-gradient(ellipse at 50% 45%,${glowColor} 0%,transparent 65%)`, pointerEvents: "none", transition: "background 2s ease" } }), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", inset: 0, background: `radial-gradient(ellipse at 50% 45%,${glowColor} 0%,transparent 65%)`, pointerEvents: "none", transition: "background 2s ease" } }), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", zIndex: 1, paddingTop: 8 } }, isRepeatSession && /* @__PURE__ */ React.createElement("div", { style: { display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 50, background: "rgba(0,194,178,0.1)", border: "1px solid rgba(0,194,178,0.2)", marginBottom: 8 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, fontWeight: 700, color: T.teal } }, "Round 2 \u2014 still your promise")), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, fontWeight: 700, letterSpacing: 1.1, textTransform: "uppercase", color: nearEnd ? T.gold : T.teal, marginBottom: 8, transition: "color 1s" } }, nearEnd ? "Almost there" : "In progress"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 18, fontWeight: 800, color: T.text, maxWidth: 300, lineHeight: 1.35, margin: "0 auto" } }, activeTask), doneLooks && tier === "gold" && React.createElement("div", { style: { marginTop: 10, maxWidth: 320, marginLeft: "auto", marginRight: "auto", fontSize: 14, lineHeight: 1.45, color: T.sub } }, "Done when: ", React.createElement("span", { style: { color: T.text } }, doneLooks)), firstSession && /* @__PURE__ */ React.createElement("div", { style: { margin: "12px auto 0", maxWidth: 300, fontSize: 13, fontWeight: 600, lineHeight: 1.5, color: T.teal } }, "Work on it now. We\u2019ll check in when the timer ends.")), /* @__PURE__ */ React.createElement("div", { style: { position: "relative", width: size, height: size, zIndex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", inset: 0, borderRadius: "50%", boxShadow: `0 0 60px ${glowColor}`, transition: "box-shadow 2s ease" } }), /* @__PURE__ */ React.createElement("svg", { width: size, height: size, viewBox: `0 0 ${size} ${size}`, style: { transform: "rotate(-90deg)", display: "block" } }, /* @__PURE__ */ React.createElement("circle", { cx: size / 2, cy: size / 2, r, fill: "none", stroke: "rgba(255,255,255,0.05)", strokeWidth: "10" }), /* @__PURE__ */ React.createElement(
+  /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", inset: 0, background: `radial-gradient(ellipse at 50% 45%,${glowColor} 0%,transparent 65%)`, pointerEvents: "none", transition: "background 2s ease" } }), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", inset: 0, background: `radial-gradient(ellipse at 50% 45%,${glowColor} 0%,transparent 65%)`, pointerEvents: "none", transition: "background 2s ease" } }), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", zIndex: 1, paddingTop: 8 } }, isRepeatSession && /* @__PURE__ */ React.createElement("div", { style: { display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 50, background: "rgba(0,194,178,0.1)", border: "1px solid rgba(0,194,178,0.2)", marginBottom: 8 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, fontWeight: 700, color: T.teal } }, "Round 2 \u2014 still committed")), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, fontWeight: 700, letterSpacing: 1.1, textTransform: "uppercase", color: nearEnd ? T.gold : T.teal, marginBottom: 8, transition: "color 1s" } }, nearEnd ? "Almost there" : "In progress"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 18, fontWeight: 800, color: T.text, maxWidth: 300, lineHeight: 1.35, margin: "0 auto" } }, activeTask), doneLooks && tier === "gold" && React.createElement("div", { style: { marginTop: 10, maxWidth: 320, marginLeft: "auto", marginRight: "auto", fontSize: 14, lineHeight: 1.45, color: T.sub } }, "Done when: ", React.createElement("span", { style: { color: T.text } }, doneLooks)), firstSession && /* @__PURE__ */ React.createElement("div", { style: { margin: "12px auto 0", maxWidth: 300, fontSize: 13, fontWeight: 600, lineHeight: 1.5, color: T.teal } }, "Work on it now. We\u2019ll check in when the timer ends.")), /* @__PURE__ */ React.createElement("div", { style: { position: "relative", width: size, height: size, zIndex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", inset: 0, borderRadius: "50%", boxShadow: `0 0 60px ${glowColor}`, transition: "box-shadow 2s ease" } }), /* @__PURE__ */ React.createElement("svg", { width: size, height: size, viewBox: `0 0 ${size} ${size}`, style: { transform: "rotate(-90deg)", display: "block" } }, /* @__PURE__ */ React.createElement("circle", { cx: size / 2, cy: size / 2, r, fill: "none", stroke: "rgba(255,255,255,0.05)", strokeWidth: "10" }), /* @__PURE__ */ React.createElement(
     "circle",
     {
       cx: size / 2,
@@ -738,12 +738,12 @@ const computeMomentum = (sessionHistory) => {
   }
   const nowH = (/* @__PURE__ */ new Date()).getHours();
   let timeNudge = null;
-  if (nowH >= 5 && nowH < 10) timeNudge = { label: "Prime focus window", sub: "Morning clarity is your edge \u2014 start now", urgency: "high" };
-  else if (nowH >= 10 && nowH < 12) timeNudge = { label: "Focus window open", sub: "Late morning \u2014 still excellent", urgency: "med" };
-  else if (nowH >= 12 && nowH < 14) timeNudge = { label: "Post-lunch dip ahead", sub: "Start before noon for best results", urgency: "low" };
-  else if (nowH >= 14 && nowH < 16) timeNudge = { label: "Afternoon recovery", sub: "Energy rebounds \u2014 good window opening", urgency: "med" };
-  else if (nowH >= 16 && nowH < 19) timeNudge = { label: "End-of-day push", sub: "Finish strong before you wind down", urgency: "high" };
-  else timeNudge = { label: "Off-peak hours", sub: "Consider scheduling Gold for tomorrow morning", urgency: "low" };
+  if (nowH >= 5 && nowH < 10) timeNudge = { label: "Morning focus", sub: "Mornings are often clearest \u2014 a good time for Gold", urgency: "high" };
+  else if (nowH >= 10 && nowH < 12) timeNudge = { label: "Late morning", sub: "Still a good window for focused work", urgency: "med" };
+  else if (nowH >= 12 && nowH < 14) timeNudge = { label: "After lunch", sub: "Energy often dips here \u2014 a shorter session helps", urgency: "low" };
+  else if (nowH >= 14 && nowH < 16) timeNudge = { label: "Afternoon", sub: "Energy usually returns about now", urgency: "med" };
+  else if (nowH >= 16 && nowH < 19) timeNudge = { label: "Late afternoon", sub: "Time for one more session before the evening", urgency: "high" };
+  else timeNudge = { label: "Evening", sub: "Tomorrow morning may suit Gold better", urgency: "low" };
   return { rate, total, recentCompleted, last5: last5.length, bestHour, timeNudge };
 };
 const MomentumCard = ({ sessionHistory, userName }) => {
@@ -844,8 +844,8 @@ const dayCounts = (d, isPast) => {
 let DL_FIRST_DAY = false;
 const verdictLine = (kept, committed) => {
   if (!committed) return "";
-  if (DL_FIRST_DAY && committed === 1) return kept ? "Your first promise, kept." : "Your first honest answer. That\u2019s how this starts.";
-  if (kept === committed) return "Your word held today.";
+  if (DL_FIRST_DAY && committed === 1) return kept ? "Your first commitment, kept." : "You showed up and checked in. That\u2019s how this starts.";
+  if (kept === committed) return "All kept. You kept your word.";
   if (kept === 0) return "Not today. Tomorrow is still yours.";
   if (kept === committed - 1) return kept === 2 ? "Two kept. That’s a strong day." : "One kept. That’s a strong day.";
   return "You kept one. That’s still evidence.";
@@ -961,15 +961,15 @@ const GoldCompleteScreen = ({ goldTask, streak, identityStatement, doneLooks, wi
   return RCx("div", { style: { position: "fixed", inset: 0, zIndex: 9998, background: "#07090d", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "calc(env(safe-area-inset-top,0px) + 24px) 26px calc(env(safe-area-inset-bottom,0px) + 22px)", overflowY: "auto" } },
     RCx("div", { style: { maxWidth: 380, width: "100%", textAlign: "center" } },
       RCx("div", { className: "stamp-pop", style: { width: 64, height: 64, borderRadius: 32, margin: "0 auto 18px", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,194,178,0.12)", border: "1.5px solid rgba(0,194,178,0.45)", color: T.teal } }, RCx(CheckMark, { size: 30 })),
-      RCx("div", { className: "words-fade", style: { fontSize: 12, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase", color: T.teal, marginBottom: 10 } }, "Evidence added"),
+      RCx("div", { className: "words-fade", style: { fontSize: 12, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase", color: T.teal, marginBottom: 10 } }, "Evidence Added"),
       RCx("div", { className: "words-fade", style: { fontFamily: "'Syne',sans-serif", fontSize: 26, fontWeight: 900, color: T.text, letterSpacing: -0.4, lineHeight: 1.22, marginBottom: 10, wordBreak: "break-word", animationDelay: "0.15s" } }, goldTask),
       doneLooks ? RCx("div", { className: "words-fade", style: { fontSize: 14, color: T.sub, lineHeight: 1.45, marginBottom: 16, animationDelay: "0.3s" } }, "Done when: ", RCx("span", { style: { color: T.text } }, doneLooks)) : null,
       RCx("div", { className: "words-fade", style: { fontSize: 15, color: T.text, fontWeight: 600, marginBottom: 6, animationDelay: "0.45s" } }, "You kept your word."),
-      identityStatement ? RCx("div", { className: "words-fade", style: { fontSize: 14, color: T.teal, fontStyle: "italic", marginBottom: 10, animationDelay: "0.6s" } }, "Another vote for: ", identityStatement) : null,
+      identityStatement ? RCx("div", { className: "words-fade", style: { fontSize: 14, color: T.teal, fontStyle: "italic", marginBottom: 10, animationDelay: "0.6s" } }, "Becoming: ", identityStatement) : null,
       streak >= 2 ? RCx("div", { className: "words-fade", style: { display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, color: T.gold, fontWeight: 700, marginBottom: 8, animationDelay: "0.7s" } }, RCx(BoltMark, { size: 15, color: T.gold }), streak, " days Gold kept") : null,
       withSession ? RCx("div", { style: { margin: "18px 0 6px" } }, RCx(DifficultyRow, { value: difficulty, onChange: setDifficulty })) : null,
       RCx("button", { onClick: () => onDismiss(difficulty), style: btnPrimary({ width: "100%", marginTop: 20, fontSize: 16, padding: "16px" }) }, "Continue →"),
-      RCx("button", { onClick: share, style: btn({ width: "100%", marginTop: 4, minHeight: 44, background: "none", color: T.teal, fontSize: 14, padding: "0 10px" }) }, "Share this ✦")));
+      RCx("button", { onClick: share, style: btn({ width: "100%", marginTop: 4, minHeight: 44, background: "none", color: T.teal, fontSize: 14, padding: "0 10px" }) }, "Share this")));
 };
 
 // ── Recommit — a Gold miss becomes tomorrow's promise. ──
@@ -979,7 +979,7 @@ const RecommitSheet = ({ task, rolls, withSession, onRecommit, onLetGo }) => {
   const third = rolls >= 2;
   return RCx("div", { style: { position: "fixed", inset: 0, zIndex: 9998, background: "rgba(0,0,0,0.88)", display: "flex", alignItems: "flex-end", justifyContent: "center", padding: "16px 16px calc(env(safe-area-inset-bottom,0px) + 16px)" } },
     RCx("div", { className: "slide-up", role: "dialog", "aria-label": "Make it tomorrow's Gold", style: { background: T.card, borderRadius: 28, padding: "26px 22px 18px", maxWidth: 420, width: "100%", border: `1px solid ${T.border2}` } },
-      RCx("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 22, fontWeight: 900, color: T.text, marginBottom: 6, textAlign: "center" } }, "That’s honest."),
+      RCx("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 22, fontWeight: 900, color: T.text, marginBottom: 6, textAlign: "center" } }, "Not today."),
       RCx("div", { style: { fontSize: 14, color: T.sub, lineHeight: 1.5, marginBottom: 16, textAlign: "center" } }, third ? "Third time this has rolled forward — what’s actually in the way? Make it smaller, or let it go." : "Make it tomorrow’s Gold? Smaller is fine."),
       RCx("label", { htmlFor: "zi-recommit", style: { fontSize: 12, color: T.sub, display: "block", marginBottom: 6 } }, "Tomorrow’s Gold"),
       RCx("input", { id: "zi-recommit", type: "text", value: txt, maxLength: 80, onChange: (e) => setTxt(e.target.value), style: { width: "100%", padding: "13px 14px", borderRadius: 12, border: `1.5px solid rgba(245,158,11,0.45)`, background: T.bg, color: T.text, fontSize: 15, boxSizing: "border-box", outline: "none", fontFamily: "'DM Sans',sans-serif", marginBottom: 14 } }),
@@ -1148,7 +1148,7 @@ const PromiseRitual = ({ day, onBack, onIn }) => {
   const others = ["diamond", "platinum"].filter((t) => (day[t] || "").trim());
   const fade = (delay, extra) => ({ className: "words-fade", style: __spreadValues({ animationDelay: `${delay}s` }, extra || {}) });
   return shell(RC("div", { style: { maxWidth: 380, width: "100%", textAlign: "center" } },
-    RC("div", fade(0, { fontSize: 11, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: T.gold, marginBottom: 12 }), "Today, I said I would"),
+    RC("div", fade(0, { fontSize: 11, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: T.gold, marginBottom: 12 }), "Today, I’m committed to"),
     RC("div", fade(0.2, { fontFamily: "'Syne',sans-serif", fontSize: 26, fontWeight: 900, color: T.text, letterSpacing: -0.4, lineHeight: 1.22, marginBottom: 20, wordBreak: "break-word" }), day.gold.trim()),
     RC("div", fade(0.5, { marginBottom: 12 }), dlLabel("Done when", "rgba(245,158,11,0.7)", { marginBottom: 4 }), RC("div", { style: { fontSize: 15, color: T.text, lineHeight: 1.45 } }, day.gold_done_when.trim())),
     RC("div", fade(0.8, { marginBottom: others.length ? 30 : 8 }), dlLabel("Because", "rgba(0,194,178,0.8)", { marginBottom: 4 }), RC("div", { style: { fontSize: 15, color: T.teal, fontStyle: "italic", lineHeight: 1.45 } }, day.gold_why.trim())),
@@ -1166,10 +1166,10 @@ const TodaysThreeForm = ({ day, onTask, onTaskBlur, onDoneWhen, onWhy, onPromise
   const missing = [];
   if (!day.gold.trim()) missing.push("your Gold task");
   else {
-    if (!day.gold_done_when.trim()) missing.push("Gold’s finish line");
+    if (!day.gold_done_when.trim()) missing.push("when Gold is done");
     if (!day.gold_why.trim()) missing.push("why Gold matters");
   }
-  ["diamond", "platinum"].forEach((t) => { if (day[t].trim() && !day[`${t}_done_when`].trim()) missing.push(`${DL_TIER[t].label}’s finish line`); });
+  ["diamond", "platinum"].forEach((t) => { if (day[t].trim() && !day[`${t}_done_when`].trim()) missing.push(`when ${DL_TIER[t].label} is done`); });
   const ok = missing.length === 0;
   return RC("div", { className: "fade-up", style: { padding: "4px 16px 20px" } },
     hint ? RC("div", { style: { margin: "0 0 12px", padding: "10px 14px", borderRadius: 12, background: "rgba(0,194,178,0.07)", border: "1px solid rgba(0,194,178,0.22)", fontSize: 13, color: T.teal, fontWeight: 600, lineHeight: 1.45 } }, hint) : null,
@@ -1193,16 +1193,16 @@ const TodaysThreeForm = ({ day, onTask, onTaskBlur, onDoneWhen, onWhy, onPromise
           // Suggestion is an offer, never pre-filled: the promise stays in the user's own words.
           const sug = hasText ? suggestDoneWhen(day[t]) : "";
           if (!sug || day[`${t}_done_when`].trim() === sug) return null;
-          return RC("button", { onClick: () => (onAcceptSuggestion ? onAcceptSuggestion(t, sug) : onDoneWhen(t, sug)), "aria-label": `Use suggested finish line: ${sug}`, style: btn({ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 6, minHeight: 36, padding: "0 12px", borderRadius: 50, background: "rgba(255,255,255,0.04)", border: `1px dashed ${T.border2}`, color: T.sub, fontSize: 12, fontWeight: 600, maxWidth: "100%", textAlign: "left" }) },
+          return RC("button", { onClick: () => (onAcceptSuggestion ? onAcceptSuggestion(t, sug) : onDoneWhen(t, sug)), "aria-label": `Use suggested done when: ${sug}`, style: btn({ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 6, minHeight: 36, padding: "0 12px", borderRadius: 50, background: "rgba(255,255,255,0.04)", border: `1px dashed ${T.border2}`, color: T.sub, fontSize: 12, fontWeight: 600, maxWidth: "100%", textAlign: "left" }) },
             RC("span", { style: { color: T.sub2 } }, "Suggest:"), RC("span", { style: { color: T.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, sug), RC("span", { "aria-hidden": true }, "\u21B5"));
         })(),
         t === "gold" ? RC("input", { type: "text", value: day.gold_why, maxLength: 100, placeholder: "Why does this matter today?", "aria-label": "Why Gold matters today",
           onChange: (e) => onWhy(e.target.value), onFocus: () => setFocus("why"), onBlur: () => setFocus(null),
           style: __spreadProps(__spreadValues({}, dlInput(focus === "why", T.teal)), { marginTop: 8, fontSize: 13 }) }) : null);
     }),
-    RC("button", { onClick: () => ok && onPromise(), disabled: !ok, style: btnGold({ width: "100%", fontSize: 16, padding: "16px", marginTop: 6, opacity: ok ? 1 : 0.4, cursor: ok ? "pointer" : "not-allowed" }) }, "Make your promise"),
-    !ok && day.gold.trim() ? RC("div", { style: { fontSize: 12, color: T.sub, textAlign: "center", marginTop: 8 } }, "Add ", missing.join(", "), " to continue.") : null,
-    weekRecord && weekRecord.committed > 0 ? RC("div", { style: { fontSize: 12, color: T.sub, textAlign: "center", marginTop: 16 } }, "This week: ", RC("span", { style: { color: T.teal, fontWeight: 700 } }, weekRecord.kept, " of ", weekRecord.committed), " kept") : null);
+    RC("button", { onClick: () => ok && onPromise(), disabled: !ok, style: btnGold({ width: "100%", fontSize: 16, padding: "16px", marginTop: 6, opacity: ok ? 1 : 0.4, cursor: ok ? "pointer" : "not-allowed" }) }, "Commit to today"),
+    !ok && day.gold.trim() ? RC("div", { style: { fontSize: 12, color: T.sub, textAlign: "center", marginTop: 8 } }, "Still needed: ", missing.join(" \u00B7 "), ".") : null,
+    weekRecord && weekRecord.committed > 0 ? RC("div", { style: { fontSize: 12, color: T.sub, textAlign: "center", marginTop: 16 } }, "ZonedIn Rate this week: ", RC("span", { style: { color: T.teal, fontWeight: 700 } }, weekRecord.kept, " of ", weekRecord.committed), " kept") : null);
 };
 
 // ── DL-05 — DAY IN PROGRESS ───────────────────────────────────────────────
@@ -1231,7 +1231,7 @@ const TaskCard = ({ t, day, status, onStartFocus, onReckonNow, onEditSave }) => 
     dlLabel(`Edit ${cfg.label}`, cfg.color, { marginBottom: 8 }),
     RC("input", { type: "text", value: txt, maxLength: 80, onChange: (e) => setTxt(e.target.value), style: __spreadProps(__spreadValues({}, dlInput(false, cfg.color)), { marginBottom: 8 }) }),
     RC("input", { type: "text", value: dw, maxLength: 120, placeholder: "Done when…", onChange: (e) => setDw(e.target.value), style: __spreadProps(__spreadValues({}, dlInput(false, cfg.color)), { marginBottom: 6 }) }),
-    RC("div", { style: { fontSize: 11, color: T.sub, marginBottom: 10 } }, "Edits after your promise are logged and show as “changed” when you close the day."),
+    RC("div", { style: { fontSize: 11, color: T.sub, marginBottom: 10 } }, "Edits after you commit are logged and show as “changed” when you close the day."),
     RC("div", { style: { display: "flex", gap: 8 } },
       RC("button", { onClick: () => { if (txt.trim() && dw.trim()) { onEditSave(t, txt.trim(), dw.trim()); setEditing(false); } }, disabled: !(txt.trim() && dw.trim()), style: btn({ flex: 1, padding: "10px", borderRadius: 12, background: cfg.color, color: T.bg, fontSize: 13, minHeight: 44, opacity: txt.trim() && dw.trim() ? 1 : 0.4 }) }, "Save"),
       RC("button", { onClick: () => { setTxt(day[t]); setDw(day[`${t}_done_when`]); setEditing(false); }, style: btn({ flex: 1, padding: "10px", minHeight: 44, borderRadius: 12, background: "transparent", border: `1px solid ${T.border}`, color: T.sub, fontSize: 13 }) }, "Cancel")));
@@ -1244,8 +1244,8 @@ const TaskCard = ({ t, day, status, onStartFocus, onReckonNow, onEditSave }) => 
     RC("div", { style: { fontSize: 15, fontWeight: 700, color: T.text, lineHeight: 1.35, wordBreak: "break-word" } }, day[t]),
     RC("div", { style: { fontSize: 12, color: T.sub, marginTop: 3, lineHeight: 1.4 } }, "Done when: ", day[`${t}_done_when`]),
     pending ? RC("div", { style: { display: "flex", alignItems: "center", gap: 8, marginTop: 12 } },
-      RC("button", { onClick: () => onStartFocus(t), style: btn({ flex: 1.3, padding: "10px 12px", borderRadius: 12, background: t === "gold" ? `linear-gradient(135deg,${T.gold},${T.gold2})` : cfg.color, color: t === "gold" ? "#1a1200" : T.bg, fontSize: 13, fontWeight: 800, minHeight: 44 }) }, "Start focus →"),
-      RC("button", { onClick: () => onReckonNow(t), style: btn({ flex: 1, padding: "10px 12px", minHeight: 44, borderRadius: 12, background: "transparent", border: `1.5px solid ${T.border2}`, color: T.text, fontSize: 13 }) }, "Reckon now"),
+      RC("button", { onClick: () => onStartFocus(t), style: btn({ flex: 1.3, padding: "10px 12px", borderRadius: 12, background: t === "gold" ? `linear-gradient(135deg,${T.gold},${T.gold2})` : cfg.color, color: t === "gold" ? "#1a1200" : T.bg, fontSize: 13, fontWeight: 800, minHeight: 44 }) }, "Get ZonedIn →"),
+      RC("button", { onClick: () => onReckonNow(t), style: btn({ flex: 1, padding: "10px 12px", minHeight: 44, borderRadius: 12, background: "transparent", border: `1.5px solid ${T.border2}`, color: T.text, fontSize: 13 }) }, "Check in now"),
       RC("button", { onClick: () => setEditing(true), style: btn({ background: "none", color: T.sub, fontSize: 13, padding: "0 8px", minHeight: 44, minWidth: 44, fontWeight: 600, textDecoration: "underline", textUnderlineOffset: 3 }) }, "Edit")) : null);
 };
 const DayInProgress = ({ day, today, sessionHistory, activeTier, onStartFocus, onReckonNow, onEditSave, onOpenClose, weekRecord, eveningNow }) => {
@@ -1253,12 +1253,12 @@ const DayInProgress = ({ day, today, sessionHistory, activeTier, onStartFocus, o
   const pendingCount = tiers.filter((t) => day.outcomes[t] === "pending").length;
   const allDone = pendingCount === 0 && tiers.length > 0;
   const showBanner = allDone || eveningNow;
-  const allTxt = tiers.length === 3 ? "All three reckoned." : tiers.length === 2 ? "Both reckoned." : "Gold reckoned.";
+  const allTxt = tiers.length === 3 ? "All three checked in." : tiers.length === 2 ? "Both checked in." : "Gold checked in.";
   return RC("div", { className: "fade-up", style: { padding: "4px 16px 20px" } },
     showBanner ? RC("button", { onClick: () => onOpenClose("banner"), className: "pop-in", style: btn({ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "14px 16px", borderRadius: 16, marginBottom: 12, background: "linear-gradient(135deg,rgba(0,194,178,0.14),rgba(0,194,178,0.04))", border: "1.5px solid rgba(0,194,178,0.4)", color: T.text, fontSize: 14, textAlign: "left" }) },
       RC("span", null, allDone ? allTxt + " " : "", RC("span", { style: { color: T.teal } }, allDone ? "Close your day →" : "Ready to close the day? →"))) : null,
     tiers.map((t) => RC(TaskCard, { key: t + (day.edited_after_commit[t] ? "-e" : ""), t, day, status: taskStatus(day, t, sessionHistory, today, activeTier), onStartFocus, onReckonNow, onEditSave })),
-    weekRecord && weekRecord.committed > 0 ? RC("div", { style: { fontSize: 12, color: T.sub, textAlign: "center", marginTop: 8 } }, "This week: ", RC("span", { style: { color: T.teal, fontWeight: 700 } }, weekRecord.kept, " of ", weekRecord.committed), " kept") : null);
+    weekRecord && weekRecord.committed > 0 ? RC("div", { style: { fontSize: 12, color: T.sub, textAlign: "center", marginTop: 8 } }, "ZonedIn Rate this week: ", RC("span", { style: { color: T.teal, fontWeight: 700 } }, weekRecord.kept, " of ", weekRecord.committed), " kept") : null);
 };
 
 // ── VERDICT (Close the Day screen 2, Plan closed state, Reflect) ─────────
@@ -1294,8 +1294,8 @@ const ClosedDayCard = ({ day, weekRecord, onShare, onView }) => RC("div", { clas
   RC("div", { style: __spreadProps(__spreadValues({}, card()), { padding: "22px 18px" }) },
     dlLabel("Today, closed", T.teal, { textAlign: "center", marginBottom: 14 }),
     RC(VerdictBlock, { day }),
-    weekRecord && weekRecord.committed ? RC("div", { style: { fontSize: 12, color: T.sub, textAlign: "center", marginTop: 14 } }, "This week: ", weekRecord.kept, " of ", weekRecord.committed, " kept · ", weekRecord.pct, "%") : null,
-    RC("button", { onClick: onShare, style: btn({ width: "100%", marginTop: 16, padding: "12px", borderRadius: 12, border: "1.5px solid rgba(0,194,178,0.35)", background: "transparent", color: T.teal, fontSize: 14 }) }, "Share today’s card ✦"),
+    weekRecord && weekRecord.committed ? RC("div", { style: { fontSize: 12, color: T.sub, textAlign: "center", marginTop: 14 } }, "ZonedIn Rate this week: ", weekRecord.kept, " of ", weekRecord.committed, " kept · ", weekRecord.pct, "%") : null,
+    RC("button", { onClick: onShare, style: btn({ width: "100%", marginTop: 16, padding: "12px", borderRadius: 12, border: "1.5px solid rgba(0,194,178,0.35)", background: "transparent", color: T.teal, fontSize: 14 }) }, "Share today’s card"),
     onView ? RC("button", { onClick: onView, style: btn({ width: "100%", marginTop: 6, padding: "0 8px", minHeight: 44, background: "none", color: T.sub, fontSize: 13 }) }, "View summary") : null),
   day.tomorrow_gold ? RC("div", { style: { marginTop: 12, padding: "14px 16px", borderRadius: 16, background: T.goldBg, border: "1px solid rgba(245,158,11,0.25)" } },
     dlLabel("Tomorrow’s Gold", T.gold, { marginBottom: 4 }),
@@ -1307,13 +1307,13 @@ const CloseYesterdayCard = ({ row, onAnswer }) => {
   if (!pending.length) return null;
   return RC("div", { className: "pop-in", style: { margin: "4px 16px 14px", padding: "16px", borderRadius: 18, background: "rgba(167,139,250,0.07)", border: "1.5px solid rgba(167,139,250,0.3)" } },
     RC("div", { style: { fontSize: 15, fontWeight: 800, color: T.text, marginBottom: 2 } }, "Close yesterday"),
-    RC("div", { style: { fontSize: 12, color: T.sub, lineHeight: 1.5, marginBottom: 12 } }, "You didn’t reckon these. Be honest — then start today."),
+    RC("div", { style: { fontSize: 12, color: T.sub, lineHeight: 1.5, marginBottom: 12 } }, "These weren’t checked in. Answer each one, then start today."),
     pending.map((t) => RC("div", { key: t, style: { padding: "10px 12px", borderRadius: 12, background: T.card, border: `1px solid ${T.border}`, marginBottom: 8 } },
       RC("div", { style: { fontSize: 11, fontWeight: 700, letterSpacing: 1.1, textTransform: "uppercase", color: DL_TIER[t].color } }, DL_TIER[t].label),
       RC("div", { style: { fontSize: 14, fontWeight: 700, color: T.text, marginTop: 2 } }, row[t]),
       RC("div", { style: { fontSize: 12, color: T.sub, marginTop: 2 } }, "You said done meant: ", row[`${t}_done_when`] || row[t]),
       RC("div", { style: { display: "flex", gap: 8, marginTop: 10 } },
-        RC("button", { onClick: () => onAnswer(t, true), style: btn({ flex: 1, padding: "9px", borderRadius: 10, background: "rgba(0,194,178,0.12)", border: "1px solid rgba(0,194,178,0.4)", color: T.teal, fontSize: 13, minHeight: 44 }) }, "Yes, I did"),
+        RC("button", { onClick: () => onAnswer(t, true), style: btn({ flex: 1, padding: "9px", borderRadius: 10, background: "rgba(0,194,178,0.12)", border: "1px solid rgba(0,194,178,0.4)", color: T.teal, fontSize: 13, minHeight: 44 }) }, "Yes, kept it"),
         RC("button", { onClick: () => onAnswer(t, false), style: btn({ flex: 1, padding: "9px", borderRadius: 10, background: "transparent", border: `1px solid ${T.border2}`, color: T.sub, fontSize: 13, minHeight: 44 }) }, "Not quite")))));
 };
 
@@ -1327,11 +1327,11 @@ const ReckoningScreen = ({ tier, task, doneLooks, onYes, onNotQuite, onLater }) 
       RC("div", { style: { fontSize: 13, color: T.sub, marginBottom: 14, lineHeight: 1.4 } }, task),
       RC("div", { style: { fontSize: 13, color: T.sub, marginBottom: 8 } }, "You said done meant:"),
       RC("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 18, fontWeight: 800, color: T.text, marginBottom: 22, padding: "12px 16px", background: T.card2, borderRadius: 14, border: `1px solid ${T.border}`, lineHeight: 1.35 } }, "“", doneLooks || task, "”"),
-      RC("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 22, fontWeight: 900, color: T.text, marginBottom: 24 } }, "Did you keep your word?"),
+      RC("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 22, fontWeight: 900, color: T.text, marginBottom: 24 } }, "Did you keep your commitment?"),
       RC("div", { style: { display: "flex", gap: 10 } },
-        RC("button", { onClick: onYes, style: btnGold({ flex: 1, fontSize: 16, background: tier === "gold" ? `linear-gradient(135deg,${T.gold},${T.gold2})` : cfg.color, color: tier === "gold" ? "#1a1200" : T.bg, boxShadow: "none" }) }, "Yes, I did"),
+        RC("button", { onClick: onYes, style: btnGold({ flex: 1, fontSize: 16, background: tier === "gold" ? `linear-gradient(135deg,${T.gold},${T.gold2})` : cfg.color, color: tier === "gold" ? "#1a1200" : T.bg, boxShadow: "none" }) }, "Yes, kept it"),
         RC("button", { onClick: onNotQuite, style: btn({ flex: 1, padding: "16px", border: `1.5px solid ${T.border2}`, background: "transparent", color: T.sub, fontSize: 15 }) }, "Not quite")),
-      onLater ? RC("button", { onClick: onLater, style: btn({ marginTop: 8, background: "none", color: T.sub, fontSize: 13, padding: "0 12px", minHeight: 44, fontWeight: 500 }) }, "Still working on it — reckon later") : null));
+      onLater ? RC("button", { onClick: onLater, style: btn({ marginTop: 8, background: "none", color: T.sub, fontSize: 13, padding: "0 12px", minHeight: 44, fontWeight: 500 }) }, "Still working on it — check in later") : null));
 };
 // Diamond / Platinum kept — light confirmation, 1.2s, no confetti, no share.
 const LightKept = ({ kept, committed, onDone }) => {
@@ -1359,7 +1359,7 @@ const FocusConfirmCard = ({ tier, task, doneWhen, why, minutes, onMinutes, ident
         tier === "gold" && why ? RC("div", { style: { fontSize: 13, color: T.teal, fontStyle: "italic", marginTop: 8 } }, "Because ", why) : null),
       onMinutes ? RC("div", { style: { marginBottom: 14 } }, RC(DurationChips, { value: minutes, onChange: onMinutes })) : null,
       RC("button", { onClick: onStart, style: btnGold({ width: "100%", fontSize: 17, padding: "17px", background: tier === "gold" ? `linear-gradient(135deg,${T.gold},${T.gold2})` : cfg.color, color: tier === "gold" ? "#1a1200" : T.bg }) }, `Start ${minutes} min →`),
-      tier === "gold" ? RC("button", { onClick: () => shareZonedInCard("commitment", { task, identity: identityStatement || null, date: new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: USER_TZ }) }), style: btn({ width: "100%", marginTop: 6, padding: "0 11px", minHeight: 44, borderRadius: 12, background: "transparent", border: "none", color: T.teal, fontSize: 13 }) }, "Share my promise ✦") : null));
+      tier === "gold" ? RC("button", { onClick: () => shareZonedInCard("commitment", { task, identity: identityStatement || null, date: new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: USER_TZ }) }), style: btn({ width: "100%", marginTop: 6, padding: "0 11px", minHeight: 44, borderRadius: 12, background: "transparent", border: "none", color: T.teal, fontSize: 13 }) }, "Share my commitment") : null));
 };
 
 // ── DL-09 — CLOSE THE DAY ────────────────────────────────────────────────
@@ -1392,21 +1392,21 @@ const CloseTheDay = ({ day, weekRecord, summaryOnly, firstTime, onAnswer, onFini
   const title = (t, s) => RC(React.Fragment, null,
     RC("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 25, fontWeight: 900, color: T.text, letterSpacing: -0.4, lineHeight: 1.22, textAlign: "center", marginBottom: s ? 8 : 22 } }, t),
     s ? RC("div", { style: { fontSize: 14, color: T.sub, textAlign: "center", lineHeight: 1.55, marginBottom: 22 } }, s) : null);
-  const intro = firstTime ? RC("div", { style: { fontSize: 13, color: T.teal, fontWeight: 600, textAlign: "center", marginBottom: 14 } }, "Every evening, see if you kept your word.") : null;
+  const intro = firstTime ? RC("div", { style: { fontSize: 13, color: T.teal, fontWeight: 600, textAlign: "center", marginBottom: 14 } }, "Every evening, close the day and see what you kept.") : null;
   if (screen === 1) return shell(RC(React.Fragment, null, intro,
-    title("Before you close", "Answer each one honestly."),
-    pending.length === 0 ? RC("button", { onClick: () => setScreen(2), style: btnPrimary({ width: "100%" }) }, "See today’s verdict →") :
+    title("Before you close", "Answer each one."),
+    pending.length === 0 ? RC("button", { onClick: () => setScreen(2), style: btnPrimary({ width: "100%" }) }, "See how today went →") :
     pending.map((t) => RC("div", { key: t, style: { padding: "14px", borderRadius: 16, background: T.card, border: `1px solid ${T.border}`, marginBottom: 10 } },
       RC("div", { style: { fontSize: 11, fontWeight: 700, letterSpacing: 1.1, textTransform: "uppercase", color: DL_TIER[t].color } }, DL_TIER[t].label),
       RC("div", { style: { fontSize: 15, fontWeight: 700, color: T.text, marginTop: 3 } }, day[t]),
       RC("div", { style: { fontSize: 12, color: T.sub, marginTop: 3 } }, "You said done meant: ", day[`${t}_done_when`]),
       RC("div", { style: { display: "flex", gap: 8, marginTop: 12 } },
-        RC("button", { onClick: () => onAnswer(t, true), style: btn({ flex: 1, padding: "11px", borderRadius: 12, background: "rgba(0,194,178,0.12)", border: "1px solid rgba(0,194,178,0.4)", color: T.teal, fontSize: 14, minHeight: 44 }) }, "Yes, I did"),
+        RC("button", { onClick: () => onAnswer(t, true), style: btn({ flex: 1, padding: "11px", borderRadius: 12, background: "rgba(0,194,178,0.12)", border: "1px solid rgba(0,194,178,0.4)", color: T.teal, fontSize: 14, minHeight: 44 }) }, "Yes, kept it"),
         RC("button", { onClick: () => onAnswer(t, false), style: btn({ flex: 1, padding: "11px", borderRadius: 12, background: "transparent", border: `1px solid ${T.border2}`, color: T.sub, fontSize: 14 }) }, "Not quite"))))));
   if (screen === 2) return shell(RC(React.Fragment, null, screen === 2 && !pending.length && !summaryOnly ? intro : null,
-    dlLabel(summaryOnly ? "Today, closed" : "Today’s verdict", T.teal, { textAlign: "center", marginBottom: 18 }),
+    dlLabel(summaryOnly ? "Today, closed" : "Today’s three", T.teal, { textAlign: "center", marginBottom: 18 }),
     RC(VerdictBlock, { day, big: true }),
-    weekRecord && weekRecord.committed ? RC("div", { style: { fontSize: 13, color: T.sub, textAlign: "center", marginTop: 18 } }, "This week: ", RC("span", { style: { color: T.teal, fontWeight: 700 } }, weekRecord.kept, " of ", weekRecord.committed), " kept · ", weekRecord.pct, "%") : null,
+    weekRecord && weekRecord.committed ? RC("div", { style: { fontSize: 13, color: T.sub, textAlign: "center", marginTop: 18 } }, "ZonedIn Rate this week: ", RC("span", { style: { color: T.teal, fontWeight: 700 } }, weekRecord.kept, " of ", weekRecord.committed), " kept · ", weekRecord.pct, "%") : null,
     summaryOnly
       ? RC("button", { onClick: onDismiss, style: btnPrimary({ width: "100%", marginTop: 26 }) }, "Done")
       : RC("button", { onClick: () => setScreen(3), style: btnPrimary({ width: "100%", marginTop: 26 }) }, "Continue →")));
@@ -1535,10 +1535,10 @@ const FocusTab = ({ day, activeZoneKey, setActiveZoneKey, sessionDuration, setSe
       RC("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 22, fontWeight: 900, color: T.text, letterSpacing: -0.3, marginBottom: 10 } }, head),
       RC("div", { style: { fontSize: 14, color: T.sub, lineHeight: 1.65, marginBottom: 26 } }, body),
       cta ? RC("button", { onClick: onCta, style: btnPrimary({ width: "100%", maxWidth: 280, fontSize: 15, padding: "15px 24px" }) }, cta) : null));
-  if (!committed) return empty(RC("span", { style: { display: "inline-flex" } }, RC(TierMark, { tier: "gold", size: 48 })), "Make today’s promise first", "Write today’s three in Plan and commit to them. Then come back to focus.", "Go to Plan →", () => setTab("plan"));
+  if (!committed) return empty(RC("span", { style: { display: "inline-flex" } }, RC(TierMark, { tier: "gold", size: 48 })), "Commit to today’s three first", "Write today’s three in Plan and commit to them. Then come back to focus.", "Go to Plan →", () => setTab("plan"));
   if (!pendingTiers.length) return day.closed_at
     ? empty("✓", "Today is closed", "Rest. Tomorrow’s Gold is waiting in Plan.", null)
-    : empty("✓", "Everything is reckoned", "Every task you promised has an answer. One step left.", "Close your day →", () => onOpenClose("banner"));
+    : empty("✓", "Everything is reckoned", "Every commitment has an answer. One step left.", "Close your day →", () => onOpenClose("banner"));
   const tier = pendingTiers.includes(activeZoneKey) ? activeZoneKey : pendingTiers[0];
   const cfg = DL_TIER[tier];
   return RC("div", { className: "fade-up", style: { height: "100%", display: "flex", flexDirection: "column", overflow: "hidden", padding: "0 0 8px" } },
@@ -1617,13 +1617,13 @@ const ReflectTab = ({ day, today, weekRecord, rowsByDate, insightHistory, loadin
   insightHistory.forEach((i) => { if (i.date && !insightByDate[i.date]) insightByDate[i.date] = i; });
   const orphanInsights = insightHistory.filter((i) => i !== todays && !(i.date && pastDates.includes(i.date)));
   return RC("div", { className: "fade-up" },
-    RC("div", { style: { padding: "2px 20px 14px", fontSize: 13, color: T.sub, lineHeight: 1.5 } }, "Every promise, honestly answered."),
+    RC("div", { style: { padding: "2px 20px 14px", fontSize: 13, color: T.sub, lineHeight: 1.5 } }, "Every commitment you made, and how it went."),
     closed
       ? RC("div", { style: __spreadProps(__spreadValues({}, card()), { margin: "0 16px 12px", padding: "20px 18px" }) }, dlLabel("Today", T.teal, { textAlign: "center", marginBottom: 14 }), RC(VerdictBlock, { day }),
-          weekRecord && weekRecord.committed ? RC("div", { style: { fontSize: 13, color: T.sub, textAlign: "center", marginTop: 14 } }, "This week: ", weekRecord.kept, " of ", weekRecord.committed, " kept · ", weekRecord.pct, "%") : null)
+          weekRecord && weekRecord.committed ? RC("div", { style: { fontSize: 13, color: T.sub, textAlign: "center", marginTop: 14 } }, "ZonedIn Rate this week: ", weekRecord.kept, " of ", weekRecord.committed, " kept · ", weekRecord.pct, "%") : null)
       : RC("div", { style: __spreadProps(__spreadValues({}, card()), { margin: "0 16px 12px", textAlign: "center", padding: "22px 18px" }) },
-          RC("div", { style: { fontSize: 15, fontWeight: 700, color: T.text, marginBottom: 6 } }, committed ? "Today isn’t closed yet" : "Nothing promised today yet"),
-          RC("div", { style: { fontSize: 13, color: T.sub, lineHeight: 1.55, marginBottom: 14 } }, committed ? "Close the day to add it to your record. Your insight arrives when you do." : "Make today’s promise in Plan. Tonight it joins your record."),
+          RC("div", { style: { fontSize: 15, fontWeight: 700, color: T.text, marginBottom: 6 } }, committed ? "Today isn’t closed yet" : "Nothing committed today yet"),
+          RC("div", { style: { fontSize: 13, color: T.sub, lineHeight: 1.55, marginBottom: 14 } }, committed ? "Close the day to add it to your record. Your insight arrives when you do." : "Commit to today’s three in Plan. Tonight it joins your record."),
           RC("button", { onClick: committed ? () => onOpenClose("reflect") : () => setTab("plan"), style: btnPrimary({ fontSize: 14, padding: "0 22px", minHeight: 44 }) }, committed ? "Close today →" : "Go to Plan →")),
     closed ? RC("div", { style: { margin: "0 16px 12px" } },
       loadingInsight ? RC("div", { style: { padding: "18px", borderRadius: 18, border: `1px solid ${T.border}`, fontSize: 13, color: T.sub, textAlign: "center" } }, "Reading your day…")
@@ -1632,7 +1632,7 @@ const ReflectTab = ({ day, today, weekRecord, rowsByDate, insightHistory, loadin
             RC("div", { style: { fontSize: 13, fontWeight: 700, color: "#E2726F" } }, "Insight unavailable — try again"),
             RC("button", { onClick: onRefreshInsight, style: btn({ padding: "0 14px", minHeight: 44, borderRadius: 50, background: "transparent", border: "1px solid rgba(226,114,111,0.4)", color: "#E2726F", fontSize: 13 }) }, "Retry"))
         : null,
-      !loadingInsight && (todays || !insightError) ? RC("button", { onClick: onRefreshInsight, style: btn({ width: "100%", background: "none", color: T.teal, fontSize: 13, padding: "0 8px", minHeight: 44, fontWeight: 600 }) }, todays ? "Refresh insight ✦" : "Get tonight’s insight ✦") : null) : null,
+      !loadingInsight && (todays || !insightError) ? RC("button", { onClick: onRefreshInsight, style: btn({ width: "100%", background: "none", color: T.teal, fontSize: 13, padding: "0 8px", minHeight: 44, fontWeight: 600 }) }, todays ? "Refresh insight" : "Get tonight’s insight") : null) : null,
     RC(DaysWonGrid, { rowsByDate: rowsByDate || {}, today }),
     RC("div", { style: { margin: "4px 16px 12px" } },
       dlLabel("Past days", T.sub, { marginBottom: 10, padding: "0 4px" }),
@@ -1644,20 +1644,20 @@ const ReflectTab = ({ day, today, weekRecord, rowsByDate, insightHistory, loadin
 const ProgressTab = ({ onShareWeek, morningPushOn, onMorningPush, morningTime, onMorningTime, standalone, showSettings, streak, bestStreak, shields, tierCfg, milestonePct, daysLeft, nextMilestone, totalPoints, currentLevel, tierHistory, isStreakMilestone, streakReport, setStreakReport, loadingStreakReport, generateStreakReport, streakTier, sessionHistory, rowsByDate, today, weekRecord, reminderTime, onReminderTime, emailOptIn, onEmailOptIn, userTz, onUseDeviceTz }) => { const [moreStats, setMoreStats] = useState(false); return /* @__PURE__ */ React.createElement("div", { className: "fade-up" },
   /* @__PURE__ */ React.createElement("div", { style: { height: 4 } }),
   React.createElement("div", { style: { ...card(), margin: "0 16px 12px", textAlign: "center", padding: "24px 20px 18px" } },
-    React.createElement("div", { style: { fontSize: 12, fontWeight: 700, letterSpacing: 1.1, textTransform: "uppercase", color: T.teal } }, "This week"),
+    React.createElement("div", { style: { fontSize: 12, fontWeight: 700, letterSpacing: 1.1, textTransform: "uppercase", color: T.teal } }, "ZonedIn Rate \u00B7 this week"),
     weekRecord && weekRecord.committed
       ? React.createElement(React.Fragment, null,
           React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 72, fontWeight: 900, color: T.text, letterSpacing: -4, lineHeight: 1, marginTop: 8 } }, weekRecord.pct, React.createElement("span", { style: { fontSize: 34, color: T.sub, letterSpacing: -1 } }, "%")),
-          React.createElement("div", { style: { fontSize: 15, color: T.sub, marginTop: 6 } }, weekRecord.kept, " of ", weekRecord.committed, " promises kept"),
-          weekRecord.committed >= 3 ? React.createElement("button", { onClick: onShareWeek, style: btn({ marginTop: 10, minHeight: 44, padding: "0 18px", borderRadius: 99, border: "1.5px solid rgba(0,194,178,0.3)", background: "transparent", color: T.teal, fontSize: 13, fontWeight: 700 }) }, "Share this week \u2726") : null)
-      : React.createElement("div", { style: { fontSize: 14, color: T.sub, marginTop: 10, lineHeight: 1.5 } }, "Make today\u2019s promise. Your week starts with it."),
+          React.createElement("div", { style: { fontSize: 15, color: T.sub, marginTop: 6 } }, weekRecord.kept, " of ", weekRecord.committed, " commitments kept"),
+          weekRecord.committed >= 3 ? React.createElement("button", { onClick: onShareWeek, style: btn({ marginTop: 10, minHeight: 44, padding: "0 18px", borderRadius: 99, border: "1.5px solid rgba(0,194,178,0.3)", background: "transparent", color: T.teal, fontSize: 13, fontWeight: 700 }) }, "Share this week") : null)
+      : React.createElement("div", { style: { fontSize: 14, color: T.sub, marginTop: 10, lineHeight: 1.5 } }, "Commit to today\u2019s three. Your week starts with it."),
     React.createElement("div", { style: { height: 1, background: T.border, margin: "16px 0 12px" } }),
     React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "center", gap: 14, flexWrap: "wrap", fontSize: 13, color: T.sub } },
       React.createElement("span", { style: { display: "inline-flex", alignItems: "center", gap: 5, color: streak > 0 ? T.gold : T.sub } }, React.createElement(BoltMark, { size: 15 }), React.createElement("b", { style: { color: T.text } }, streak), React.createElement("span", { style: { color: T.sub } }, streak === 1 ? " day Gold kept" : " days Gold kept")),
       React.createElement("span", null, "Best ", React.createElement("b", { style: { color: T.text } }, bestStreak || 0)),
       React.createElement("span", { style: { display: "inline-flex", alignItems: "center", gap: 4 } }, React.createElement(ShieldMark, { size: 14 }), "Shield ", React.createElement("b", { style: { color: T.text } }, shields || 0), "/1")),
     React.createElement("div", { style: { height: 3, borderRadius: 99, background: "rgba(255,255,255,0.06)", overflow: "hidden", margin: "12px 0 6px" } }, React.createElement("div", { style: { height: "100%", borderRadius: 99, width: `${milestonePct}%`, background: T.gold, transition: "width 0.6s ease" } })),
-    React.createElement("div", { style: { fontSize: 12, color: T.sub } }, streak === 0 ? "Keep today\u2019s Gold to start your run" : daysLeft === 0 ? `Day ${nextMilestone} \u2014 milestone reached` : `${daysLeft} more ${daysLeft === 1 ? "day" : "days"} to your ${nextMilestone}-day milestone`)),
+    React.createElement("div", { style: { fontSize: 12, color: T.sub } }, streak === 0 ? "Keep today\u2019s Gold to start counting" : daysLeft === 0 ? `Day ${nextMilestone} \u2014 milestone reached` : `${daysLeft} more ${daysLeft === 1 ? "day" : "days"} to your ${nextMilestone}-day milestone`)),
   React.createElement("button", { onClick: () => setMoreStats((v) => !v), "aria-expanded": moreStats, style: btn({ display: "flex", alignItems: "center", justifyContent: "space-between", width: "calc(100% - 32px)", margin: "0 16px 12px", minHeight: 44, padding: "0 16px", borderRadius: 14, background: "transparent", border: `1px solid ${T.border}`, color: T.sub, fontSize: 13 }) }, "More stats", React.createElement("span", { "aria-hidden": true, style: { transform: moreStats ? "rotate(90deg)" : "none", transition: "transform 0.15s" } }, "›")),
   moreStats && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, margin: "0 16px 12px" } },
     /* @__PURE__ */ React.createElement("div", { style: { flex: 1, ...card(), textAlign: "center", padding: "14px 10px" } },
@@ -1675,7 +1675,7 @@ const ProgressTab = ({ onShareWeek, morningPushOn, onMorningPush, morningTime, o
     ),
     /* @__PURE__ */ React.createElement("p", { style: { fontSize: 13, color: T.sub, lineHeight: 1.6, margin: "0 0 12px" } }, "Gold kept ", streak, " days running. See what\u2019s working."),
     !streakReport
-      ? /* @__PURE__ */ React.createElement("button", { style: btnPrimary({ fontSize: 13, padding: "10px 20px", opacity: loadingStreakReport ? 0.6 : 1 }), onClick: generateStreakReport, disabled: loadingStreakReport }, loadingStreakReport ? "Analysing\u2026" : "View your patterns \u2726")
+      ? /* @__PURE__ */ React.createElement("button", { style: btnPrimary({ fontSize: 13, padding: "10px 20px", opacity: loadingStreakReport ? 0.6 : 1 }), onClick: generateStreakReport, disabled: loadingStreakReport }, loadingStreakReport ? "Analysing\u2026" : "View your patterns")
       : /* @__PURE__ */ React.createElement("div", null,
           /* @__PURE__ */ React.createElement("div", { style: { padding: "14px", borderRadius: 12, background: T.card, border: `1px solid ${T.border}`, fontSize: 13, lineHeight: 1.8, whiteSpace: "pre-wrap", color: T.text } }, streakReport),
           /* @__PURE__ */ React.createElement("button", { onClick: () => setStreakReport(""), style: btn({ background: "none", color: T.teal, fontSize: 13, fontWeight: 600, marginTop: 4, padding: "0 4px", minHeight: 44 }) }, "Refresh \u2192")
@@ -1685,7 +1685,7 @@ const ProgressTab = ({ onShareWeek, morningPushOn, onMorningPush, morningTime, o
       React.createElement("div", { style: { fontSize: 11, fontWeight: 700, letterSpacing: 1.1, textTransform: "uppercase", color: T.sub, marginBottom: 10 } }, "Morning reminder"),
       React.createElement("div", { style: { padding: "14px 16px", borderRadius: 14, background: T.card, border: `1px solid ${T.border}`, marginBottom: 16 } },
         React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 } },
-          React.createElement("div", null, React.createElement("div", { style: { fontSize: 14, fontWeight: 700, color: T.text } }, "Tomorrow\u2019s Gold, each morning"), React.createElement("div", { style: { fontSize: 12, color: T.sub, marginTop: 2 } }, standalone || !isIOS() ? "One notification. Only if you haven\u2019t promised yet." : "Add ZonedIn to your Home Screen to turn this on.")),
+          React.createElement("div", null, React.createElement("div", { style: { fontSize: 14, fontWeight: 700, color: T.text } }, "Tomorrow\u2019s Gold, each morning"), React.createElement("div", { style: { fontSize: 12, color: T.sub, marginTop: 2 } }, standalone || !isIOS() ? "One notification. Only if you haven\u2019t committed yet." : "Add ZonedIn to your Home Screen to turn this on.")),
           React.createElement("button", { role: "switch", "aria-checked": !!morningPushOn, "aria-label": "Morning reminder", onClick: () => onMorningPush(!morningPushOn), style: { width: 46, height: 28, borderRadius: 14, border: "none", cursor: "pointer", position: "relative", flexShrink: 0, background: morningPushOn ? T.teal : "rgba(255,255,255,0.15)", transition: "background 0.2s", padding: 0 } },
             React.createElement("span", { style: { position: "absolute", top: 3, left: morningPushOn ? 21 : 3, width: 22, height: 22, borderRadius: 11, background: "#fff", transition: "left 0.2s" } }))),
         React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 12, opacity: morningPushOn ? 1 : 0.5 } },
@@ -1742,7 +1742,7 @@ const PMFModal = ({ userName, streak, sessionCount, onAnswer }) => {
     /* @__PURE__ */ React.createElement("div", { style: { maxWidth: 380, width: "100%", textAlign: "center" } },
       /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: T.teal, marginBottom: 16 } }, "Day 7"),
       /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 24, fontWeight: 900, color: T.text, letterSpacing: -0.5, marginBottom: 8, lineHeight: 1.2 } }, "If ZonedIn disappeared tomorrow, how would you feel?"),
-      /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: T.sub, marginBottom: 32, lineHeight: 1.6 } }, "Your honest answer helps shape the product."),
+      /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: T.sub, marginBottom: 32, lineHeight: 1.6 } }, "Your answer helps shape what ZonedIn becomes."),
       !showFreeText
         ? /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 10 } },
             OPTS.map(o => {
@@ -1773,7 +1773,7 @@ const PMFModal = ({ userName, streak, sessionCount, onAnswer }) => {
     )
   );
 };
-const RecoveryScreen = ({ bestStreak, userName, onStart, onDismiss, identityStatement }) => /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", inset: 0, zIndex: 9998, background: T.bg, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 28 } }, /* @__PURE__ */ React.createElement("div", { style: { maxWidth: 380, width: "100%", textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "center", marginBottom: 20, color: T.teal } }, React.createElement(ShieldMark, { size: 52, color: T.teal })), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 26, fontWeight: 900, color: T.text, letterSpacing: -0.5, marginBottom: 12, lineHeight: 1.2 } }, userName ? `${userName}, your run` : "Your run", " still counts."), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, color: T.sub, lineHeight: 1.7, marginBottom: 28 } }, "You built a ", bestStreak, "-day run. That doesn't disappear. Today is day 1 of your next one."), /* @__PURE__ */ React.createElement("div", { style: { padding: "18px 20px", borderRadius: 18, background: T.card, border: `1px solid ${T.border}`, marginBottom: 28 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: T.sub, marginBottom: 8 } }, "Your personal best"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 48, fontWeight: 900, color: T.teal, letterSpacing: -3, lineHeight: 1 } }, bestStreak), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: T.sub, marginTop: 4 } }, "days. You've done it before. You'll do it again.")), /* @__PURE__ */ React.createElement("button", { onClick: onStart, style: btnGold({ width: "100%", fontSize: 17, padding: "17px", marginBottom: 10 }) }, "Start today's Gold \u2192"), /* @__PURE__ */ React.createElement("button", { onClick: () => shareZonedInCard("recovery", { best: bestStreak, identity: identityStatement || null }), style: btn({ width: "100%", padding: "13px", borderRadius: 12, border: "1.5px solid rgba(167,139,250,0.3)", background: "transparent", color: "#A78BFA", fontSize: 14, fontWeight: 700, marginBottom: 10 }) }, "Share my comeback \u2726"), /* @__PURE__ */ React.createElement("button", { onClick: onDismiss, style: btn({ width: "100%", background: "none", color: T.sub, fontSize: 13, padding: "8px" }) }, "Go to Plan tab")));
+const RecoveryScreen = ({ bestStreak, userName, onStart, onDismiss, identityStatement }) => /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", inset: 0, zIndex: 9998, background: T.bg, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 28 } }, /* @__PURE__ */ React.createElement("div", { style: { maxWidth: 380, width: "100%", textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "center", marginBottom: 20, color: T.teal } }, React.createElement(ShieldMark, { size: 52, color: T.teal })), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 26, fontWeight: 900, color: T.text, letterSpacing: -0.5, marginBottom: 12, lineHeight: 1.2 } }, userName ? `${userName}, those days` : "Those days", " still count."), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, color: T.sub, lineHeight: 1.7, marginBottom: 28 } }, "You kept Gold ", bestStreak, " days in a row. That doesn't disappear. Today is day 1 again."), /* @__PURE__ */ React.createElement("div", { style: { padding: "18px 20px", borderRadius: 18, background: T.card, border: `1px solid ${T.border}`, marginBottom: 28 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: T.sub, marginBottom: 8 } }, "Your personal best"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 48, fontWeight: 900, color: T.teal, letterSpacing: -3, lineHeight: 1 } }, bestStreak), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: T.sub, marginTop: 4 } }, "days Gold kept, your best so far.")), /* @__PURE__ */ React.createElement("button", { onClick: onStart, style: btnGold({ width: "100%", fontSize: 17, padding: "17px", marginBottom: 10 }) }, "Start today's Gold \u2192"), /* @__PURE__ */ React.createElement("button", { onClick: () => shareZonedInCard("recovery", { best: bestStreak, identity: identityStatement || null }), style: btn({ width: "100%", padding: "13px", borderRadius: 12, border: "1.5px solid rgba(167,139,250,0.3)", background: "transparent", color: "#A78BFA", fontSize: 14, fontWeight: 700, marginBottom: 10 }) }, "Share my comeback"), /* @__PURE__ */ React.createElement("button", { onClick: onDismiss, style: btn({ width: "100%", background: "none", color: T.sub, fontSize: 13, padding: "8px" }) }, "Go to Plan tab")));
 const ZonedInMVP = () => {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -2221,7 +2221,7 @@ const ZonedInMVP = () => {
   // ── DL-09 — Close the Day ──
   const openClose = (via) => {
     const d = dayRef.current;
-    if (!d.committed_at) { showToast("Make today’s promise first."); return; }
+    if (!d.committed_at) { showToast("Commit to today’s three first."); return; }
     const firstTime = !LS.get("zi_close_intro_seen", false);
     if (firstTime) LS.set("zi_close_intro_seen", true);
     setCloseView({ via, summary: !!d.closed_at, firstTime });
@@ -2266,7 +2266,7 @@ const ZonedInMVP = () => {
     const energyLabel = (ENERGY_OPTS.find((e) => e.val === Number(d.close_energy)) || {}).label || "not recorded";
     const moodLabel = (MOOD_OPTS.find((m) => String(m.val) === String(d.close_mood)) || {}).label || "not recorded";
     const recent = sessionHistory.filter((s) => !s.reckonedWithoutSession).slice(0, 5).map((s) => `${s.date}: ${s.minutes}min on "${s.zone}" (${s.taskCompleted ? "kept" : "not kept"})`).join("\n");
-    const ratingNote = sessionRating ? `\nLast session focus: ${sessionRating === "fully" ? "Fully Zoned In" : sessionRating === "partly" ? "Had moments of focus" : "Mind was elsewhere"}` : "";
+    const ratingNote = sessionRating ? `\nLast session focus: ${sessionRating === "fully" ? "Fully ZonedIn" : sessionRating === "partly" ? "Had moments of focus" : "Mind was elsewhere"}` : "";
     const prompt = `You are a behavioural data analyst embedded in a productivity app. You are not a coach, motivational guide, or therapist. Your job is to state what the data shows — patterns, rates, trends — and end with one specific behavioural question the user must sit with. Never lead with praise or encouragement. Never make claims that sound like medical or psychological assessment. Tone: direct, compassionate, honest. Not harsh. Not gentle. Accurate.
 
 Today's promise (${c.kept} of ${c.committed} kept):
@@ -2306,7 +2306,7 @@ Output format — two parts, 1-2 sentences each:
     const real = sessionHistory.filter((s) => !s.reckonedWithoutSession);
     const avg = real.length ? Math.round(real.reduce((a, s) => a + s.minutes, 0) / real.length) : 0;
     const prompt = `You are a behavioural data analyst. The user has kept their Gold task ${streak} days in a row in ZonedIn.
-Data: ${real.length} sessions, ${real.filter((s) => s.completed).length} completed, avg ${avg}min, this week ${weekRecord.kept} of ${weekRecord.committed} promises kept, tasks: ${tasks.join(", ") || "not set"}
+Data: ${real.length} sessions, ${real.filter((s) => s.completed).length} completed, avg ${avg}min, this week ${weekRecord.kept} of ${weekRecord.committed} commitments kept, tasks: ${tasks.join(", ") || "not set"}
 
 Write 3 short sections. Direct, data-first, no filler:
 \u{1F4CA} WHAT'S WORKING: (2 sentences — state what the data shows)
@@ -2362,7 +2362,7 @@ Write 3 short sections. Direct, data-first, no filler:
   const shareDayCard = () => {
     const d = dayRef.current, c = dayCounts(d, true);
     track("share_tapped", { type: "day" });
-    shareZonedInCard("day", { kept: c.kept, committed: c.committed, line: c.kept === c.committed ? "My word held today." : verdictLine(c.kept, c.committed), tasks: dayCommittedTiers(d).map((k) => ({ tier: k, text: d[k], kept: d.outcomes[k] === "kept" })), date: fmtDay(todayRef.current, { weekday: "long", day: "numeric", month: "long" }) });
+    shareZonedInCard("day", { kept: c.kept, committed: c.committed, line: c.kept === c.committed ? "I kept my word today." : verdictLine(c.kept, c.committed), tasks: dayCommittedTiers(d).map((k) => ({ tier: k, text: d[k], kept: d.outcomes[k] === "kept" })), date: fmtDay(todayRef.current, { weekday: "long", day: "numeric", month: "long" }) });
   };
 
   // Evening email deep link: ?close=today
@@ -2417,7 +2417,7 @@ Write 3 short sections. Direct, data-first, no filler:
         RC("div", { className: "orbit-b", style: { position: "absolute", top: "50%", left: "50%", marginTop: -5, marginLeft: -5, width: 10, height: 10, borderRadius: "50%", background: T.gold, boxShadow: `0 0 10px ${T.gold}, 0 0 20px rgba(245,158,11,0.4)` } })),
       RC("div", { className: "splash-tagline", style: { marginTop: 36 } },
         RC("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 28, fontWeight: 900, color: T.text, letterSpacing: -0.5, marginBottom: 10 } }, "ZonedIn"),
-        RC("div", { style: { fontSize: 14, color: T.sub, lineHeight: 1.65, maxWidth: 260 } }, "Keep your word to yourself."))));
+        RC("div", { style: { fontSize: 14, color: T.sub, lineHeight: 1.65, maxWidth: 260 } }, "Clarity beats chaos."))));
   if (!user) return RC(AuthScreen, null);
   if (dbLoading) return RC("div", { style: { minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center" } },
     RC("div", { style: { textAlign: "center" } },
@@ -2438,7 +2438,7 @@ Write 3 short sections. Direct, data-first, no filler:
     onDismiss: () => { track("a2hs_nudge_dismissed", {}); dismissInstall(); }
   } : showPush ? {
     title: "Get your Gold each morning",
-    body: `One notification at ${morningTime}: tomorrow\u2019s Gold, or a nudge to make today\u2019s promise.`,
+    body: `One notification at ${morningTime}: tomorrow\u2019s Gold, or a nudge to commit to today\u2019s three.`,
     cta: "Turn on",
     onCta: () => toggleMorningPush(true),
     onDismiss: () => { setPushDismissed(true); LS.set("zi_push_dismissed", true); track("push_nudge_dismissed", {}); }
@@ -2451,7 +2451,7 @@ Write 3 short sections. Direct, data-first, no filler:
         RC("div", { style: { display: "flex", justifyContent: "center", marginBottom: 12, color: T.gold } }, RC(BoltMark, { size: 48, color: T.gold })),
         RC("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 28, fontWeight: 900, color: T.teal, marginBottom: 8 } }, milestoneShare + " days kept"),
         RC("div", { style: { fontSize: 14, color: T.sub, marginBottom: 24, lineHeight: 1.6 } }, milestoneShare >= 30 ? "One month of keeping your word. That's evidence." : "The habit is forming. Keep going."),
-        RC("button", { onClick: async () => { await shareZonedInCard("milestone", { days: milestoneShare }); setMilestoneShare(null); }, style: btnPrimary({ width: "100%", fontSize: 15, marginBottom: 10 }) }, "Share this ✦"),
+        RC("button", { onClick: async () => { await shareZonedInCard("milestone", { days: milestoneShare }); setMilestoneShare(null); }, style: btnPrimary({ width: "100%", fontSize: 15, marginBottom: 10 }) }, "Share this"),
         RC("button", { onClick: () => setMilestoneShare(null), style: btn({ width: "100%", background: "none", color: T.sub, fontSize: 13, padding: "8px" }) }, "Continue →"))) : null,
     showRecovery && hasOnboarded ? RC(RecoveryScreen, { bestStreak, userName, identityStatement, onStart: () => { setShowRecovery(false); setTab(day.committed_at ? "focus" : "plan"); }, onDismiss: () => setShowRecovery(false) }) : null,
     onboardingOpen ? RC(OnboardingFlow, { day, form, onCommitDay: () => { LS.set("zi_first_day", todayRef.current); commitDay(); }, onStartFirstSession: startOnboardingSession }) : null,

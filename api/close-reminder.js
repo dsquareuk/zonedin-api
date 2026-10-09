@@ -47,10 +47,10 @@ const emailHtml = (name, zone, uid) => {
   return `<!doctype html><html><body style="margin:0;background:#0a0e14;padding:28px 16px">
   <table role="presentation" width="100%" style="max-width:460px;margin:0 auto"><tr><td>
   <div style="font:900 22px Arial;color:#F0F4F8;margin-bottom:6px">${name ? esc(name) + ", close" : "Close"} your day.</div>
-  <div style="font:14px Arial;color:#8a929c;margin-bottom:20px">This morning you made a promise. See if you kept your word.</div>
+  <div style="font:14px Arial;color:#8a929c;margin-bottom:20px">This morning you committed to today’s three. Close the day and see what you kept.</div>
   <table role="presentation" width="100%">${rows}</table>
   <a href="${APP_URL}/?close=today" style="display:block;text-align:center;margin-top:14px;padding:15px;border-radius:50px;background:#00C2B2;color:#fff;font:700 16px Arial;text-decoration:none">Close today &rarr;</a>
-  <div style="font:11px Arial;color:#5b636d;margin-top:26px;text-align:center">Keep your word to yourself. &middot;
+  <div style="font:11px Arial;color:#5b636d;margin-top:26px;text-align:center">Clarity beats chaos. &middot;
   <a href="${APP_URL}/api/email-event?a=unsub&u=${uid}&s=${sig}" style="color:#5b636d">Unsubscribe from evening emails</a></div>
   <img src="${APP_URL}/api/email-event?a=open&u=${uid}&s=${sig}" width="1" height="1" alt="" style="display:block;border:0">
   </td></tr></table></body></html>`;
