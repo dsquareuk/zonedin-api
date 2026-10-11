@@ -1804,7 +1804,7 @@ const ReflectTab = ({ day, today, weekRecord, rowsByDate, insightHistory, loadin
       loadingInsight ? RC("div", { style: { padding: "18px", borderRadius: 18, border: `1px solid ${T.border}`, fontSize: 13, color: T.sub, textAlign: "center" } }, "Reading your day…")
         : todays ? insightCardEl(todays, true)
         : insightError ? RC("div", { style: { padding: "12px 16px", borderRadius: 14, background: "rgba(226,75,74,0.08)", border: "1px solid rgba(226,75,74,0.25)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 } },
-            RC("div", { style: { fontSize: 13, fontWeight: 700, color: "#E2726F" } }, "Insight unavailable — try again"),
+            RC("div", { style: { fontSize: 13, fontWeight: 700, color: "#E2726F" } }, insightError === "offline" ? "You\u2019re offline. Your day is saved; tap Retry when you\u2019re back." : "Insight unavailable \u2014 try again"),
             RC("button", { onClick: onRefreshInsight, style: btn({ padding: "0 14px", minHeight: 44, borderRadius: 50, background: "transparent", border: "1px solid rgba(226,114,111,0.4)", color: "#E2726F", fontSize: 13 }) }, "Retry"))
         : null,
       !loadingInsight && (todays || !insightError) ? RC("button", { onClick: onRefreshInsight, style: btn({ width: "100%", background: "none", color: T.teal, fontSize: 13, padding: "0 8px", minHeight: 44, fontWeight: 600 }) }, todays ? "Refresh insight" : "Get tonight’s insight") : null) : null,
@@ -1973,6 +1973,49 @@ const PMFModal = ({ userName, streak, sessionCount, onAnswer }) => {
   );
 };
 const RecoveryScreen = ({ bestStreak, userName, onStart, onDismiss, identityStatement }) => /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", inset: 0, zIndex: 9998, background: T.bg, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 28 } }, /* @__PURE__ */ React.createElement("div", { style: { maxWidth: 380, width: "100%", textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "center", marginBottom: 20, color: T.teal } }, React.createElement(ShieldMark, { size: 52, color: T.teal })), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 26, fontWeight: 900, color: T.text, letterSpacing: -0.5, marginBottom: 12, lineHeight: 1.2 } }, userName ? `${userName}, those days` : "Those days", " still count."), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, color: T.sub, lineHeight: 1.7, marginBottom: 28 } }, "You kept Gold ", bestStreak, " days in a row. That doesn't disappear. Today is day 1 again."), /* @__PURE__ */ React.createElement("div", { style: { padding: "18px 20px", borderRadius: 18, background: T.card, border: `1px solid ${T.border}`, marginBottom: 28 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: T.sub, marginBottom: 8 } }, "Your personal best"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 48, fontWeight: 900, color: T.teal, letterSpacing: -3, lineHeight: 1 } }, bestStreak), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: T.sub, marginTop: 4 } }, "days Gold kept, your best so far.")), /* @__PURE__ */ React.createElement("button", { onClick: onStart, style: btnGold({ width: "100%", fontSize: 17, padding: "17px", marginBottom: 10 }) }, "Start today's Gold \u2192"), /* @__PURE__ */ React.createElement("button", { onClick: () => shareZonedInCard("recovery", { best: bestStreak, identity: identityStatement || null }), style: btn({ width: "100%", padding: "13px", borderRadius: 12, border: "1.5px solid rgba(167,139,250,0.3)", background: "transparent", color: "#A78BFA", fontSize: 14, fontWeight: 700, marginBottom: 10 }) }, "Share my comeback"), /* @__PURE__ */ React.createElement("button", { onClick: onDismiss, style: btn({ width: "100%", background: "none", color: T.sub, fontSize: 13, padding: "8px" }) }, "Go to Plan tab")));
+// ── v53 — Sunday recap: "Your week, ZonedIn" ──
+const dowOf = (d) => new Date(d + "T12:00:00").getDay();
+const recapWeekFor = (today) => {
+  const dow = dowOf(today);
+  if (dow === 0 && localHour() >= 17) return { start: weekStart(today), end: today };
+  if (dow === 1) { const y = addDays(today, -1); return { start: weekStart(y), end: y }; }
+  return null;
+};
+const buildRecap = (rowsByDate, sessionHistory, wk) => {
+  let kept = 0, committed = 0, goldKept = 0, days = 0;
+  const golds = [];
+  for (let d = wk.start; d <= wk.end; d = addDays(d, 1)) {
+    const r = rowsByDate[d];
+    if (!r || !r.committed_at) continue;
+    days += 1;
+    const c = dayCounts(r, true);
+    kept += c.kept; committed += c.committed;
+    const gk = r.outcomes && r.outcomes.gold === "kept";
+    if (gk) goldKept += 1;
+    if ((r.gold || "").trim()) golds.push({ date: d, text: r.gold.trim(), kept: gk });
+  }
+  const sess = (sessionHistory || []).filter((x) => x.date >= wk.start && x.date <= wk.end && !x.reckonedWithoutSession);
+  const minutes = sess.reduce((a, x) => a + (x.minutes || 0), 0);
+  return { wk, kept, committed, pct: committed ? Math.round((kept / committed) * 100) : 0, goldKept, days, golds, sessions: sess.length, minutes };
+};
+const WeekRecap = ({ data, onShare, onClose }) => {
+  const h = Math.floor(data.minutes / 60), m = data.minutes % 60;
+  const focusLine = data.sessions ? `${h ? h + "h " : ""}${m}m focused across ${data.sessions} session${data.sessions === 1 ? "" : "s"}` : "No focus sessions this week";
+  return RC("div", { style: { position: "fixed", inset: 0, zIndex: 9997, background: "rgba(5,8,12,0.94)", display: "flex", alignItems: "center", justifyContent: "center", padding: 18, overflowY: "auto" } },
+    RC("div", { className: "slide-up", style: { width: "100%", maxWidth: 400, background: T.card, borderRadius: 24, border: `1px solid ${T.border2}`, padding: "26px 22px 20px" } },
+      RC("div", { style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 14 } }, RC(ZonedInMark, { size: 26 }), RC("span", { style: { fontSize: 12, fontWeight: 700, letterSpacing: 1.3, textTransform: "uppercase", color: T.gold } }, "Your week, ZonedIn")),
+      RC("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 26, fontWeight: 900, color: T.text, letterSpacing: -0.4, lineHeight: 1.2, marginBottom: 8 } }, `${data.goldKept} of ${data.days} Golds kept.`),
+      RC("div", { style: { fontSize: 14, color: T.sub, marginBottom: 18 } }, "ZonedIn Rate: ", RC("b", { style: { color: T.teal } }, `${data.kept} of ${data.committed} kept`), ` · ${data.pct}%`),
+      RC("div", { style: { borderTop: `1px solid ${T.border}`, paddingTop: 14, marginBottom: 14 } },
+        dlLabel("What mattered most, in your words", T.sub, { marginBottom: 10 }),
+        data.golds.map((g) => RC("div", { key: g.date, style: { display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 8 } },
+          RC("span", { style: { width: 34, flexShrink: 0, fontSize: 12, color: T.sub2, paddingTop: 2 } }, fmtDay(g.date, { weekday: "short" })),
+          RC("span", { style: { flex: 1, fontSize: 14, color: g.kept ? T.text : T.sub, lineHeight: 1.4 } }, "“", g.text, "”"),
+          RC("span", { style: { fontSize: 12, fontWeight: 700, color: g.kept ? T.teal : T.sub2, paddingTop: 2 } }, g.kept ? "Kept" : "Not kept")))),
+      RC("div", { style: { fontSize: 13, color: T.sub, marginBottom: 20 } }, focusLine),
+      RC("button", { onClick: onShare, style: btnPrimary({ width: "100%", fontSize: 15, padding: "14px", marginBottom: 8 }) }, "Share my week"),
+      RC("button", { onClick: onClose, style: btn({ width: "100%", fontSize: 14, background: "transparent", color: T.sub, minHeight: 44 }) }, "Start next week →")));
+};
 const ZonedInMVP = () => {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -2015,6 +2058,7 @@ const ZonedInMVP = () => {
   const [dbLoading, setDbLoading] = useState(false);
   const [offlineMode, setOfflineMode] = useState(typeof navigator !== "undefined" && navigator.onLine === false);
   const [offlineEmpty, setOfflineEmpty] = useState(false);
+  const [recap, setRecap] = useState(null);
   const [queued, setQueued] = useState(outboxLen());
   const [today, setToday] = useState(() => localDay());
   const todayRef = useRef(today);
@@ -2285,6 +2329,15 @@ const ZonedInMVP = () => {
 
   // ── derived ──
   const rowsByDate = __spreadProps(__spreadValues({}, rows), { [today]: day });
+  useEffect(() => {
+    if (!dataReady || !hasOnboarded || recap || yRow) return; // wait until yesterday is checked in
+    const wk = recapWeekFor(today);
+    if (!wk || LS.get("zi_recap_" + wk.start, false)) return;
+    const data = buildRecap(rowsByDate, sessionHistory, wk);
+    if (data.days < 2) return;
+    setRecap(data);
+    track("week_recap_shown", { kept: data.kept, committed: data.committed, gold_kept: data.goldKept, days: data.days });
+  }, [dataReady, hasOnboarded, today, rows, day, yRow]);
   if (yRow) rowsByDate[yRow.date] = yRow.day;
   const weekRecord = weekRecordFor(rowsByDate, today);
   const eveningNow = localHour() >= 18;
@@ -2500,6 +2553,7 @@ const ZonedInMVP = () => {
   // ── DL-11 — evening insight (automatic on close, manual refresh) ──
   const generateInsight = async () => {
     const d = dayRef.current;
+    if (navigator.onLine === false) { setInsightError("offline"); return; }
     setLoadingInsight(true);
     setInsightError("");
     if (window.zi) window.zi.insightRequested(streakTier, !!(d.went_well || "").trim(), d.close_energy, d.close_mood);
@@ -2512,21 +2566,34 @@ const ZonedInMVP = () => {
     const moodLabel = (MOOD_OPTS.find((m) => String(m.val) === String(d.close_mood)) || {}).label || "not recorded";
     const recent = sessionHistory.filter((s) => !s.reckonedWithoutSession).slice(0, 5).map((s) => `${s.date}: ${s.minutes}min on "${s.zone}" (${s.taskCompleted ? "kept" : "not kept"})`).join("\n");
     const ratingNote = sessionRating ? `\nLast session focus: ${sessionRating === "fully" ? "Fully ZonedIn" : sessionRating === "partly" ? "Had moments of focus" : "Mind was elsewhere"}` : "";
-    const prompt = `You are a behavioural data analyst embedded in a productivity app. You are not a coach, motivational guide, or therapist. Your job is to state what the data shows — patterns, rates, trends — and end with one specific behavioural question the user must sit with. Never lead with praise or encouragement. Never make claims that sound like medical or psychological assessment. Tone: direct, compassionate, honest. Not harsh. Not gentle. Accurate.
+    const pastGolds = Object.keys(rowsByDate || {}).filter((x) => x < todayRef.current).sort().slice(-6).map((x) => {
+      const r = rowsByDate[x];
+      if (!r || !r.committed_at || !(r.gold || "").trim()) return null;
+      return `${x}: Gold "${r.gold.trim()}" (${r.outcomes && r.outcomes.gold === "kept" ? "kept" : "not kept"})${(r.gold_why || "").trim() ? `, because "${r.gold_why.trim()}"` : ""}`;
+    }).filter(Boolean).join("\n");
+    const prompt = `You write the evening insight in ZonedIn, an app where people commit to up to three things a day (Gold matters most) and check in on whether they kept each one.
 
-Today's promise (${c.kept} of ${c.committed} kept):
+Rules:
+- Quote the person's own words back to them at least once, in double quotes, exactly as they wrote them: a task, their "done when", their reason, or their note. Style example: You said Gold was "the pitch deck". Third day running.
+- State one specific pattern from the data below: a count, a repeat, or a change. Use the dates and outcomes. If there is little history, say what today shows and that the pattern builds over time.
+- No praise, no pep talk, no therapy or medical language. Calm, clear, direct. British English.
+- Never use these words: promise, honest, verdict, streak.
+
+Today (${c.kept} of ${c.committed} kept):
 ${taskLines || "Nothing committed"}
-Why Gold mattered today: ${d.gold_why || "not given"}
-Energy: ${energyLabel} Mood: ${moodLabel}
-Note: ${(d.went_well || "").trim() || "none"}
-This week: ${weekRecord.kept} of ${weekRecord.committed} kept (${weekRecord.pct}%)
-${integrity}${ratingNote}${rollCount(d.gold) >= 2 ? `\nThis Gold has been rolled forward ${rollCount(d.gold)} times.` : ""}
-Recent sessions:
+Why Gold mattered today, in their words: ${(d.gold_why || "").trim() ? `"${d.gold_why.trim()}"` : "not given"}
+Their note tonight: ${(d.went_well || "").trim() ? `"${d.went_well.trim()}"` : "none"}
+Energy: ${energyLabel}. Mood: ${moodLabel}.
+ZonedIn Rate this week: ${weekRecord.kept} of ${weekRecord.committed} kept (${weekRecord.pct}%)
+${integrity}${ratingNote}${rollCount(d.gold) >= 2 ? `\nThis Gold has been carried forward ${rollCount(d.gold)} times.` : ""}
+Recent Golds, in their words:
+${pastGolds || "None yet"}
+Recent focus sessions:
 ${recent || "None yet"}
 
-Output format — two parts, 1-2 sentences each:
-\u{1F4CA} Pattern: [state what the data shows — a specific rate, pattern, or trend from the data above]
-❓ Question: [end with one specific behavioural question the user must sit with — not a suggestion, not a recommendation, a question]`;
+Write exactly two short parts:
+\u{1F4CA} Pattern: [1-2 sentences, quoting their own words]
+❓ Question: [one specific question about tomorrow, not advice]`;
     try {
       const res = await fetch("https://zonedin-api.vercel.app/api/insight", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prompt: prompt.slice(0, 3990) }) });
       const data = await res.json();
@@ -2681,6 +2748,7 @@ Write 3 short sections. Direct, data-first, no filler:
   return RC("div", { style: { height: "100%", minHeight: 0, background: T.bg, display: "flex", flexDirection: "column", maxWidth: 480, width: "100%", margin: "0 auto", position: "relative" } },
     showPMF ? RC(PMFModal, { userName, streak, sessionCount: sessionHistory.length, onAnswer: () => { setShowPMF(false); saveProfile({ pmf_answered: true }); } }) : null,
     showPromise ? RC(PromiseRitual, { day, onBack: () => setShowPromise(false), onIn: () => { commitDay(); setShowPromise(false); setTab("plan"); } }) : null,
+    recap && !closeView && !sessionActive && !showRecovery && !onboardingOpen ? RC(WeekRecap, { data: recap, onShare: () => { track("share_tapped", { type: "week_recap" }); shareZonedInCard("rate", { kept: recap.kept, of: recap.committed }); }, onClose: () => { LS.set("zi_recap_" + recap.wk.start, true); track("week_recap_closed", {}); setRecap(null); } }) : null,
     milestoneShare && !closeView ? RC("div", { style: { position: "fixed", inset: 0, zIndex: 9997, background: "rgba(0,0,0,0.88)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 } },
       RC("div", { style: { background: T.card, borderRadius: 24, padding: "32px 24px", maxWidth: 380, width: "100%", textAlign: "center", border: "1px solid rgba(0,194,178,0.2)" } },
         RC("div", { style: { display: "flex", justifyContent: "center", marginBottom: 12, color: T.gold } }, RC(BoltMark, { size: 48, color: T.gold })),
