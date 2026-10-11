@@ -644,9 +644,48 @@ const AuthScreen = () => {
     )
   );
 };
+// ── ZonedIn state (v52): ambient sound generated on the device ──
+const AMBIENT_OPTS = [{ id: "off", label: "Silence" }, { id: "rain", label: "Rain" }, { id: "brown", label: "Deep noise" }];
+const ziAmbient = (() => {
+  let ctx = null, nodes = null;
+  const build = (kind) => {
+    const sr = ctx.sampleRate, len = sr * 6, buf = ctx.createBuffer(2, len, sr);
+    for (let ch = 0; ch < 2; ch++) {
+      const d = buf.getChannelData(ch); let last = 0;
+      for (let i = 0; i < len; i++) { const w = Math.random() * 2 - 1; if (kind === "brown") { last = (last + 0.02 * w) / 1.02; d[i] = last * 3.2; } else d[i] = w; }
+    }
+    const src = ctx.createBufferSource(); src.buffer = buf; src.loop = true;
+    const f = ctx.createBiquadFilter(), g = ctx.createGain();
+    if (kind === "rain") { f.type = "bandpass"; f.frequency.value = 1600; f.Q.value = 0.5; } else { f.type = "lowpass"; f.frequency.value = 700; }
+    g.gain.value = 0; src.connect(f); f.connect(g); g.connect(ctx.destination); src.start();
+    g.gain.setTargetAtTime(kind === "rain" ? 0.09 : 0.32, ctx.currentTime, 0.6);
+    return { src, g };
+  };
+  const api = {
+    kind: "off",
+    start(kind) {
+      api.stop(); api.kind = kind || "off";
+      if (!kind || kind === "off") return;
+      try { ctx = ctx || new (window.AudioContext || window.webkitAudioContext)(); if (ctx.state === "suspended") ctx.resume(); nodes = build(kind); } catch (e) { nodes = null; }
+    },
+    stop() {
+      if (!nodes || !ctx) { nodes = null; return; }
+      const n = nodes; nodes = null;
+      try { n.g.gain.setTargetAtTime(0, ctx.currentTime, 0.25); setTimeout(() => { try { n.src.stop(); } catch (_) {} }, 1200); } catch (_) {}
+    }
+  };
+  return api;
+})();
 const SessionLock = ({ secondsLeft, activeTask, doneLooks, tier, why, onEnd, onCompleteTask, sessionDuration, isRepeatSession, firstSession }) => {
   const [wakeLockNotice, setWakeLockNotice] = useState(false);
   const [leftNotice, setLeftNotice] = useState(false);
+  const [breaks, setBreaks] = useState(0);
+  const [ambient, setAmbient] = useState(() => ziAmbient.kind || LS.get("zi_ambient", "off"));
+  const [dim, setDim] = useState(false);
+  const idleRef = useRef(null);
+  const wake = () => { setDim(false); clearTimeout(idleRef.current); idleRef.current = setTimeout(() => setDim(true), 20000); };
+  useEffect(() => { wake(); return () => clearTimeout(idleRef.current); }, []);
+  const pickAmbient = (k) => { setAmbient(k); LS.set("zi_ambient", k); ziAmbient.start(k); if (window.zi) window.zi.track("ambient_selected", { sound: k }); wake(); };
   const [leftSeconds, setLeftSeconds] = useState(0);
   const leftTimeRef = useRef(null);
   const wakeLockRef = useRef(null);
@@ -685,6 +724,9 @@ const SessionLock = ({ secondsLeft, activeTask, doneLooks, tier, why, onEnd, onC
         }
       } else {
         leftTimeRef.current = Date.now();
+        window.__ziFocusBreaks = (window.__ziFocusBreaks || 0) + 1;
+        setBreaks(window.__ziFocusBreaks);
+        if (window.zi) window.zi.track("focus_broken", { count: window.__ziFocusBreaks, tier });
       }
     };
     document.addEventListener("visibilitychange", onVisible);
@@ -700,7 +742,11 @@ const SessionLock = ({ secondsLeft, activeTask, doneLooks, tier, why, onEnd, onC
     justifyContent: "space-between",
     padding: "env(safe-area-inset-top, 48px) 24px env(safe-area-inset-bottom, 40px)",
     overflow: "hidden", touchAction: "none"
-  } },
+  }, onPointerDown: wake },
+  dim ? RC("div", { onPointerDown: (e) => { e.stopPropagation(); wake(); }, style: { position: "absolute", inset: 0, zIndex: 20, background: "#020304", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", transition: "opacity var(--zi-settle) var(--zi-ease)", cursor: "pointer" } },
+    RC("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 44, fontWeight: 900, color: "rgba(240,244,248,0.38)", letterSpacing: -2 } }, fmt(secondsLeft)),
+    RC("div", { style: { marginTop: 10, fontSize: 12, color: "rgba(240,244,248,0.32)", letterSpacing: 1.5, textTransform: "uppercase" } }, "ZonedIn \u00B7 tap to wake")) : null,
+
   leftNotice && /* @__PURE__ */ React.createElement("div", { className: "slide-up", style: { position: "absolute", top: 56, left: 16, right: 16, zIndex: 10, padding: "10px 16px", borderRadius: 14, background: "rgba(226,75,74,0.12)", border: "1px solid rgba(226,75,74,0.25)", display: "flex", alignItems: "center", gap: 10 } },
     /* @__PURE__ */ React.createElement("span", { style: { fontSize: 16 } }, "\u26A0\uFE0F"),
     /* @__PURE__ */ React.createElement("div", null,
@@ -731,7 +777,9 @@ const SessionLock = ({ secondsLeft, activeTask, doneLooks, tier, why, onEnd, onC
     letterSpacing: -4,
     lineHeight: 1,
     transition: "color 1s"
-  } }, fmt(secondsLeft)), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: nearEnd ? T.gold : T.teal, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase", marginTop: 6, transition: "color 1s" } }, "remaining"))), /* @__PURE__ */ React.createElement("div", { style: { width: "100%", maxWidth: 360, zIndex: 1 } }, tier === "gold" && why ? React.createElement("div", { style: { textAlign: "center", fontSize: 15, color: T.text, lineHeight: 1.5, fontWeight: 600, marginBottom: 20, minHeight: 40, padding: "0 8px" } }, React.createElement("span", { style: { color: T.sub, fontWeight: 500 } }, "You said this matters because\u2026 "), React.createElement("span", { style: { color: T.teal } }, why)) : React.createElement("div", { style: { textAlign: "center", fontSize: 14, color: T.text, lineHeight: 1.5, marginBottom: 20, minHeight: 40, padding: "0 8px" } }, React.createElement("span", { style: { color: T.sub } }, "Done when: "), doneLooks || activeTask), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10 } }, /* @__PURE__ */ React.createElement(
+  } }, fmt(secondsLeft)), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: nearEnd ? T.gold : T.teal, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase", marginTop: 6, transition: "color 1s" } }, "remaining"), RC("span", { "aria-live": "polite", style: { fontSize: 12, marginTop: 10, color: breaks ? "rgba(245,158,11,0.85)" : "rgba(240,244,248,0.4)", fontWeight: 600 } }, breaks ? `Focus broken ${breaks}\u00D7` : "Focus held"))), /* @__PURE__ */ React.createElement("div", { style: { width: "100%", maxWidth: 360, zIndex: 1 } }, RC("div", { style: { display: "flex", justifyContent: "center", flexWrap: "wrap", gap: 6, marginBottom: 14 } },
+    AMBIENT_OPTS.map((o) => RC("button", { key: o.id, onClick: () => pickAmbient(o.id), "aria-pressed": ambient === o.id, style: btn({ minHeight: 32, padding: "0 11px", borderRadius: 50, fontSize: 11, fontWeight: 700, border: `1px solid ${ambient === o.id ? "rgba(0,194,178,0.5)" : "rgba(255,255,255,0.1)"}`, background: ambient === o.id ? "rgba(0,194,178,0.12)" : "transparent", color: ambient === o.id ? T.teal : T.sub }) }, o.label)),
+    RC("button", { onClick: (e) => { e.stopPropagation(); clearTimeout(idleRef.current); setDim(true); }, "aria-label": "Dim the screen", style: btn({ minHeight: 32, padding: "0 11px", borderRadius: 50, fontSize: 11, fontWeight: 700, border: "1px solid rgba(255,255,255,0.1)", background: "transparent", color: T.sub }) }, "Dim")), tier === "gold" && why ? React.createElement("div", { style: { textAlign: "center", fontSize: 15, color: T.text, lineHeight: 1.5, fontWeight: 600, marginBottom: 20, minHeight: 40, padding: "0 8px" } }, React.createElement("span", { style: { color: T.sub, fontWeight: 500 } }, "You said this matters because\u2026 "), React.createElement("span", { style: { color: T.teal } }, why)) : React.createElement("div", { style: { textAlign: "center", fontSize: 14, color: T.text, lineHeight: 1.5, marginBottom: 20, minHeight: 40, padding: "0 8px" } }, React.createElement("span", { style: { color: T.sub } }, "Done when: "), doneLooks || activeTask), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10 } }, /* @__PURE__ */ React.createElement(
     "button",
     {
       onClick: onCompleteTask,
@@ -1135,6 +1183,7 @@ const HoldRing = ({ onCommit, holdMs, color }) => {
   const timerRef = useRef(null);
   const startRef = useRef(0);
   const doneRef = useRef(false);
+  const midRef = useRef(false);
   useEffect(() => () => clearInterval(timerRef.current), []);
   const chime = () => {
     try {
@@ -1166,6 +1215,7 @@ const HoldRing = ({ onCommit, holdMs, color }) => {
     startRef.current = Date.now();
     timerRef.current = setInterval(() => {
       const pct = Math.min(100, ((Date.now() - startRef.current) / HOLD) * 100);
+      if (pct >= 50 && !midRef.current) { midRef.current = true; haptic("tap"); }
       setProgress(pct);
       if (pct >= 100) complete();
     }, 16);
@@ -1174,6 +1224,7 @@ const HoldRing = ({ onCommit, holdMs, color }) => {
     if (!timerRef.current) return;
     clearInterval(timerRef.current); timerRef.current = null;
     if (Date.now() - startRef.current < 700) setShortPresses((n) => n + 1);
+    midRef.current = false;
     setPhase("idle"); setProgress(0);
   };
   const isKey = (e) => e.key === " " || e.key === "Enter" || e.key === "Spacebar";
@@ -1199,8 +1250,11 @@ const HoldRing = ({ onCommit, holdMs, color }) => {
 };
 
 // ── DL-04 — MAKE YOUR PROMISE ─────────────────────────────────────────────
-const PromiseRitual = ({ day, onBack, onIn }) => {
+const PromiseRitual = ({ day, onBack, onIn: onInRaw }) => {
   const [screen, setScreen] = useState("a");
+  const openedAt = useRef(Date.now());
+  // The ceremony is designed to take well under 45 seconds; we measure it to keep it that way.
+  const onIn = () => { haptic("success"); const sec = Math.round((Date.now() - openedAt.current) / 1000); if (window.zi) window.zi.track("commit_ceremony_completed", { seconds: sec, under_45s: sec <= 45 }); onInRaw(); };
   const [ready, setReady] = useState(false);
   const backRef = useRef(onBack);
   backRef.current = onBack;
@@ -1228,9 +1282,10 @@ const PromiseRitual = ({ day, onBack, onIn }) => {
       RC("div", { style: { fontSize: 14, color: T.sub, marginBottom: 14 } }, "You’re choosing to do this today."),
       RC("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 30, fontWeight: 900, color: T.text, letterSpacing: -0.5, lineHeight: 1.2, marginBottom: 48, wordBreak: "break-word" } }, day.gold.trim()),
       RC(HoldRing, { onCommit: () => setScreen("b") }))));
+  // Screen B arrives with a ceremony-length background pulse.
   const others = ["diamond", "platinum"].filter((t) => (day[t] || "").trim());
   const fade = (delay, extra) => ({ className: "words-fade", style: __spreadValues({ animationDelay: `${delay}s` }, extra || {}) });
-  return shell(RC("div", { style: { maxWidth: 380, width: "100%", textAlign: "center" } },
+  return shell(RC("div", { className: "bg-pulse", style: { maxWidth: 380, width: "100%", textAlign: "center", borderRadius: 24, padding: "8px 0" } },
     RC("div", fade(0, { fontSize: 11, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: T.gold, marginBottom: 12 }), "Today, I’m committed to"),
     RC("div", fade(0.2, { fontFamily: "'Syne',sans-serif", fontSize: 26, fontWeight: 900, color: T.text, letterSpacing: -0.4, lineHeight: 1.22, marginBottom: 20, wordBreak: "break-word" }), day.gold.trim()),
     RC("div", fade(0.5, { marginBottom: 12 }), dlLabel("Done when", "rgba(245,158,11,0.7)", { marginBottom: 4 }), RC("div", { style: { fontSize: 15, color: T.text, lineHeight: 1.45 } }, day.gold_done_when.trim())),
@@ -1244,8 +1299,41 @@ const PromiseRitual = ({ day, onBack, onIn }) => {
 };
 
 // ── DL-03 — TODAY'S THREE (morning form) ──────────────────────────────────
+const TypeItOut = ({ onSorted }) => {
+  const [open, setOpen] = useState(false);
+  const [txt, setTxt] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState("");
+  if (!open) return RC(React.Fragment, null,
+    RC("button", { onClick: () => { setOpen(true); setMsg(""); if (window.zi) window.zi.track("type_it_opened", {}); }, style: btn({ display: "block", width: "100%", textAlign: "left", background: "none", color: T.teal, fontSize: 13, fontWeight: 700, padding: "0 2px", minHeight: 40, marginBottom: 6 }) }, "Type it out instead \u2192"),
+    msg ? RC("div", { className: "fade-up", style: { fontSize: 12, color: T.sub, margin: "-2px 2px 10px", lineHeight: 1.5 } }, msg) : null);
+  const go = async () => {
+    if (!txt.trim() || busy) return;
+    if (navigator.onLine === false) { setMsg("Sorting needs a connection. You can still fill in your Three below."); return; }
+    setBusy(true); setMsg("");
+    try {
+      const r = await fetch("/api/sort", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: txt.trim() }) });
+      const j = await r.json();
+      if (!r.ok || !j.gold) throw new Error("sort");
+      onSorted(j);
+      if (window.zi) window.zi.track("type_it_sorted", { tiers: ["gold", "diamond", "platinum"].filter((k) => j[k]).length, later: (j.later || []).length });
+      setMsg((j.later || []).length ? "Also on your mind, for another day: " + j.later.join(" \u00B7 ") : "Check the order and the finish lines, then commit.");
+      setOpen(false); setTxt("");
+    } catch (e) { setMsg("Couldn\u2019t sort that right now. Fill in your Three below instead."); }
+    finally { setBusy(false); }
+  };
+  return RC("div", { className: "fade-up", style: { marginBottom: 12, padding: 14, borderRadius: 16, border: "1px solid rgba(0,194,178,0.25)", background: "rgba(0,194,178,0.05)" } },
+    RC("div", { style: { fontSize: 13, fontWeight: 700, color: T.text, marginBottom: 8 } }, "What\u2019s on your mind today?"),
+    RC("textarea", { value: txt, autoFocus: true, rows: 3, maxLength: 800, "aria-label": "Type your tasks", onChange: (e) => setTxt(e.target.value), placeholder: "e.g. need to send Sarah the proposal, reply to Sam, maybe sketch the homepage", style: { width: "100%", resize: "none", padding: "12px 14px", borderRadius: 12, border: `1px solid ${T.border2}`, background: T.bg, color: T.text, fontSize: 16, lineHeight: 1.45, fontFamily: "'DM Sans',sans-serif" } }),
+    RC("div", { style: { display: "flex", gap: 8, marginTop: 10 } },
+      RC("button", { onClick: go, disabled: !txt.trim() || busy, style: btnPrimary({ flex: 2, fontSize: 14, padding: "12px", opacity: txt.trim() && !busy ? 1 : 0.45 }) }, busy ? "Sorting\u2026" : "Sort into my Three"),
+      RC("button", { onClick: () => { setOpen(false); setMsg(""); }, style: btn({ flex: 1, fontSize: 13, background: "transparent", border: `1px solid ${T.border}`, color: T.sub, borderRadius: 50 }) }, "Cancel")),
+    msg ? RC("div", { style: { fontSize: 12, color: T.sub, marginTop: 8, lineHeight: 1.5 } }, msg) : null,
+    RC("div", { style: { fontSize: 11, color: T.sub2, marginTop: 8 } }, "Sorted by Claude, Anthropic\u2019s AI. You decide what you commit to."));
+};
 const TodaysThreeForm = ({ day, onTask, onTaskBlur, onDoneWhen, onWhy, onPromise, hint, weekRecord, fromTomorrow, goldOnly, onAcceptSuggestion, beforeCommit, commitLabel }) => {
   const [focus, setFocus] = useState(null);
+  const onSorted = (j) => { DL_TIERS.forEach((k) => { if (j[k]) { onTask(k, j[k].task); if (j[k].done_when) onDoneWhen(k, j[k].done_when); } }); };
   const missing = [];
   if (!day.gold.trim()) missing.push("your Gold task");
   else {
@@ -1256,6 +1344,7 @@ const TodaysThreeForm = ({ day, onTask, onTaskBlur, onDoneWhen, onWhy, onPromise
   const ok = missing.length === 0;
   return RC("div", { className: "fade-up", style: { padding: "4px 16px 20px" } },
     hint ? RC("div", { style: { margin: "0 0 12px", padding: "10px 14px", borderRadius: 12, background: "rgba(0,194,178,0.07)", border: "1px solid rgba(0,194,178,0.22)", fontSize: 13, color: T.teal, fontWeight: 600, lineHeight: 1.45 } }, hint) : null,
+    !goldOnly ? RC(TypeItOut, { onSorted }) : null,
     (goldOnly ? ["gold"] : DL_TIERS).map((t) => {
       const cfg = DL_TIER[t];
       const hasText = !!day[t].trim();
@@ -2035,7 +2124,7 @@ const ZonedInMVP = () => {
   };
   const saveSessionToDB = useCallback(async (s) => {
     if (!user) return;
-    const { error } = await dbWrite({ t: "sessions", op: "insert", v: { user_id: user.id, zone_label: s.zone, zone_emoji: s.emoji, zone_key: s.zoneKey, minutes: s.minutes, completed: !!s.completed, task_completed: !!s.taskCompleted, date: s.date, commitment_statement: s.doneLooks || null, started_at: s.startedAt || null, difficulty: s.difficulty || null, confidence_before: s.confidence || null, reckoned_without_session: !!s.reckonedWithoutSession } });
+    const { error } = await dbWrite({ t: "sessions", op: "insert", v: { user_id: user.id, zone_label: s.zone, zone_emoji: s.emoji, zone_key: s.zoneKey, minutes: s.minutes, completed: !!s.completed, task_completed: !!s.taskCompleted, date: s.date, commitment_statement: s.doneLooks || null, started_at: s.startedAt || null, difficulty: s.difficulty || null, confidence_before: s.confidence || null, reckoned_without_session: !!s.reckonedWithoutSession, focus_breaks: s.focusBreaks == null ? null : s.focusBreaks } });
     if (error) console.warn("session save:", error.message);
   }, [user]);
   const updateLastSession = useCallback(async (difficulty) => {
@@ -2240,6 +2329,9 @@ const ZonedInMVP = () => {
     setIsRepeatSession(sessionHistory.some((s) => s.date === todayRef.current && s.zoneKey === tier && !s.reckonedWithoutSession));
     setSecondsLeft(mins * 60);
     setSessionStartedAt(new Date().toISOString());
+    window.__ziFocusBreaks = 0;
+    ziAmbient.start(LS.get("zi_ambient", "off"));
+    haptic("settle");
     setSessionActive(true);
     const hr = localHour();
     if (tier === "gold" && window.zi) window.zi.goldSessionStarted(mins, true, hr < 12 ? "morning" : hr < 17 ? "afternoon" : "evening");
@@ -2248,10 +2340,12 @@ const ZonedInMVP = () => {
   const finishSession = useCallback((taskDone) => {
     setSessionActive(false);
     clearInterval(intervalRef.current);
+    ziAmbient.stop();
     const d = dayRef.current;
     const tier = activeZoneKey;
     const mins = Math.round((sessionDuration * 60 - secondsLeft) / 60);
-    const s = { date: todayRef.current, zone: d[tier] || DL_TIER[tier].label, emoji: DL_TIER[tier].emoji, zoneKey: tier, minutes: mins, completed: secondsLeft === 0 || !!taskDone, doneLooks: d[`${tier}_done_when`], startedAt: sessionStartedAt };
+    const s = { date: todayRef.current, zone: d[tier] || DL_TIER[tier].label, emoji: DL_TIER[tier].emoji, zoneKey: tier, minutes: mins, completed: secondsLeft === 0 || !!taskDone, doneLooks: d[`${tier}_done_when`], startedAt: sessionStartedAt, focusBreaks: window.__ziFocusBreaks || 0 };
+    if (window.zi) window.zi.track("focus_session_summary", { tier, minutes: mins, focus_breaks: s.focusBreaks, ambient: LS.get("zi_ambient", "off") });
     setPendingSession(s);
     if (!LS.get("zi_first_session_date", null)) LS.set("zi_first_session_date", todayRef.current);
     if (d.outcomes && d.outcomes[tier] === "pending") setReckon({ tier, withSession: true, date: todayRef.current });
