@@ -10,6 +10,12 @@
   <meta name="apple-mobile-web-app-title" content="ZonedIn"/>
   <meta name="mobile-web-app-capable" content="yes"/>
   <meta name="theme-color" content="#0a0e14"/>
+  <script>
+    (function(){var p='dark';try{p=localStorage.getItem('zi_theme')||'dark';}catch(e){}
+      var light=p==='light'||(p==='system'&&window.matchMedia&&matchMedia('(prefers-color-scheme: light)').matches);
+      document.documentElement.setAttribute('data-theme',light?'light':'dark');window.__ziPref=p;
+      if(light){var m=document.querySelector('meta[name=theme-color]');if(m)m.setAttribute('content','#F5F6F8');}})();
+  </script>
   <link rel="apple-touch-icon" href="/icons/icon-180x180.png"/>
   <link rel="apple-touch-icon" sizes="120x120" href="/icons/icon-120x120.png"/>
   <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png"/>
@@ -131,6 +137,9 @@
   </script>
   <style>
     *{box-sizing:border-box;margin:0;padding:0;}
+    :root,.zi-force-dark{--zi-bg:#0a0e14;--zi-card:#111720;--zi-card2:#161d28;--zi-text:#F0F4F8;--zi-ink:240,244,248;--zi-line:255,255,255;--zi-scrim:0,0,0;--zi-on-accent:#0a0e14;--zi-on-gold:#1a1200;--zi-deep:#07090d;color-scheme:dark;}
+    :root[data-theme=light]{--zi-bg:#F5F6F8;--zi-card:#FFFFFF;--zi-card2:#EDF0F4;--zi-text:#0F141C;--zi-ink:15,20,28;--zi-line:15,20,28;--zi-scrim:245,246,248;--zi-on-accent:#FFFFFF;--zi-on-gold:#FFFFFF;--zi-deep:#FFFFFF;color-scheme:light;}
+    :root[data-theme=light] .zi-force-dark{color-scheme:dark;}
     :root{--zi-quick:160ms;--zi-settle:320ms;--zi-ceremony:700ms;--zi-ease:cubic-bezier(.2,.8,.2,1);--zi-spring:cubic-bezier(.34,1.3,.64,1);}
     button{-webkit-tap-highlight-color:transparent;}
     button:not([disabled]):active{filter:brightness(0.9);}
@@ -143,7 +152,7 @@
     @keyframes ziSplashIn{from{opacity:0;transform:scale(0.9)}to{opacity:1;transform:scale(1)}}
     @keyframes ziSplashUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
     .zi-offline{position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 8px);z-index:9999;padding:7px 14px;border-radius:50px;background:rgba(17,23,32,0.96);border:1px solid rgba(255,255,255,0.12);color:rgba(240,244,248,0.85);font-size:12px;font-weight:600;white-space:nowrap;animation:fadeUp var(--zi-settle) var(--zi-ease) both;}
-    html,body{height:100%;background:#0a0e14;font-family:'DM Sans',sans-serif;overflow:hidden;position:fixed;width:100%;} html::before{content:'';position:fixed;inset:0;background:#0a0e14;z-index:-1;}
+    html,body{height:100%;background:var(--zi-bg);font-family:'DM Sans',sans-serif;overflow:hidden;position:fixed;width:100%;} html::before{content:'';position:fixed;inset:0;background:var(--zi-bg);z-index:-1;}
     input,textarea,button{font-family:'DM Sans',sans-serif;}
     input:focus,textarea:focus{outline:none;}
     :focus-visible{outline:2px solid #00E5D4 !important;outline-offset:3px !important;}
@@ -169,7 +178,7 @@
     @keyframes stampPop{0%{opacity:0;transform:scale(0) rotate(-12deg)}60%{transform:scale(1.3) rotate(4deg)}100%{opacity:1;transform:scale(1) rotate(0deg)}}
     @keyframes borderDraw{from{height:0}to{height:100%}}
     @keyframes wordsFadeIn{0%{opacity:0;transform:translateY(12px)}100%{opacity:1;transform:translateY(0)}}
-    @keyframes bgPulse{0%{background:#0a0e14}50%{background:#1a1200}100%{background:#0a0e14}}
+    @keyframes bgPulse{0%{background:var(--zi-bg)}50%{background:rgba(245,158,11,0.14)}100%{background:var(--zi-bg)}}
     .stamp-pop{animation:stampPop var(--zi-settle) var(--zi-spring) both;}
     .border-draw{animation:borderDraw var(--zi-settle) var(--zi-ease) both;}
     .words-fade{animation:wordsFadeIn var(--zi-settle) var(--zi-ease) both;}
@@ -251,6 +260,40 @@ const T = {
   plat: "#A78BFA",
   platBg: "rgba(167,139,250,0.10)"
 };
+// v55 — Appearance: Dark (default, the brand) / Light / Match phone. Saved on the device and to the account.
+const ZI_DARK = Object.assign({}, T);
+const ZI_LIGHT = Object.assign({}, T, {
+  bg: "#F5F6F8", card: "#FFFFFF", card2: "#EDF0F4",
+  border: "rgba(15,20,28,0.09)", border2: "rgba(15,20,28,0.16)",
+  text: "#0F141C", sub: "rgba(15,20,28,0.68)", sub2: "rgba(15,20,28,0.62)",
+  teal: "#007A70", teal2: "#006B62", tealBg: "rgba(0,122,112,0.08)",
+  gold: "#B45309", goldBg: "rgba(180,83,9,0.09)", gold2: "#A16207",
+  diamond: "#2563EB", diamondBg: "rgba(37,99,235,0.08)",
+  plat: "#7C3AED", platBg: "rgba(124,58,237,0.08)"
+});
+const ziResolveLight = (p) => p === "light" || (p === "system" && !!(window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches));
+const ziApplyTheme = (p, opts) => {
+  const light = ziResolveLight(p);
+  window.__ziPref = p;
+  document.documentElement.setAttribute("data-theme", light ? "light" : "dark");
+  Object.assign(T, light ? ZI_LIGHT : ZI_DARK);
+  const m = document.querySelector("meta[name=theme-color]"); if (m) m.setAttribute("content", light ? "#F5F6F8" : "#0a0e14");
+  if (!(opts && opts.silent)) window.dispatchEvent(new Event("zi-theme"));
+};
+const ziSetTheme = (p) => {
+  try { localStorage.setItem("zi_theme", p); } catch (e) {}
+  ziApplyTheme(p);
+  try { if (typeof supabase !== "undefined" && supabase) supabase.auth.updateUser({ data: { zi_theme: p } }).catch(() => {}); } catch (e) {}
+  try { window.posthog && posthog.capture("appearance_changed", { theme: p }); } catch (e) {}
+};
+const ziThemeFromUser = (u) => {
+  const p = u && u.user_metadata && u.user_metadata.zi_theme;
+  if (!p || p === window.__ziPref) return;
+  try { localStorage.setItem("zi_theme", p); } catch (e) {}
+  ziApplyTheme(p);
+};
+ziApplyTheme(window.__ziPref || "dark", { silent: true });
+try { window.matchMedia && matchMedia("(prefers-color-scheme: light)").addEventListener("change", () => { if (window.__ziPref === "system") ziApplyTheme("system"); }); } catch (e) {}
 // ═══════════════════════════════════════════════════════════════════════
 // ZONEDIN SHARE CARDS — v3 integrated
 // ═══════════════════════════════════════════════════════════════════════
@@ -551,8 +594,8 @@ const playGoldSound = () => {
 };
 const card = (e = {}) => __spreadValues({ background: T.card, borderRadius: 20, border: `1px solid ${T.border}`, padding: "18px 20px" }, e);
 const btn = (e = {}) => __spreadValues({ border: "none", borderRadius: 50, cursor: "pointer", fontFamily: "'DM Sans',sans-serif", fontWeight: 700, transition: "all var(--zi-quick) var(--zi-ease)" }, e);
-const btnPrimary = (e = {}) => btn(__spreadValues({ background: `linear-gradient(135deg,${T.teal},${T.teal2})`, color: "#0a0e14", padding: "14px 28px", fontSize: 15, boxShadow: `0 6px 24px rgba(0,194,178,0.25)` }, e));
-const btnGold = (e = {}) => btn(__spreadValues({ background: `linear-gradient(135deg,${T.gold},${T.gold2})`, color: "#1a1200", padding: "16px 28px", fontSize: 16, fontWeight: 900, boxShadow: `0 8px 28px rgba(245,158,11,0.35)` }, e));
+const btnPrimary = (e = {}) => btn(__spreadValues({ background: `linear-gradient(135deg,${T.teal},${T.teal2})`, color: "var(--zi-on-accent)", padding: "14px 28px", fontSize: 15, boxShadow: `0 6px 24px rgba(0,194,178,0.25)` }, e));
+const btnGold = (e = {}) => btn(__spreadValues({ background: `linear-gradient(135deg,${T.gold},${T.gold2})`, color: "var(--zi-on-gold)", padding: "16px 28px", fontSize: 16, fontWeight: 900, boxShadow: `0 8px 28px rgba(245,158,11,0.35)` }, e));
 const ZonedInMark = ({ size = 40 }) => /* @__PURE__ */ React.createElement("svg", { width: size, height: size, viewBox: "0 0 64 64", fill: "none" }, /* @__PURE__ */ React.createElement("circle", { cx: "32", cy: "32", r: "26", stroke: T.border2, strokeWidth: "3" }), /* @__PURE__ */ React.createElement("circle", { cx: "32", cy: "32", r: "16", stroke: T.teal, strokeWidth: "5.5" }), /* @__PURE__ */ React.createElement("circle", { cx: "32", cy: "32", r: "7", fill: T.card }), /* @__PURE__ */ React.createElement("text", { x: "32", y: "36", textAnchor: "middle", fontSize: "11", fontWeight: "900", fill: T.text, style: { fontFamily: "'Syne',sans-serif" } }, "Z"));
 // ── Motion + haptics (v51): three timings used everywhere ──
 const MOTION = { quick: 160, settle: 320, ceremony: 700 };
@@ -628,7 +671,7 @@ const AuthScreen = () => {
       React.createElement("div", { style: { marginBottom: 20, display: "flex", justifyContent: "center" } }, React.createElement(ZonedInMark, { size: 56 })),
       React.createElement("h1", { style: { fontFamily: "'Syne',sans-serif", fontSize: 30, fontWeight: 900, color: T.text, letterSpacing: -0.5, margin: "0 0 6px" } }, "ZonedIn"),
       React.createElement("p", { style: { fontSize: 14, color: T.sub, margin: "0 0 20px" } }, "Clarity beats chaos. Commit to your top three. See them through."),
-      !sent ? React.createElement("div", { "aria-label": "Example of a ZonedIn commitment", style: { textAlign: "left", background: "#07090d", borderRadius: 20, padding: "18px 18px 14px", border: `1px solid ${T.border2}`, marginBottom: 16 } },
+      !sent ? React.createElement("div", { "aria-label": "Example of a ZonedIn commitment", style: { textAlign: "left", background: "var(--zi-deep)", borderRadius: 20, padding: "18px 18px 14px", border: `1px solid ${T.border2}`, marginBottom: 16 } },
         React.createElement("div", { style: { fontSize: 11, fontWeight: 700, letterSpacing: 1.1, textTransform: "uppercase", color: T.gold, marginBottom: 6 } }, "Today, I’m committed to"),
         React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 19, fontWeight: 900, color: T.text, lineHeight: 1.25, marginBottom: 8 } }, "Send the proposal to Sarah"),
         React.createElement("div", { style: { fontSize: 13, color: T.sub, marginBottom: 3 } }, "Done when: ", React.createElement("span", { style: { color: T.text } }, "Proposal sent to Sarah")),
@@ -774,9 +817,9 @@ const SessionLock = ({ secondsLeft, activeTask, doneLooks, tier, why, onEnd, onC
     padding: "env(safe-area-inset-top, 48px) 24px env(safe-area-inset-bottom, 40px)",
     overflow: "hidden", touchAction: "none"
   }, onPointerDown: wake },
-  dim ? RC("div", { onPointerDown: (e) => { e.stopPropagation(); wake(); }, style: { position: "absolute", inset: 0, zIndex: 20, background: "#020304", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", transition: "opacity var(--zi-settle) var(--zi-ease)", cursor: "pointer" } },
-    RC("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 44, fontWeight: 900, color: "rgba(240,244,248,0.38)", letterSpacing: -2 } }, fmt(secondsLeft)),
-    RC("div", { style: { marginTop: 10, fontSize: 12, color: "rgba(240,244,248,0.5)", letterSpacing: 1.5, textTransform: "uppercase" } }, "ZonedIn \u00B7 tap to wake")) : null,
+  dim ? RC("div", { className: "zi-force-dark", onPointerDown: (e) => { e.stopPropagation(); wake(); }, style: { position: "absolute", inset: 0, zIndex: 20, background: "#020304", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", transition: "opacity var(--zi-settle) var(--zi-ease)", cursor: "pointer" } },
+    RC("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 44, fontWeight: 900, color: "rgba(var(--zi-ink),0.38)", letterSpacing: -2 } }, fmt(secondsLeft)),
+    RC("div", { style: { marginTop: 10, fontSize: 12, color: "rgba(var(--zi-ink),0.5)", letterSpacing: 1.5, textTransform: "uppercase" } }, "ZonedIn \u00B7 tap to wake")) : null,
 
   leftNotice && /* @__PURE__ */ React.createElement("div", { className: "slide-up", style: { position: "absolute", top: 56, left: 16, right: 16, zIndex: 10, padding: "10px 16px", borderRadius: 14, background: "rgba(226,75,74,0.12)", border: "1px solid rgba(226,75,74,0.25)", display: "flex", alignItems: "center", gap: 10 } },
     /* @__PURE__ */ React.createElement("span", { style: { fontSize: 16 } }, "\u26A0\uFE0F"),
@@ -786,7 +829,7 @@ const SessionLock = ({ secondsLeft, activeTask, doneLooks, tier, why, onEnd, onC
     )
   ),
   wakeLockNotice && /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", top: 12, left: "50%", transform: "translateX(-50%)", zIndex: 2, padding: "5px 14px", borderRadius: 50, background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.2)", whiteSpace: "nowrap" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 10, color: T.gold, fontWeight: 700 } }, "\u26A0 Keep your screen on during this session")),
-  /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", inset: 0, background: `radial-gradient(ellipse at 50% 45%,${glowColor} 0%,transparent 65%)`, pointerEvents: "none", transition: "background 2s ease" } }), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", inset: 0, background: `radial-gradient(ellipse at 50% 45%,${glowColor} 0%,transparent 65%)`, pointerEvents: "none", transition: "background 2s ease" } }), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", zIndex: 1, paddingTop: 8 } }, isRepeatSession && /* @__PURE__ */ React.createElement("div", { style: { display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 50, background: "rgba(0,194,178,0.1)", border: "1px solid rgba(0,194,178,0.2)", marginBottom: 8 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, fontWeight: 700, color: T.teal } }, "Round 2 \u2014 still committed")), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, fontWeight: 700, letterSpacing: 1.1, textTransform: "uppercase", color: nearEnd ? T.gold : T.teal, marginBottom: 8, transition: "color 1s" } }, nearEnd ? "Almost there" : "In progress"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 18, fontWeight: 800, color: T.text, maxWidth: 300, lineHeight: 1.35, margin: "0 auto" } }, activeTask), doneLooks && tier === "gold" && React.createElement("div", { style: { marginTop: 10, maxWidth: 320, marginLeft: "auto", marginRight: "auto", fontSize: 14, lineHeight: 1.45, color: T.sub } }, "Done when: ", React.createElement("span", { style: { color: T.text } }, doneLooks)), firstSession && /* @__PURE__ */ React.createElement("div", { style: { margin: "12px auto 0", maxWidth: 300, fontSize: 13, fontWeight: 600, lineHeight: 1.5, color: T.teal } }, "Work on it now. We\u2019ll check in when the timer ends.")), /* @__PURE__ */ React.createElement("div", { style: { position: "relative", width: size, height: size, zIndex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", inset: 0, borderRadius: "50%", boxShadow: `0 0 60px ${glowColor}`, transition: "box-shadow 2s ease" } }), /* @__PURE__ */ React.createElement("svg", { width: size, height: size, viewBox: `0 0 ${size} ${size}`, style: { transform: "rotate(-90deg)", display: "block" } }, /* @__PURE__ */ React.createElement("circle", { cx: size / 2, cy: size / 2, r, fill: "none", stroke: "rgba(255,255,255,0.05)", strokeWidth: "10" }), /* @__PURE__ */ React.createElement(
+  /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", inset: 0, background: `radial-gradient(ellipse at 50% 45%,${glowColor} 0%,transparent 65%)`, pointerEvents: "none", transition: "background 2s ease" } }), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", inset: 0, background: `radial-gradient(ellipse at 50% 45%,${glowColor} 0%,transparent 65%)`, pointerEvents: "none", transition: "background 2s ease" } }), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", zIndex: 1, paddingTop: 8 } }, isRepeatSession && /* @__PURE__ */ React.createElement("div", { style: { display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 50, background: "rgba(0,194,178,0.1)", border: "1px solid rgba(0,194,178,0.2)", marginBottom: 8 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, fontWeight: 700, color: T.teal } }, "Round 2 \u2014 still committed")), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, fontWeight: 700, letterSpacing: 1.1, textTransform: "uppercase", color: nearEnd ? T.gold : T.teal, marginBottom: 8, transition: "color 1s" } }, nearEnd ? "Almost there" : "In progress"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 18, fontWeight: 800, color: T.text, maxWidth: 300, lineHeight: 1.35, margin: "0 auto" } }, activeTask), doneLooks && tier === "gold" && React.createElement("div", { style: { marginTop: 10, maxWidth: 320, marginLeft: "auto", marginRight: "auto", fontSize: 14, lineHeight: 1.45, color: T.sub } }, "Done when: ", React.createElement("span", { style: { color: T.text } }, doneLooks)), firstSession && /* @__PURE__ */ React.createElement("div", { style: { margin: "12px auto 0", maxWidth: 300, fontSize: 13, fontWeight: 600, lineHeight: 1.5, color: T.teal } }, "Work on it now. We\u2019ll check in when the timer ends.")), /* @__PURE__ */ React.createElement("div", { style: { position: "relative", width: size, height: size, zIndex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", inset: 0, borderRadius: "50%", boxShadow: `0 0 60px ${glowColor}`, transition: "box-shadow 2s ease" } }), /* @__PURE__ */ React.createElement("svg", { width: size, height: size, viewBox: `0 0 ${size} ${size}`, style: { transform: "rotate(-90deg)", display: "block" } }, /* @__PURE__ */ React.createElement("circle", { cx: size / 2, cy: size / 2, r, fill: "none", stroke: "rgba(var(--zi-line),0.05)", strokeWidth: "10" }), /* @__PURE__ */ React.createElement(
     "circle",
     {
       cx: size / 2,
@@ -808,9 +851,9 @@ const SessionLock = ({ secondsLeft, activeTask, doneLooks, tier, why, onEnd, onC
     letterSpacing: -4,
     lineHeight: 1,
     transition: "color 1s"
-  } }, fmt(secondsLeft)), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: nearEnd ? T.gold : T.teal, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase", marginTop: 6, transition: "color 1s" } }, "remaining"), RC("span", { "aria-live": "polite", style: { fontSize: 12, marginTop: 10, color: breaks ? "rgba(245,158,11,0.85)" : "rgba(240,244,248,0.52)", fontWeight: 600 } }, breaks ? `Focus broken ${breaks}\u00D7` : "Focus held"))), /* @__PURE__ */ React.createElement("div", { style: { width: "100%", maxWidth: 360, zIndex: 1 } }, RC("div", { style: { display: "flex", justifyContent: "center", flexWrap: "wrap", gap: 6, marginBottom: 14 } },
-    AMBIENT_OPTS.map((o) => RC("button", { key: o.id, onClick: () => pickAmbient(o.id), "aria-pressed": ambient === o.id, style: btn({ minHeight: 32, padding: "0 11px", borderRadius: 50, fontSize: 11, fontWeight: 700, border: `1px solid ${ambient === o.id ? "rgba(0,194,178,0.5)" : "rgba(255,255,255,0.1)"}`, background: ambient === o.id ? "rgba(0,194,178,0.12)" : "transparent", color: ambient === o.id ? T.teal : T.sub }) }, o.label)),
-    RC("button", { onClick: (e) => { e.stopPropagation(); clearTimeout(idleRef.current); setDim(true); }, "aria-label": "Dim the screen", style: btn({ minHeight: 32, padding: "0 11px", borderRadius: 50, fontSize: 11, fontWeight: 700, border: "1px solid rgba(255,255,255,0.1)", background: "transparent", color: T.sub }) }, "Dim")), tier === "gold" && why ? React.createElement("div", { style: { textAlign: "center", fontSize: 15, color: T.text, lineHeight: 1.5, fontWeight: 600, marginBottom: 20, minHeight: 40, padding: "0 8px" } }, React.createElement("span", { style: { color: T.sub, fontWeight: 500 } }, "You said this matters because\u2026 "), React.createElement("span", { style: { color: T.teal } }, why)) : React.createElement("div", { style: { textAlign: "center", fontSize: 14, color: T.text, lineHeight: 1.5, marginBottom: 20, minHeight: 40, padding: "0 8px" } }, React.createElement("span", { style: { color: T.sub } }, "Done when: "), doneLooks || activeTask), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10 } }, /* @__PURE__ */ React.createElement(
+  } }, fmt(secondsLeft)), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: nearEnd ? T.gold : T.teal, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase", marginTop: 6, transition: "color 1s" } }, "remaining"), RC("span", { "aria-live": "polite", style: { fontSize: 12, marginTop: 10, color: breaks ? "rgba(245,158,11,0.85)" : "rgba(var(--zi-ink),0.52)", fontWeight: 600 } }, breaks ? `Focus broken ${breaks}\u00D7` : "Focus held"))), /* @__PURE__ */ React.createElement("div", { style: { width: "100%", maxWidth: 360, zIndex: 1 } }, RC("div", { style: { display: "flex", justifyContent: "center", flexWrap: "wrap", gap: 6, marginBottom: 14 } },
+    AMBIENT_OPTS.map((o) => RC("button", { key: o.id, onClick: () => pickAmbient(o.id), "aria-pressed": ambient === o.id, style: btn({ minHeight: 32, padding: "0 11px", borderRadius: 50, fontSize: 11, fontWeight: 700, border: `1px solid ${ambient === o.id ? "rgba(0,194,178,0.5)" : "rgba(var(--zi-line),0.1)"}`, background: ambient === o.id ? "rgba(0,194,178,0.12)" : "transparent", color: ambient === o.id ? T.teal : T.sub }) }, o.label)),
+    RC("button", { onClick: (e) => { e.stopPropagation(); clearTimeout(idleRef.current); setDim(true); }, "aria-label": "Dim the screen", style: btn({ minHeight: 32, padding: "0 11px", borderRadius: 50, fontSize: 11, fontWeight: 700, border: "1px solid rgba(var(--zi-line),0.1)", background: "transparent", color: T.sub }) }, "Dim")), tier === "gold" && why ? React.createElement("div", { style: { textAlign: "center", fontSize: 15, color: T.text, lineHeight: 1.5, fontWeight: 600, marginBottom: 20, minHeight: 40, padding: "0 8px" } }, React.createElement("span", { style: { color: T.sub, fontWeight: 500 } }, "You said this matters because\u2026 "), React.createElement("span", { style: { color: T.teal } }, why)) : React.createElement("div", { style: { textAlign: "center", fontSize: 14, color: T.text, lineHeight: 1.5, marginBottom: 20, minHeight: 40, padding: "0 8px" } }, React.createElement("span", { style: { color: T.sub } }, "Done when: "), doneLooks || activeTask), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10 } }, /* @__PURE__ */ React.createElement(
     "button",
     {
       onClick: onCompleteTask,
@@ -820,7 +863,7 @@ const SessionLock = ({ secondsLeft, activeTask, doneLooks, tier, why, onEnd, onC
         padding: "16px",
         whiteSpace: "nowrap",
         background: nearEnd ? `linear-gradient(135deg,${T.gold},${T.gold2})` : `linear-gradient(135deg,${T.teal},${T.teal2})`,
-        color: nearEnd ? "#1a1200" : T.bg,
+        color: nearEnd ? "var(--zi-on-gold)" : T.bg,
         boxShadow: nearEnd ? `0 8px 28px rgba(245,158,11,0.35)` : `0 6px 24px rgba(0,194,178,0.25)`,
         transition: "all 1s"
       })
@@ -830,7 +873,7 @@ const SessionLock = ({ secondsLeft, activeTask, doneLooks, tier, why, onEnd, onC
     "button",
     {
       onClick: onEnd,
-      style: btn({ flex: 1, padding: "16px 12px", border: `1.5px solid rgba(255,255,255,0.1)`, background: "transparent", color: T.sub, fontSize: 13, whiteSpace: "nowrap", borderRadius: 50 })
+      style: btn({ flex: 1, padding: "16px 12px", border: `1.5px solid rgba(var(--zi-line),0.1)`, background: "transparent", color: T.sub, fontSize: 13, whiteSpace: "nowrap", borderRadius: 50 })
     },
     "End early"
   ))));
@@ -932,7 +975,7 @@ const MomentumCard = ({ sessionHistory, userName }) => {
     /* @__PURE__ */ React.createElement("div", { style: { padding: "0 16px 14px" } },
       /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 14, fontWeight: 800, color: T.text, marginBottom: 4, lineHeight: 1.35 } }, "Your patterns build here as you complete sessions."),
       /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, marginTop: 10 } },
-        [5, 10, 20].map((n, i) => /* @__PURE__ */ React.createElement("div", { key: n, style: { flex: 1, padding: "7px 8px", borderRadius: 10, background: total >= n ? "rgba(0,194,178,0.1)" : "rgba(255,255,255,0.03)", border: `1px solid ${total >= n ? "rgba(0,194,178,0.25)" : T.border}`, textAlign: "center" } },
+        [5, 10, 20].map((n, i) => /* @__PURE__ */ React.createElement("div", { key: n, style: { flex: 1, padding: "7px 8px", borderRadius: 10, background: total >= n ? "rgba(0,194,178,0.1)" : "rgba(var(--zi-line),0.03)", border: `1px solid ${total >= n ? "rgba(0,194,178,0.25)" : T.border}`, textAlign: "center" } },
           /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, fontWeight: 800, color: total >= n ? T.teal : T.sub } }, n, " sessions"),
           /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: T.sub, marginTop: 2, lineHeight: 1.3 } }, ["Best window", "Completion heatmap", "Full forecast"][i])
         ))
@@ -956,12 +999,12 @@ const MomentumCard = ({ sessionHistory, userName }) => {
         /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: T.sub, lineHeight: 1.5 } }, timeNudge == null ? void 0 : timeNudge.sub)
       ),
       unlockHeatmap && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, marginTop: 8 } },
-        /* @__PURE__ */ React.createElement("div", { style: { flex: 1, padding: "8px 10px", borderRadius: 12, background: "rgba(255,255,255,0.04)", border: `1px solid ${T.border}` } },
+        /* @__PURE__ */ React.createElement("div", { style: { flex: 1, padding: "8px 10px", borderRadius: 12, background: "rgba(var(--zi-line),0.04)", border: `1px solid ${T.border}` } },
           /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: T.sub, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 } }, "Last ", last5, " Gold sessions"),
-          /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 3 } }, Array.from({ length: last5 }, (_, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { width: 10, height: 10, borderRadius: 3, background: i < recentCompleted ? T.gold : "rgba(255,255,255,0.08)" } }))),
+          /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 3 } }, Array.from({ length: last5 }, (_, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { width: 10, height: 10, borderRadius: 3, background: i < recentCompleted ? T.gold : "rgba(var(--zi-line),0.08)" } }))),
           /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: T.sub, marginTop: 4 } }, recentCompleted, " of ", last5, " completed")
         ),
-        /* @__PURE__ */ React.createElement("div", { style: { flex: 1, padding: "8px 10px", borderRadius: 12, background: "rgba(255,255,255,0.04)", border: `1px solid ${T.border}` } },
+        /* @__PURE__ */ React.createElement("div", { style: { flex: 1, padding: "8px 10px", borderRadius: 12, background: "rgba(var(--zi-line),0.04)", border: `1px solid ${T.border}` } },
           bestHour !== null ? /* @__PURE__ */ React.createElement(React.Fragment, null,
             /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: T.sub, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 } }, "Best window"),
             /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 14, fontWeight: 900, color: T.teal } }, fmtW(bestHour)),
@@ -1120,7 +1163,7 @@ const GoldCompleteScreen = ({ goldTask, streak, identityStatement, doneLooks, wi
   const [difficulty, setDifficulty] = useState(null);
   useEffect(() => { try { playGoldSound(); } catch (e) {} }, []);
   const share = () => shareZonedInCard("evidence", { task: goldTask, doneLooks: doneLooks || null, streak, identity: identityStatement || null });
-  return RCx("div", { style: { position: "fixed", inset: 0, zIndex: 9998, background: "#07090d", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "calc(env(safe-area-inset-top,0px) + 24px) 26px calc(env(safe-area-inset-bottom,0px) + 22px)", overflowY: "auto" } },
+  return RCx("div", { style: { position: "fixed", inset: 0, zIndex: 9998, background: "var(--zi-deep)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "calc(env(safe-area-inset-top,0px) + 24px) 26px calc(env(safe-area-inset-bottom,0px) + 22px)", overflowY: "auto" } },
     RCx("div", { style: { maxWidth: 380, width: "100%", textAlign: "center" } },
       RCx("div", { className: "stamp-pop", style: { width: 64, height: 64, borderRadius: 32, margin: "0 auto 18px", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,194,178,0.12)", border: "1.5px solid rgba(0,194,178,0.45)", color: T.teal } }, RCx(CheckMark, { size: 30 })),
       RCx("div", { className: "words-fade", style: { fontSize: 12, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase", color: T.teal, marginBottom: 10 } }, "Evidence Added"),
@@ -1139,7 +1182,7 @@ const RecommitSheet = ({ task, rolls, withSession, onRecommit, onLetGo }) => {
   const [txt, setTxt] = useState(task || "");
   const [difficulty, setDifficulty] = useState(null);
   const third = rolls >= 2;
-  return RCx("div", { style: { position: "fixed", inset: 0, zIndex: 9998, background: "rgba(0,0,0,0.88)", display: "flex", alignItems: "flex-end", justifyContent: "center", padding: "16px 16px calc(env(safe-area-inset-bottom,0px) + 16px)" } },
+  return RCx("div", { style: { position: "fixed", inset: 0, zIndex: 9998, background: "rgba(var(--zi-scrim),0.92)", display: "flex", alignItems: "flex-end", justifyContent: "center", padding: "16px 16px calc(env(safe-area-inset-bottom,0px) + 16px)" } },
     RCx("div", { className: "slide-up", role: "dialog", "aria-label": "Make it tomorrow's Gold", style: { background: T.card, borderRadius: 28, padding: "26px 22px 18px", maxWidth: 420, width: "100%", border: `1px solid ${T.border2}` } },
       RCx("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 22, fontWeight: 900, color: T.text, marginBottom: 6, textAlign: "center" } }, "Not today."),
       RCx("div", { style: { fontSize: 14, color: T.sub, lineHeight: 1.5, marginBottom: 16, textAlign: "center" } }, third ? "Third time this has rolled forward — what’s actually in the way? Make it smaller, or let it go." : "Make it tomorrow’s Gold? Smaller is fine."),
@@ -1198,7 +1241,7 @@ const showToast = (msg) => {
     let live = document.getElementById("zi-live");
     if (!live) { live = document.createElement("div"); live.id = "zi-live"; live.className = "zi-sr"; live.setAttribute("role", "status"); live.setAttribute("aria-live", "polite"); document.body.appendChild(live); }
     live.textContent = ""; setTimeout(() => { live.textContent = msg; }, 60);
-    el.style.cssText = "position:fixed;left:50%;bottom:calc(72px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:10001;background:#161d28;color:#F0F4F8;border:1px solid rgba(0,194,178,0.35);padding:10px 16px;border-radius:12px;font:600 13px 'DM Sans',sans-serif;max-width:86vw;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,0.4);transition:opacity .3s";
+    el.style.cssText = "position:fixed;left:50%;bottom:calc(72px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:10001;background:var(--zi-card2);color:var(--zi-text);border:1px solid rgba(0,194,178,0.35);padding:10px 16px;border-radius:12px;font:600 13px 'DM Sans',sans-serif;max-width:86vw;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,0.4);transition:opacity .3s";
     document.body.appendChild(el);
     setTimeout(() => { el.style.opacity = "0"; }, 3600);
     setTimeout(() => { el.remove(); }, 4000);
@@ -1272,10 +1315,10 @@ const HoldRing = ({ onCommit, holdMs, color }) => {
       onKeyUp: (e) => { if (isKey(e)) { e.preventDefault(); cancel(); } },
       onBlur: cancel,
       onContextMenu: (e) => e.preventDefault(),
-      style: { position: "relative", width: S, height: S, borderRadius: "50%", border: "none", padding: 0, cursor: "pointer", background: phase === "done" ? `${col}26` : phase === "holding" ? `${col}14` : "rgba(255,255,255,0.03)", userSelect: "none", WebkitUserSelect: "none", touchAction: "none", WebkitTouchCallout: "none", WebkitTapHighlightColor: "transparent", transition: "background var(--zi-quick) var(--zi-ease)" }
+      style: { position: "relative", width: S, height: S, borderRadius: "50%", border: "none", padding: 0, cursor: "pointer", background: phase === "done" ? `${col}26` : phase === "holding" ? `${col}14` : "rgba(var(--zi-line),0.03)", userSelect: "none", WebkitUserSelect: "none", touchAction: "none", WebkitTouchCallout: "none", WebkitTapHighlightColor: "transparent", transition: "background var(--zi-quick) var(--zi-ease)" }
     },
       RC("svg", { width: S, height: S, viewBox: `0 0 ${S} ${S}`, style: { position: "absolute", inset: 0, transform: "rotate(-90deg)", pointerEvents: "none" } },
-        RC("circle", { cx: S / 2, cy: S / 2, r, fill: "none", stroke: "rgba(255,255,255,0.09)", strokeWidth: 5 }),
+        RC("circle", { cx: S / 2, cy: S / 2, r, fill: "none", stroke: "rgba(var(--zi-line),0.09)", strokeWidth: 5 }),
         RC("circle", { cx: S / 2, cy: S / 2, r, fill: "none", stroke: col, strokeWidth: 5, strokeLinecap: "round", strokeDasharray: circ, strokeDashoffset: circ * (1 - (phase === "done" ? 1 : progress / 100)) })),
       RC("span", { className: phase === "done" ? "stamp-pop" : "", style: { position: "relative", display: "flex", alignItems: "center", justifyContent: "center", color: col, pointerEvents: "none" } }, phase === "done" ? RC(CheckMark, { size: 40 }) : RC("span", { style: { width: 14, height: 14, borderRadius: 7, background: col, display: "block" } }))),
     RC("div", { "aria-live": "polite", style: { fontSize: 14, fontWeight: 700, letterSpacing: 0.3, color: phase === "idle" ? T.sub : col } }, label),
@@ -1309,7 +1352,7 @@ const PromiseRitual = ({ day, onBack, onIn: onInRaw }) => {
     const t = setTimeout(() => setReady(true), 1500);
     return () => clearTimeout(t);
   }, [screen]);
-  const shell = (kids) => RC("div", { style: { position: "fixed", inset: 0, zIndex: 9999, background: "#07090d", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "calc(env(safe-area-inset-top,0px) + 24px) 28px calc(env(safe-area-inset-bottom,0px) + 24px)", overflowY: "auto" } }, kids);
+  const shell = (kids) => RC("div", { style: { position: "fixed", inset: 0, zIndex: 9999, background: "var(--zi-deep)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "calc(env(safe-area-inset-top,0px) + 24px) 28px calc(env(safe-area-inset-bottom,0px) + 24px)", overflowY: "auto" } }, kids);
   if (screen === "a") return shell(RC(React.Fragment, null,
     RC("button", { onClick: onBack, style: { position: "absolute", top: "calc(env(safe-area-inset-top,0px) + 14px)", left: 10, fontSize: 14, color: T.sub, background: "none", border: "none", cursor: "pointer", padding: "0 10px", minHeight: 44, fontFamily: "'DM Sans',sans-serif" } }, "← Back"),
     RC("div", { className: "fade-up", style: { maxWidth: 380, width: "100%", textAlign: "center" } },
@@ -1324,7 +1367,7 @@ const PromiseRitual = ({ day, onBack, onIn: onInRaw }) => {
     RC("div", fade(0.2, { fontFamily: "'Syne',sans-serif", fontSize: 26, fontWeight: 900, color: T.text, letterSpacing: -0.4, lineHeight: 1.22, marginBottom: 20, wordBreak: "break-word" }), day.gold.trim()),
     RC("div", fade(0.5, { marginBottom: 12 }), dlLabel("Done when", "rgba(245,158,11,0.7)", { marginBottom: 4 }), RC("div", { style: { fontSize: 15, color: T.text, lineHeight: 1.45 } }, day.gold_done_when.trim())),
     RC("div", fade(0.8, { marginBottom: others.length ? 30 : 8 }), dlLabel("Because", "rgba(0,194,178,0.8)", { marginBottom: 4 }), RC("div", { style: { fontSize: 15, color: T.teal, fontStyle: "italic", lineHeight: 1.45 } }, day.gold_why.trim())),
-    others.map((t, i) => RC("div", __spreadProps(__spreadValues({ key: t }, fade(1.05 + i * 0.2, { padding: "10px 14px", borderRadius: 12, border: `1px solid ${T.border}`, background: "rgba(255,255,255,0.02)", marginBottom: 8, textAlign: "left" })), {}),
+    others.map((t, i) => RC("div", __spreadProps(__spreadValues({ key: t }, fade(1.05 + i * 0.2, { padding: "10px 14px", borderRadius: 12, border: `1px solid ${T.border}`, background: "rgba(var(--zi-line),0.02)", marginBottom: 8, textAlign: "left" })), {}),
       RC("div", { style: { fontSize: 11, fontWeight: 700, letterSpacing: 1.1, textTransform: "uppercase", color: DL_TIER[t].color, marginBottom: 3 } }, DL_TIER[t].label),
       RC("div", { style: { fontSize: 14, fontWeight: 700, color: T.text, lineHeight: 1.35 } }, day[t].trim()),
       RC("div", { style: { fontSize: 12, color: T.sub, marginTop: 2 } }, "Done when: ", (day[`${t}_done_when`] || "").trim()))),
@@ -1399,7 +1442,7 @@ const TodaysThreeForm = ({ day, onTask, onTaskBlur, onDoneWhen, onWhy, onPromise
           // Suggestion is an offer, never pre-filled: the promise stays in the user's own words.
           const sug = hasText ? suggestDoneWhen(day[t]) : "";
           if (!sug || day[`${t}_done_when`].trim() === sug) return null;
-          return RC("button", { onClick: () => (onAcceptSuggestion ? onAcceptSuggestion(t, sug) : onDoneWhen(t, sug)), "aria-label": `Use suggested done when: ${sug}`, style: btn({ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 6, minHeight: 36, padding: "0 12px", borderRadius: 50, background: "rgba(255,255,255,0.04)", border: `1px dashed ${T.border2}`, color: T.sub, fontSize: 12, fontWeight: 600, maxWidth: "100%", textAlign: "left" }) },
+          return RC("button", { onClick: () => (onAcceptSuggestion ? onAcceptSuggestion(t, sug) : onDoneWhen(t, sug)), "aria-label": `Use suggested done when: ${sug}`, style: btn({ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 6, minHeight: 36, padding: "0 12px", borderRadius: 50, background: "rgba(var(--zi-line),0.04)", border: `1px dashed ${T.border2}`, color: T.sub, fontSize: 12, fontWeight: 600, maxWidth: "100%", textAlign: "left" }) },
             RC("span", { style: { color: T.sub2 } }, "Suggest:"), RC("span", { style: { color: T.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, sug), RC("span", { "aria-hidden": true }, "\u21B5"));
         })(),
         t === "gold" ? RC("input", { type: "text", value: day.gold_why, maxLength: 100, placeholder: "Why does this matter today?", "aria-label": "Why Gold matters today",
@@ -1414,10 +1457,10 @@ const TodaysThreeForm = ({ day, onTask, onTaskBlur, onDoneWhen, onWhy, onPromise
 
 // ── DL-05 — DAY IN PROGRESS ───────────────────────────────────────────────
 const STATUS_CHIP = {
-  not_started: { txt: "Not started", c: T.sub, bg: "rgba(255,255,255,0.04)", b: T.border },
+  not_started: { txt: "Not started", c: T.sub, bg: "rgba(var(--zi-line),0.04)", b: T.border },
   in_focus: { txt: "In focus", c: T.teal, bg: "rgba(0,194,178,0.1)", b: "rgba(0,194,178,0.3)" },
   kept: { txt: "Kept", c: T.teal, bg: "rgba(0,194,178,0.1)", b: "rgba(0,194,178,0.35)" },
-  not_kept: { txt: "Not kept", c: T.sub, bg: "rgba(255,255,255,0.04)", b: T.border2 }
+  not_kept: { txt: "Not kept", c: T.sub, bg: "rgba(var(--zi-line),0.04)", b: T.border2 }
 };
 const StatusChip = ({ status }) => { const s = STATUS_CHIP[status] || STATUS_CHIP.not_started; return RC("span", { style: { fontSize: 10, fontWeight: 800, letterSpacing: 0.4, color: s.c, background: s.bg, border: `1px solid ${s.b}`, padding: "3px 9px", borderRadius: 50, whiteSpace: "nowrap" } }, s.txt); };
 const taskStatus = (day, t, sessionHistory, today, activeTier) => {
@@ -1451,7 +1494,7 @@ const TaskCard = ({ t, day, status, onStartFocus, onReckonNow, onEditSave }) => 
     RC("div", { style: { fontSize: 15, fontWeight: 700, color: T.text, lineHeight: 1.35, wordBreak: "break-word" } }, day[t]),
     RC("div", { style: { fontSize: 12, color: T.sub, marginTop: 3, lineHeight: 1.4 } }, "Done when: ", day[`${t}_done_when`]),
     pending ? RC("div", { style: { display: "flex", alignItems: "center", gap: 8, marginTop: 12 } },
-      RC("button", { onClick: () => onStartFocus(t), style: btn({ flex: 1.3, padding: "10px 12px", borderRadius: 12, background: t === "gold" ? `linear-gradient(135deg,${T.gold},${T.gold2})` : cfg.color, color: t === "gold" ? "#1a1200" : T.bg, fontSize: 13, fontWeight: 800, minHeight: 44 }) }, "Get ZonedIn →"),
+      RC("button", { onClick: () => onStartFocus(t), style: btn({ flex: 1.3, padding: "10px 12px", borderRadius: 12, background: t === "gold" ? `linear-gradient(135deg,${T.gold},${T.gold2})` : cfg.color, color: t === "gold" ? "var(--zi-on-gold)" : T.bg, fontSize: 13, fontWeight: 800, minHeight: 44 }) }, "Get ZonedIn →"),
       RC("button", { onClick: () => onReckonNow(t), style: btn({ flex: 1, padding: "10px 12px", minHeight: 44, borderRadius: 12, background: "transparent", border: `1.5px solid ${T.border2}`, color: T.text, fontSize: 13 }) }, "Check in now"),
       RC("button", { onClick: () => setEditing(true), style: btn({ background: "none", color: T.sub, fontSize: 13, padding: "0 8px", minHeight: 44, minWidth: 44, fontWeight: 600, textDecoration: "underline", textUnderlineOffset: 3 }) }, "Edit")) : null);
 };
@@ -1489,7 +1532,7 @@ const VerdictBlock = ({ day, isPast, big }) => {
     RC("div", { className: animate ? "words-fade" : "", style: __spreadValues({ fontSize: big ? 17 : 14, fontWeight: 700, color: T.text, marginTop: 10, marginBottom: 16 }, animate ? { animationDelay: `${0.2 + c.kept * 0.26}s` } : {}) }, verdictLine(c.kept, c.committed)),
     RC("div", { style: { display: "flex", flexDirection: "column", gap: 6, textAlign: "left" } }, tiers.map((t, i) => {
       const kept = day.outcomes[t] === "kept";
-      return RC("div", { key: t, className: animate ? "words-fade" : "", style: { ...lineDelay(i), display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 12, background: "rgba(255,255,255,0.03)", border: `1px solid ${T.border}` } },
+      return RC("div", { key: t, className: animate ? "words-fade" : "", style: { ...lineDelay(i), display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 12, background: "rgba(var(--zi-line),0.03)", border: `1px solid ${T.border}` } },
         RC("span", { className: animate && kept ? "stamp-pop" : "", style: __spreadValues({ fontSize: 14, width: 18, display: "flex", justifyContent: "center", color: kept ? T.teal : T.sub, fontWeight: 900 }, lineDelay(i)) }, kept ? RC(CheckMark, { size: 15 }) : "✕"),
         RC("div", { style: { flex: 1, minWidth: 0 } },
           RC("div", { style: { fontSize: 13, fontWeight: 600, color: T.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, day[t]),
@@ -1527,7 +1570,7 @@ const CloseYesterdayCard = ({ row, onAnswer }) => {
 // ── DL-07 — RECKONING (all tiers) ────────────────────────────────────────
 const ReckoningScreen = ({ tier, task, doneLooks, onYes, onNotQuite, onLater }) => {
   const cfg = DL_TIER[tier] || DL_TIER.gold;
-  return RC("div", { style: { position: "fixed", inset: 0, zIndex: 9998, background: "rgba(0,0,0,0.88)", display: "flex", alignItems: "flex-end", justifyContent: "center", padding: "16px 16px calc(env(safe-area-inset-bottom,0px) + 16px)" } },
+  return RC("div", { style: { position: "fixed", inset: 0, zIndex: 9998, background: "rgba(var(--zi-scrim),0.92)", display: "flex", alignItems: "flex-end", justifyContent: "center", padding: "16px 16px calc(env(safe-area-inset-bottom,0px) + 16px)" } },
     RC("div", { className: "slide-up", style: { background: T.card, borderRadius: 28, padding: "32px 22px 24px", maxWidth: 420, width: "100%", textAlign: "center", border: `1px solid ${cfg.color}40`, position: "relative", overflow: "hidden" } },
       RC("div", { style: { position: "absolute", inset: 0, background: `radial-gradient(ellipse at 50% 0%,${cfg.color}14 0%,transparent 65%)`, pointerEvents: "none" } }),
       RC("div", { style: { fontSize: 11, fontWeight: 700, letterSpacing: 1.1, textTransform: "uppercase", color: cfg.color, marginBottom: 6 } }, "The Reckoning · ", cfg.label),
@@ -1536,7 +1579,7 @@ const ReckoningScreen = ({ tier, task, doneLooks, onYes, onNotQuite, onLater }) 
       RC("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 18, fontWeight: 800, color: T.text, marginBottom: 22, padding: "12px 16px", background: T.card2, borderRadius: 14, border: `1px solid ${T.border}`, lineHeight: 1.35 } }, "“", doneLooks || task, "”"),
       RC("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 22, fontWeight: 900, color: T.text, marginBottom: 24 } }, "Did you keep your commitment?"),
       RC("div", { style: { display: "flex", gap: 10 } },
-        RC("button", { onClick: onYes, style: btnGold({ flex: 1, fontSize: 16, background: tier === "gold" ? `linear-gradient(135deg,${T.gold},${T.gold2})` : cfg.color, color: tier === "gold" ? "#1a1200" : T.bg, boxShadow: "none" }) }, "Yes, kept it"),
+        RC("button", { onClick: onYes, style: btnGold({ flex: 1, fontSize: 16, background: tier === "gold" ? `linear-gradient(135deg,${T.gold},${T.gold2})` : cfg.color, color: tier === "gold" ? "var(--zi-on-gold)" : T.bg, boxShadow: "none" }) }, "Yes, kept it"),
         RC("button", { onClick: onNotQuite, style: btn({ flex: 1, padding: "16px", border: `1.5px solid ${T.border2}`, background: "transparent", color: T.sub, fontSize: 15 }) }, "Not quite")),
       onLater ? RC("button", { onClick: onLater, style: btn({ marginTop: 8, background: "none", color: T.sub, fontSize: 13, padding: "0 12px", minHeight: 44, fontWeight: 500 }) }, "Still working on it — check in later") : null));
 };
@@ -1556,7 +1599,7 @@ const FIRST_DURATIONS = [10, 15, 25];
 const DurationChips = ({ value, onChange, options }) => RC("div", { role: "radiogroup", "aria-label": "Session length", style: { display: "flex", gap: 6 } }, (options || DURATIONS).map((d) => RC("button", { key: d, role: "radio", "aria-checked": value === d, onClick: () => onChange(d), style: btn({ flex: 1, minHeight: 44, padding: "0 2px", borderRadius: 50, fontSize: 14, fontWeight: 700, border: `1.5px solid ${value === d ? T.teal : T.border2}`, background: value === d ? T.teal : "transparent", color: value === d ? T.bg : T.sub }) }, d, RC("span", { style: { fontSize: 11, fontWeight: 600 } }, " min"))));
 const FocusConfirmCard = ({ tier, task, doneWhen, why, minutes, onMinutes, identityStatement, onStart, onBack }) => {
   const cfg = DL_TIER[tier] || DL_TIER.gold;
-  return RC("div", { style: { position: "fixed", inset: 0, zIndex: 9997, background: "rgba(0,0,0,0.88)", display: "flex", alignItems: "flex-end", justifyContent: "center", padding: "16px 16px calc(env(safe-area-inset-bottom,0px) + 16px)" } },
+  return RC("div", { style: { position: "fixed", inset: 0, zIndex: 9997, background: "rgba(var(--zi-scrim),0.92)", display: "flex", alignItems: "flex-end", justifyContent: "center", padding: "16px 16px calc(env(safe-area-inset-bottom,0px) + 16px)" } },
     RC("div", { className: "slide-up", style: { background: T.card, borderRadius: 28, padding: "22px 22px 22px", maxWidth: 420, width: "100%", border: `1px solid ${cfg.color}44` } },
       RC("button", { onClick: onBack, style: { fontSize: 14, color: T.sub, background: "none", border: "none", cursor: "pointer", padding: "0 10px 0 0", minHeight: 44, marginBottom: 4, fontFamily: "'DM Sans',sans-serif" } }, "← Back"),
       RC("div", { style: { display: "flex", alignItems: "center", gap: 6, marginBottom: 8 } }, RC(TierMark, { tier, size: 15 }), dlLabel(cfg.label, cfg.color)),
@@ -1566,7 +1609,7 @@ const FocusConfirmCard = ({ tier, task, doneWhen, why, minutes, onMinutes, ident
         RC("div", { style: { fontSize: 14, color: T.text, lineHeight: 1.45 } }, doneWhen),
         tier === "gold" && why ? RC("div", { style: { fontSize: 13, color: T.teal, fontStyle: "italic", marginTop: 8 } }, "Because ", why) : null),
       onMinutes ? RC("div", { style: { marginBottom: 14 } }, RC(DurationChips, { value: minutes, onChange: onMinutes })) : null,
-      RC("button", { onClick: onStart, style: btnGold({ width: "100%", fontSize: 17, padding: "17px", background: tier === "gold" ? `linear-gradient(135deg,${T.gold},${T.gold2})` : cfg.color, color: tier === "gold" ? "#1a1200" : T.bg }) }, `Start ${minutes} min →`),
+      RC("button", { onClick: onStart, style: btnGold({ width: "100%", fontSize: 17, padding: "17px", background: tier === "gold" ? `linear-gradient(135deg,${T.gold},${T.gold2})` : cfg.color, color: tier === "gold" ? "var(--zi-on-gold)" : T.bg }) }, `Start ${minutes} min →`),
       tier === "gold" ? RC("button", { onClick: () => shareZonedInCard("commitment", { task, identity: identityStatement || null, date: new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: USER_TZ }) }), style: btn({ width: "100%", marginTop: 6, padding: "0 11px", minHeight: 44, borderRadius: 12, background: "transparent", border: "none", color: T.teal, fontSize: 13 }) }, "Share my commitment") : null));
 };
 
@@ -1594,7 +1637,7 @@ const CloseTheDay = ({ day, weekRecord, summaryOnly, firstTime, onAnswer, onFini
   const shell = (kids) => RC("div", { style: { position: "fixed", inset: 0, zIndex: 9999, background: T.bg, display: "flex", flexDirection: "column", padding: "calc(env(safe-area-inset-top,0px) + 14px) 22px calc(env(safe-area-inset-bottom,0px) + 18px)", overflowY: "auto" } },
     RC("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", minHeight: 32, marginBottom: 8 } },
       RC("button", { onClick: onDismiss, "aria-label": "Close", style: { fontSize: 14, color: T.sub, background: "none", border: "none", cursor: "pointer", padding: "0 10px 0 0", minHeight: 44, fontFamily: "'DM Sans',sans-serif" } }, summaryOnly ? "Done" : "← Not yet"),
-      summaryOnly ? null : RC("div", { style: { display: "flex", gap: 6 } }, [1, 2, 3, 4].map((i) => RC("div", { key: i, style: { width: i === screen ? 18 : 6, height: 6, borderRadius: 99, background: i <= screen ? T.teal : "rgba(255,255,255,0.1)", transition: "all var(--zi-settle) var(--zi-ease)" } }))),
+      summaryOnly ? null : RC("div", { style: { display: "flex", gap: 6 } }, [1, 2, 3, 4].map((i) => RC("div", { key: i, style: { width: i === screen ? 18 : 6, height: 6, borderRadius: 99, background: i <= screen ? T.teal : "rgba(var(--zi-line),0.1)", transition: "all var(--zi-settle) var(--zi-ease)" } }))),
       RC("div", { style: { width: 50 } })),
     RC("div", { key: screen, className: "fade-up", style: { flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", maxWidth: 400, width: "100%", margin: "0 auto" } }, kids));
   const title = (t, s) => RC(React.Fragment, null,
@@ -1646,16 +1689,16 @@ const DaysWonGrid = ({ rowsByDate, today }) => {
   const cells = [];
   for (let i = 0; i < 35; i++) cells.push(addDays(start, i));
   const col = (d) => {
-    if (d > today) return { bg: "transparent", b: "rgba(255,255,255,0.03)", label: "" };
+    if (d > today) return { bg: "transparent", b: "rgba(var(--zi-line),0.03)", label: "" };
     const r = rowsByDate[d];
-    if (!r || !r.committed_at) return { bg: "transparent", b: "rgba(240,244,248,0.16)", dash: true, label: "Not committed" };
+    if (!r || !r.committed_at) return { bg: "transparent", b: "rgba(var(--zi-ink),0.16)", dash: true, label: "Not committed" };
     const c = dayCounts(r, d < today);
     if (d === today && !r.closed_at && c.pending) return { bg: "rgba(0,194,178,0.05)", b: "rgba(0,194,178,0.45)", label: "In progress" };
     if (c.kept === c.committed) return { bg: "rgba(0,194,178,0.55)", b: "rgba(0,194,178,0.8)", label: "All kept", mark: "all" };
     if (c.kept > 0) return { bg: "rgba(245,158,11,0.35)", b: "rgba(245,158,11,0.55)", label: "Some kept", mark: "some" };
-    return { bg: "rgba(240,244,248,0.13)", b: "rgba(240,244,248,0.22)", label: "None kept" };
+    return { bg: "rgba(var(--zi-ink),0.13)", b: "rgba(var(--zi-ink),0.22)", label: "None kept" };
   };
-  const legend = [["rgba(0,194,178,0.55)", "All kept", "all"], ["rgba(245,158,11,0.35)", "Some", "some"], ["rgba(240,244,248,0.13)", "None"], ["transparent", "Not committed", null, true]];
+  const legend = [["rgba(0,194,178,0.55)", "All kept", "all"], ["rgba(245,158,11,0.35)", "Some", "some"], ["rgba(var(--zi-ink),0.13)", "None"], ["transparent", "Not committed", null, true]];
   // Shape cues so the grid doesn't rely on colour alone: a tick for all kept, a dot for some.
   const cue = (m, small) => m === "all" ? RC("span", { style: { position: small ? "static" : "absolute", right: 3, bottom: 2, color: T.bg, display: "flex" } }, RC(CheckMark, { size: small ? 8 : 9 })) : m === "some" ? RC("span", { style: { position: small ? "static" : "absolute", right: 4, bottom: 4, width: small ? 4 : 5, height: small ? 4 : 5, borderRadius: 3, background: T.text, display: "block" } }) : null;
   return RC("div", { style: __spreadProps(__spreadValues({}, card()), { margin: "0 16px 12px" }) },
@@ -1663,7 +1706,7 @@ const DaysWonGrid = ({ rowsByDate, today }) => {
     RC("div", { style: { display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 5, marginBottom: 6 } }, ["M", "T", "W", "T", "F", "S", "S"].map((l, i) => RC("div", { key: i, style: { fontSize: 11, color: T.sub2, textAlign: "center", fontWeight: 700 } }, l))),
     RC("div", { style: { display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 5 } }, cells.map((d) => {
       const s = col(d);
-      return RC("div", { key: d, role: d <= today ? "img" : undefined, "aria-label": d <= today ? `${fmtDay(d, { weekday: "long", day: "numeric", month: "long" })}: ${s.label}` : undefined, title: d <= today ? `${fmtDay(d, { weekday: "short", day: "numeric", month: "short" })} · ${s.label}` : "", style: { position: "relative", aspectRatio: "1", borderRadius: 7, background: s.bg, border: `1px ${s.dash ? "dashed" : "solid"} ${d === today ? T.text : s.b}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: d > today ? "transparent" : s.mark === "all" ? T.bg : "rgba(240,244,248,0.62)", fontWeight: 700 } }, Number(d.slice(8)), cue(s.mark));
+      return RC("div", { key: d, role: d <= today ? "img" : undefined, "aria-label": d <= today ? `${fmtDay(d, { weekday: "long", day: "numeric", month: "long" })}: ${s.label}` : undefined, title: d <= today ? `${fmtDay(d, { weekday: "short", day: "numeric", month: "short" })} · ${s.label}` : "", style: { position: "relative", aspectRatio: "1", borderRadius: 7, background: s.bg, border: `1px ${s.dash ? "dashed" : "solid"} ${d === today ? T.text : s.b}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: d > today ? "transparent" : s.mark === "all" ? T.bg : "rgba(var(--zi-ink),0.62)", fontWeight: 700 } }, Number(d.slice(8)), cue(s.mark));
     })),
     RC("div", { style: { display: "flex", flexWrap: "wrap", gap: 10, marginTop: 12 } }, legend.map(([c2, l, m, dash]) => RC("span", { key: l, style: { display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: T.sub } }, RC("span", { style: { width: 12, height: 12, borderRadius: 3, background: c2, border: `1px ${dash ? "dashed" : "solid"} ${T.border2}`, display: "flex", alignItems: "center", justifyContent: "center" } }, cue(m, true)), l))));
 };
@@ -1784,10 +1827,10 @@ const MOOD_OPTS = [
 const REFLECT_PROMPTS = ["Got distracted", "Ran out of time", "Felt focused", "Kept momentum", "Struggled to start", "Finished early"];
 // ── RECORD (was Reflect): today's verdict, Days won, every closed day, insights ──
 const insightCardEl = (ins, latest) => RC("div", { key: (ins.date || "") + (latest ? "-l" : ""), style: { marginBottom: 10, background: latest ? "linear-gradient(135deg,rgba(0,194,178,0.07),rgba(167,139,250,0.04))" : "transparent", border: `1px solid ${latest ? "rgba(0,194,178,0.18)" : T.border}`, borderRadius: 18, overflow: "hidden" } },
-  RC("div", { style: { padding: "10px 16px", background: latest ? "rgba(0,194,178,0.07)" : "rgba(255,255,255,0.02)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 } },
+  RC("div", { style: { padding: "10px 16px", background: latest ? "rgba(0,194,178,0.07)" : "rgba(var(--zi-line),0.02)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 } },
     RC("span", { style: { fontSize: 12, fontWeight: 700, color: latest ? T.teal : T.sub, letterSpacing: 0.3 } }, latest ? "Tonight’s insight" : "Insight · " + fmtDay(ins.date, { weekday: "short", day: "numeric", month: "short" })),
     RC("span", { style: { display: "flex", gap: 6, color: T.sub } }, ins.mood ? RC(MoodIcon, { val: ins.mood, size: 16 }) : null, ins.energy ? RC(EnergyIcon, { val: ins.energy, size: 16 }) : null)),
-  RC("div", { style: { padding: "12px 16px", fontSize: 13, lineHeight: 1.8, color: latest ? "rgba(240,244,248,0.9)" : T.sub, whiteSpace: "pre-wrap" } }, ins.text),
+  RC("div", { style: { padding: "12px 16px", fontSize: 13, lineHeight: 1.8, color: latest ? "rgba(var(--zi-ink),0.9)" : T.sub, whiteSpace: "pre-wrap" } }, ins.text),
   latest ? RC("div", { style: { padding: "0 16px 12px", fontSize: 11, color: T.sub2, lineHeight: 1.5 } }, "Written by Claude, Anthropic\u2019s AI, from your commitments and check-ins. Not used to train AI models. ", RC("a", { href: "/privacy.html", style: { color: T.teal, textDecoration: "none" } }, "How we use AI")) : null);
 
 const RecordDay = ({ date, row, insight }) => {
@@ -1796,7 +1839,7 @@ const RecordDay = ({ date, row, insight }) => {
   const all = c.kept === c.committed;
   return RC("div", { style: { borderRadius: 16, border: `1px solid ${T.border}`, background: T.card, marginBottom: 8, overflow: "hidden" } },
     RC("button", { onClick: () => setOpen((o) => !o), "aria-expanded": open, style: btn({ width: "100%", minHeight: 56, padding: "10px 14px", display: "flex", alignItems: "center", gap: 12, background: "transparent", border: "none", borderRadius: 0, textAlign: "left", color: T.text }) },
-      RC("span", { style: { minWidth: 44, padding: "4px 8px", borderRadius: 10, textAlign: "center", fontSize: 14, fontWeight: 800, color: all ? T.teal : c.kept ? T.gold : T.sub, background: all ? "rgba(0,194,178,0.1)" : c.kept ? "rgba(245,158,11,0.1)" : "rgba(255,255,255,0.04)" } }, c.kept, "/", c.committed),
+      RC("span", { style: { minWidth: 44, padding: "4px 8px", borderRadius: 10, textAlign: "center", fontSize: 14, fontWeight: 800, color: all ? T.teal : c.kept ? T.gold : T.sub, background: all ? "rgba(0,194,178,0.1)" : c.kept ? "rgba(245,158,11,0.1)" : "rgba(var(--zi-line),0.04)" } }, c.kept, "/", c.committed),
       RC("span", { style: { flex: 1, minWidth: 0 } },
         RC("span", { style: { display: "block", fontSize: 14, fontWeight: 700 } }, fmtDay(date, { weekday: "short", day: "numeric", month: "short" })),
         RC("span", { style: { display: "block", fontSize: 12, color: T.sub, marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, row.gold || "")),
@@ -1850,6 +1893,19 @@ const ReflectTab = ({ day, today, weekRecord, rowsByDate, insightHistory, loadin
         : RC("div", { style: { fontSize: 13, color: T.sub, padding: "6px 4px 12px" } }, "Your record starts with your first closed day.")),
     orphanInsights.length ? RC("div", { style: { margin: "4px 16px 20px" } }, dlLabel("Earlier insights", T.sub, { marginBottom: 10, padding: "0 4px" }), orphanInsights.map((ins) => insightCardEl(ins, false))) : null);
 };
+const AppearanceSetting = () => {
+  const [pref, setPref] = useState(window.__ziPref || "dark");
+  const opts = [{ id: "dark", label: "Dark" }, { id: "light", label: "Light" }, { id: "system", label: "Match phone" }];
+  return React.createElement("div", { style: { marginBottom: 16 } },
+    React.createElement("div", { id: "zi-appearance-h", style: { fontSize: 11, fontWeight: 700, letterSpacing: 1.1, textTransform: "uppercase", color: T.sub, marginBottom: 10 } }, "Appearance"),
+    React.createElement("div", { role: "radiogroup", "aria-labelledby": "zi-appearance-h", style: { display: "flex", gap: 6, padding: 4, borderRadius: 14, background: T.card, border: `1px solid ${T.border}` } },
+      opts.map((o) => React.createElement("button", { key: o.id, role: "radio", "aria-checked": pref === o.id,
+        onClick: () => { if (pref === o.id) return; setPref(o.id); haptic && haptic("tap"); ziSetTheme(o.id); },
+        style: { flex: 1, minHeight: 44, borderRadius: 10, border: "none", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", fontSize: 14, fontWeight: 700,
+          background: pref === o.id ? T.tealBg : "transparent", color: pref === o.id ? T.teal : T.sub, boxShadow: pref === o.id ? `inset 0 0 0 1px ${T.teal}55` : "none",
+          transition: "background var(--zi-quick) var(--zi-ease), color var(--zi-quick) var(--zi-ease)" } }, o.label))),
+    React.createElement("div", { style: { fontSize: 12, color: T.sub2, marginTop: 8 } }, "Saved to your account, so it follows you to any device."));
+};
 const ProgressTab = ({ onShareWeek, morningPushOn, onMorningPush, morningTime, onMorningTime, standalone, showSettings, streak, bestStreak, shields, tierCfg, milestonePct, daysLeft, nextMilestone, totalPoints, currentLevel, tierHistory, isStreakMilestone, streakReport, setStreakReport, loadingStreakReport, generateStreakReport, streakTier, sessionHistory, rowsByDate, today, weekRecord, reminderTime, onReminderTime, emailOptIn, onEmailOptIn, userTz, onUseDeviceTz }) => { const [moreStats, setMoreStats] = useState(false); return /* @__PURE__ */ React.createElement("div", { className: "fade-up" },
   /* @__PURE__ */ React.createElement("div", { style: { height: 4 } }),
   React.createElement("div", { style: { ...card(), margin: "0 16px 12px", textAlign: "center", padding: "24px 20px 18px" } },
@@ -1865,7 +1921,7 @@ const ProgressTab = ({ onShareWeek, morningPushOn, onMorningPush, morningTime, o
       React.createElement("span", { style: { display: "inline-flex", alignItems: "center", gap: 5, color: streak > 0 ? T.gold : T.sub } }, React.createElement(BoltMark, { size: 15 }), React.createElement("b", { style: { color: T.text } }, streak), React.createElement("span", { style: { color: T.sub } }, streak === 1 ? " day Gold kept" : " days Gold kept")),
       React.createElement("span", null, "Best ", React.createElement("b", { style: { color: T.text } }, bestStreak || 0)),
       React.createElement("span", { style: { display: "inline-flex", alignItems: "center", gap: 4 } }, React.createElement(ShieldMark, { size: 14 }), "Shield ", React.createElement("b", { style: { color: T.text } }, shields || 0), "/1")),
-    React.createElement("div", { style: { height: 3, borderRadius: 99, background: "rgba(255,255,255,0.06)", overflow: "hidden", margin: "12px 0 6px" } }, React.createElement("div", { style: { height: "100%", borderRadius: 99, width: `${milestonePct}%`, background: T.gold, transition: "width 0.6s ease" } })),
+    React.createElement("div", { style: { height: 3, borderRadius: 99, background: "rgba(var(--zi-line),0.06)", overflow: "hidden", margin: "12px 0 6px" } }, React.createElement("div", { style: { height: "100%", borderRadius: 99, width: `${milestonePct}%`, background: T.gold, transition: "width 0.6s ease" } })),
     React.createElement("div", { style: { fontSize: 12, color: T.sub } }, streak === 0 ? "Keep today\u2019s Gold to start counting" : daysLeft === 0 ? `Day ${nextMilestone} \u2014 milestone reached` : `${daysLeft} more ${daysLeft === 1 ? "day" : "days"} to your ${nextMilestone}-day milestone`)),
   React.createElement("button", { onClick: () => setMoreStats((v) => !v), "aria-expanded": moreStats, style: btn({ display: "flex", alignItems: "center", justifyContent: "space-between", width: "calc(100% - 32px)", margin: "0 16px 12px", minHeight: 44, padding: "0 16px", borderRadius: 14, background: "transparent", border: `1px solid ${T.border}`, color: T.sub, fontSize: 13 }) }, "More stats", React.createElement("span", { "aria-hidden": true, style: { transform: moreStats ? "rotate(90deg)" : "none", transition: "transform var(--zi-quick) var(--zi-ease)" } }, "›")),
   moreStats && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, margin: "0 16px 12px" } },
@@ -1891,11 +1947,12 @@ const ProgressTab = ({ onShareWeek, morningPushOn, onMorningPush, morningTime, o
         )
   ),
   /* @__PURE__ */ React.createElement("div", { style: { padding: "0 16px 20px" } },  showSettings && React.createElement("div", { className: "fade-up", style: { marginBottom: 16 } },
+      React.createElement(AppearanceSetting),
       React.createElement("div", { style: { fontSize: 11, fontWeight: 700, letterSpacing: 1.1, textTransform: "uppercase", color: T.sub, marginBottom: 10 } }, "Morning reminder"),
       React.createElement("div", { style: { padding: "14px 16px", borderRadius: 14, background: T.card, border: `1px solid ${T.border}`, marginBottom: 16 } },
         React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 } },
           React.createElement("div", null, React.createElement("div", { style: { fontSize: 14, fontWeight: 700, color: T.text } }, "Tomorrow\u2019s Gold, each morning"), React.createElement("div", { style: { fontSize: 12, color: T.sub, marginTop: 2 } }, standalone || !isIOS() ? "One notification. Only if you haven\u2019t committed yet." : "Add ZonedIn to your Home Screen to turn this on.")),
-          React.createElement("button", { role: "switch", "aria-checked": !!morningPushOn, "aria-label": "Morning reminder", onClick: () => onMorningPush(!morningPushOn), style: { width: 46, height: 28, borderRadius: 14, border: "none", cursor: "pointer", position: "relative", flexShrink: 0, background: morningPushOn ? T.teal : "rgba(255,255,255,0.15)", transition: "background var(--zi-quick) var(--zi-ease)", padding: 0 } },
+          React.createElement("button", { role: "switch", "aria-checked": !!morningPushOn, "aria-label": "Morning reminder", onClick: () => onMorningPush(!morningPushOn), style: { width: 46, height: 28, borderRadius: 14, border: "none", cursor: "pointer", position: "relative", flexShrink: 0, background: morningPushOn ? T.teal : "rgba(var(--zi-line),0.15)", transition: "background var(--zi-quick) var(--zi-ease)", padding: 0 } },
             React.createElement("span", { style: { position: "absolute", top: 3, left: morningPushOn ? 21 : 3, width: 22, height: 22, borderRadius: 11, background: "#fff", transition: "left var(--zi-quick) var(--zi-ease)" } }))),
         React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 12, opacity: morningPushOn ? 1 : 0.5 } },
           React.createElement("span", { style: { fontSize: 13, color: T.sub } }, "Send at"),
@@ -1904,7 +1961,7 @@ const ProgressTab = ({ onShareWeek, morningPushOn, onMorningPush, morningTime, o
       React.createElement("div", { style: { padding: "14px 16px", borderRadius: 14, background: T.card, border: `1px solid ${T.border}` } },
         React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 } },
           React.createElement("div", null, React.createElement("div", { style: { fontSize: 14, fontWeight: 700, color: T.text } }, "\u201CClose your day\u201D email"), React.createElement("div", { style: { fontSize: 11, color: T.sub, marginTop: 2 } }, "Only on days you committed and haven\u2019t closed.")),
-          React.createElement("button", { role: "switch", "aria-checked": !!emailOptIn, onClick: () => onEmailOptIn(!emailOptIn), style: { width: 46, height: 28, borderRadius: 14, border: "none", cursor: "pointer", position: "relative", flexShrink: 0, background: emailOptIn ? T.teal : "rgba(255,255,255,0.15)", transition: "background var(--zi-quick) var(--zi-ease)" } },
+          React.createElement("button", { role: "switch", "aria-checked": !!emailOptIn, onClick: () => onEmailOptIn(!emailOptIn), style: { width: 46, height: 28, borderRadius: 14, border: "none", cursor: "pointer", position: "relative", flexShrink: 0, background: emailOptIn ? T.teal : "rgba(var(--zi-line),0.15)", transition: "background var(--zi-quick) var(--zi-ease)" } },
             React.createElement("span", { style: { position: "absolute", top: 3, left: emailOptIn ? 21 : 3, width: 22, height: 22, borderRadius: 11, background: "#fff", transition: "left var(--zi-quick) var(--zi-ease)" } }))),
         React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 12, opacity: emailOptIn ? 1 : 0.4 } },
           React.createElement("span", { style: { fontSize: 13, color: T.sub } }, "Send at"),
@@ -2035,7 +2092,7 @@ const buildRecap = (rowsByDate, sessionHistory, wk) => {
 const WeekRecap = ({ data, onShare, onClose }) => {
   const h = Math.floor(data.minutes / 60), m = data.minutes % 60;
   const focusLine = data.sessions ? `${h ? h + "h " : ""}${m}m focused across ${data.sessions} session${data.sessions === 1 ? "" : "s"}` : "No focus sessions this week";
-  return RC("div", { style: { position: "fixed", inset: 0, zIndex: 9997, background: "rgba(5,8,12,0.94)", display: "flex", alignItems: "center", justifyContent: "center", padding: 18, overflowY: "auto" } },
+  return RC("div", { style: { position: "fixed", inset: 0, zIndex: 9997, background: "rgba(var(--zi-scrim),0.94)", display: "flex", alignItems: "center", justifyContent: "center", padding: 18, overflowY: "auto" } },
     RC("div", { className: "slide-up", style: { width: "100%", maxWidth: 400, background: T.card, borderRadius: 24, border: `1px solid ${T.border2}`, padding: "26px 22px 20px" } },
       RC("div", { style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 14 } }, RC(ZonedInMark, { size: 26 }), RC("span", { style: { fontSize: 12, fontWeight: 700, letterSpacing: 1.3, textTransform: "uppercase", color: T.gold } }, "Your week, ZonedIn")),
       RC("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 26, fontWeight: 900, color: T.text, letterSpacing: -0.4, lineHeight: 1.2, marginBottom: 8 } }, `${data.goldKept} of ${data.days} Golds kept.`),
@@ -2084,7 +2141,7 @@ const ZonedInMVP = () => {
       setUser(u);
       finishLoading(u);
     }).catch((err) => { clearTimeout(timeout); console.error("Auth error:", err); finishLoading(null); });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => { setUser(session && session.user ? session.user : null); });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => { setUser(session && session.user ? session.user : null); if (session && session.user) ziThemeFromUser(session.user); });
     return () => { subscription.unsubscribe(); clearTimeout(timeout); };
   }, []);
 
@@ -2783,7 +2840,7 @@ Write 3 short sections. Direct, data-first, no filler:
     showPMF ? RC(PMFModal, { userName, streak, sessionCount: sessionHistory.length, onAnswer: () => { setShowPMF(false); saveProfile({ pmf_answered: true }); } }) : null,
     showPromise ? RC(PromiseRitual, { day, onBack: () => setShowPromise(false), onIn: () => { commitDay(); setShowPromise(false); setTab("plan"); } }) : null,
     recap && !closeView && !sessionActive && !showRecovery && !onboardingOpen ? RC(WeekRecap, { data: recap, onShare: () => { track("share_tapped", { type: "week_recap" }); shareZonedInCard("rate", { kept: recap.kept, of: recap.committed }); }, onClose: () => { LS.set("zi_recap_" + recap.wk.start, true); track("week_recap_closed", {}); setRecap(null); } }) : null,
-    milestoneShare && !closeView ? RC("div", { style: { position: "fixed", inset: 0, zIndex: 9997, background: "rgba(0,0,0,0.88)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 } },
+    milestoneShare && !closeView ? RC("div", { style: { position: "fixed", inset: 0, zIndex: 9997, background: "rgba(var(--zi-scrim),0.92)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 } },
       RC("div", { style: { background: T.card, borderRadius: 24, padding: "32px 24px", maxWidth: 380, width: "100%", textAlign: "center", border: "1px solid rgba(0,194,178,0.2)" } },
         RC("div", { style: { display: "flex", justifyContent: "center", marginBottom: 12, color: T.gold } }, RC(BoltMark, { size: 48, color: T.gold })),
         RC("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 28, fontWeight: 900, color: T.teal, marginBottom: 8 } }, milestoneShare + " days kept"),
@@ -2808,8 +2865,8 @@ Write 3 short sections. Direct, data-first, no filler:
         tab === "focus" ? RC(FocusTab, { day, activeZoneKey, setActiveZoneKey, sessionDuration, setSessionDuration, onRequestStart: (k) => startSession(k), sessionHistory, setTab, onOpenClose: openClose }) : null,
         tab === "reflect" ? RC(ReflectTab, { day, today, weekRecord, rowsByDate, insightHistory, loadingInsight, insightError, onRefreshInsight: generateInsight, onOpenClose: openClose, setTab }) : null,
         tab === "progress" ? RC(ProgressTab, { showSettings, streak, bestStreak, shields, tierCfg, milestonePct, daysLeft, nextMilestone, totalPoints, currentLevel, tierHistory, isStreakMilestone, streakReport, setStreakReport, loadingStreakReport, generateStreakReport, streakTier, sessionHistory, rowsByDate, today, weekRecord, reminderTime, onReminderTime, emailOptIn, onEmailOptIn, userTz, onUseDeviceTz, morningPushOn, onMorningPush: toggleMorningPush, morningTime, onMorningTime, standalone: isStandalone(), onShareWeek: () => { track("share_tapped", { type: "rate" }); shareZonedInCard("rate", { kept: weekRecord.kept, of: weekRecord.committed }); } }) : null)),
-    RC("nav", { "aria-label": "Main", style: { position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 480, height: "calc(48px + env(safe-area-inset-bottom, 0px))", background: T.bg, borderTop: "1px solid rgba(240,244,248,0.08)", display: "flex", alignItems: "stretch", justifyContent: "space-around", paddingTop: 0, paddingLeft: 4, paddingRight: 4, paddingBottom: "env(safe-area-inset-bottom, 0px)", zIndex: 100 } },
-      [{ id: "plan", label: "Plan" }, { id: "focus", label: "Focus" }, { id: "reflect", label: "Record" }, { id: "progress", label: "Progress" }].map((t) => RC("button", { key: t.id, onClick: () => setTab(t.id), "aria-current": tab === t.id ? "page" : void 0, style: btn({ flex: 1, minWidth: 0, height: 48, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 1, padding: 0, borderRadius: 0, background: "transparent", border: "none", color: tab === t.id ? T.teal : "rgba(240,244,248,0.6)", WebkitTapHighlightColor: "transparent", transition: "color var(--zi-quick) var(--zi-ease)" }) },
+    RC("nav", { "aria-label": "Main", style: { position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 480, height: "calc(48px + env(safe-area-inset-bottom, 0px))", background: T.bg, borderTop: "1px solid rgba(var(--zi-ink),0.08)", display: "flex", alignItems: "stretch", justifyContent: "space-around", paddingTop: 0, paddingLeft: 4, paddingRight: 4, paddingBottom: "env(safe-area-inset-bottom, 0px)", zIndex: 100 } },
+      [{ id: "plan", label: "Plan" }, { id: "focus", label: "Focus" }, { id: "reflect", label: "Record" }, { id: "progress", label: "Progress" }].map((t) => RC("button", { key: t.id, onClick: () => setTab(t.id), "aria-current": tab === t.id ? "page" : void 0, style: btn({ flex: 1, minWidth: 0, height: 48, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 1, padding: 0, borderRadius: 0, background: "transparent", border: "none", color: tab === t.id ? T.teal : "rgba(var(--zi-ink),0.6)", WebkitTapHighlightColor: "transparent", transition: "color var(--zi-quick) var(--zi-ease)" }) },
         RC(NavIcon, { id: t.id, active: tab === t.id }),
         RC("span", { style: { fontSize: 9.5, lineHeight: "11px", fontWeight: tab === t.id ? 700 : 500, letterSpacing: 0.1 } }, t.label)))));
 };
@@ -2819,7 +2876,11 @@ function waitForSupabase(cb) {
 }
 waitForSupabase(() => {
   supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-  ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(ZonedInMVP));
+  ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(() => {
+  const [, bump] = useState(0);
+  useEffect(() => { const f = () => bump((n) => n + 1); window.addEventListener("zi-theme", f); return () => window.removeEventListener("zi-theme", f); }, []);
+  return React.createElement(ZonedInMVP);
+}));
 });
   </script>
 </body>
