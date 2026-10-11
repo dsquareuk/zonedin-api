@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
   <title>ZonedIn — Clarity beats chaos.</title>
   <link rel="manifest" href="/manifest.json"/>
   <meta name="apple-mobile-web-app-capable" content="yes"/>
@@ -100,6 +100,33 @@
   <script src="/vendor/react-dom-18.3.1.min.js"></script>
   <script src="/vendor/supabase-2.45.4.js"></script>
   <script>
+    /* v54 accessibility layer: every tappable thing works with a keyboard and a screen reader. */
+    (function(){
+      var R=window.React; if(!R||R.__ziA11y) return; R.__ziA11y=1;
+      var orig=R.createElement, NATIVE={button:1,a:1,input:1,select:1,textarea:1,label:1,summary:1,option:1};
+      var SVGKIDS={path:1,circle:1,rect:1,line:1,g:1,polyline:1,polygon:1,ellipse:1,defs:1,stop:1,linearGradient:1,radialGradient:1,text:1,tspan:1,clipPath:1,mask:1,use:1};
+      function isKey(e){return e.key==='Enter'||e.key===' '||e.key==='Spacebar';}
+      function isBackdrop(p){var st=p.style||{};return (st.position==='fixed'||st.position==='absolute')&&(st.inset===0||st.inset==='0'||(st.top===0&&st.left===0&&st.right===0&&st.bottom===0));}
+      function isStopper(f){try{var t=String(f);return t.length<90&&/stopPropagation/.test(t);}catch(e){return false;}}
+      R.createElement=function(type,props){
+        if(typeof type==='string'&&props){
+          var p=null;
+          if(type==='svg'&&!props['aria-label']&&!props.role&&!props.onClick&&props['aria-hidden']===undefined){p=Object.assign({},props);p['aria-hidden']=true;p.focusable='false';}
+          else if(props.onClick&&!NATIVE[type]&&!SVGKIDS[type]&&!props.role&&!isBackdrop(props)&&!isStopper(props.onClick)){
+            p=Object.assign({},props); var oc=props.onClick, ok=props.onKeyDown;
+            p.role='button'; if(p.tabIndex===undefined) p.tabIndex=0;
+            p.onKeyDown=function(e){ if(ok) ok(e); if(!e.defaultPrevented&&e.target===e.currentTarget&&isKey(e)){e.preventDefault();oc(e);} };
+            if(type==='svg'&&!p['aria-label']&&p.title) p['aria-label']=p.title;
+          }
+          else if(type==='button'&&!props['aria-label']&&props.title){p=Object.assign({},props);p['aria-label']=props.title;}
+          else if((type==='input'||type==='textarea')&&!props['aria-label']&&!props.id&&props.placeholder){p=Object.assign({},props);p['aria-label']=props.placeholder;}
+          if(p){var a=Array.prototype.slice.call(arguments);a[1]=p;return orig.apply(this,a);}
+        }
+        return orig.apply(this,arguments);
+      };
+    })();
+  </script>
+  <script>
     if (window.supabase && window.supabase.createClient) { window.__supabaseCreateClient = window.supabase.createClient; try { delete window.supabase; } catch (e) {} }
   </script>
   <style>
@@ -119,6 +146,10 @@
     html,body{height:100%;background:#0a0e14;font-family:'DM Sans',sans-serif;overflow:hidden;position:fixed;width:100%;} html::before{content:'';position:fixed;inset:0;background:#0a0e14;z-index:-1;}
     input,textarea,button{font-family:'DM Sans',sans-serif;}
     input:focus,textarea:focus{outline:none;}
+    :focus-visible{outline:2px solid #00E5D4 !important;outline-offset:3px !important;}
+    input:focus-visible,textarea:focus-visible,select:focus-visible{outline:none !important;box-shadow:0 0 0 2px #00E5D4 !important;}
+    .zi-sr{position:absolute !important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;}
+    @media (forced-colors: active){:focus-visible{outline:2px solid CanvasText !important;}}
     #root{height:100%;height:100dvh;overflow:hidden;display:flex;flex-direction:column;position:relative;}
     .tab-scroll{overflow-y:scroll;overflow-x:hidden;-webkit-overflow-scrolling:touch;flex:1;min-height:0;overscroll-behavior:contain;}
     .focus-lock{overflow:hidden;touch-action:none;flex:1;min-height:0;}
@@ -208,7 +239,7 @@ const T = {
   border2: "rgba(255,255,255,0.12)",
   text: "#F0F4F8",
   sub: "rgba(240,244,248,0.62)",
-  sub2: "rgba(240,244,248,0.45)",
+  sub2: "rgba(240,244,248,0.52)",
   teal: "#00C2B2",
   teal2: "#00E5D4",
   tealBg: "rgba(0,194,178,0.08)",
@@ -745,7 +776,7 @@ const SessionLock = ({ secondsLeft, activeTask, doneLooks, tier, why, onEnd, onC
   }, onPointerDown: wake },
   dim ? RC("div", { onPointerDown: (e) => { e.stopPropagation(); wake(); }, style: { position: "absolute", inset: 0, zIndex: 20, background: "#020304", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", transition: "opacity var(--zi-settle) var(--zi-ease)", cursor: "pointer" } },
     RC("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 44, fontWeight: 900, color: "rgba(240,244,248,0.38)", letterSpacing: -2 } }, fmt(secondsLeft)),
-    RC("div", { style: { marginTop: 10, fontSize: 12, color: "rgba(240,244,248,0.32)", letterSpacing: 1.5, textTransform: "uppercase" } }, "ZonedIn \u00B7 tap to wake")) : null,
+    RC("div", { style: { marginTop: 10, fontSize: 12, color: "rgba(240,244,248,0.5)", letterSpacing: 1.5, textTransform: "uppercase" } }, "ZonedIn \u00B7 tap to wake")) : null,
 
   leftNotice && /* @__PURE__ */ React.createElement("div", { className: "slide-up", style: { position: "absolute", top: 56, left: 16, right: 16, zIndex: 10, padding: "10px 16px", borderRadius: 14, background: "rgba(226,75,74,0.12)", border: "1px solid rgba(226,75,74,0.25)", display: "flex", alignItems: "center", gap: 10 } },
     /* @__PURE__ */ React.createElement("span", { style: { fontSize: 16 } }, "\u26A0\uFE0F"),
@@ -777,7 +808,7 @@ const SessionLock = ({ secondsLeft, activeTask, doneLooks, tier, why, onEnd, onC
     letterSpacing: -4,
     lineHeight: 1,
     transition: "color 1s"
-  } }, fmt(secondsLeft)), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: nearEnd ? T.gold : T.teal, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase", marginTop: 6, transition: "color 1s" } }, "remaining"), RC("span", { "aria-live": "polite", style: { fontSize: 12, marginTop: 10, color: breaks ? "rgba(245,158,11,0.85)" : "rgba(240,244,248,0.4)", fontWeight: 600 } }, breaks ? `Focus broken ${breaks}\u00D7` : "Focus held"))), /* @__PURE__ */ React.createElement("div", { style: { width: "100%", maxWidth: 360, zIndex: 1 } }, RC("div", { style: { display: "flex", justifyContent: "center", flexWrap: "wrap", gap: 6, marginBottom: 14 } },
+  } }, fmt(secondsLeft)), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: nearEnd ? T.gold : T.teal, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase", marginTop: 6, transition: "color 1s" } }, "remaining"), RC("span", { "aria-live": "polite", style: { fontSize: 12, marginTop: 10, color: breaks ? "rgba(245,158,11,0.85)" : "rgba(240,244,248,0.52)", fontWeight: 600 } }, breaks ? `Focus broken ${breaks}\u00D7` : "Focus held"))), /* @__PURE__ */ React.createElement("div", { style: { width: "100%", maxWidth: 360, zIndex: 1 } }, RC("div", { style: { display: "flex", justifyContent: "center", flexWrap: "wrap", gap: 6, marginBottom: 14 } },
     AMBIENT_OPTS.map((o) => RC("button", { key: o.id, onClick: () => pickAmbient(o.id), "aria-pressed": ambient === o.id, style: btn({ minHeight: 32, padding: "0 11px", borderRadius: 50, fontSize: 11, fontWeight: 700, border: `1px solid ${ambient === o.id ? "rgba(0,194,178,0.5)" : "rgba(255,255,255,0.1)"}`, background: ambient === o.id ? "rgba(0,194,178,0.12)" : "transparent", color: ambient === o.id ? T.teal : T.sub }) }, o.label)),
     RC("button", { onClick: (e) => { e.stopPropagation(); clearTimeout(idleRef.current); setDim(true); }, "aria-label": "Dim the screen", style: btn({ minHeight: 32, padding: "0 11px", borderRadius: 50, fontSize: 11, fontWeight: 700, border: "1px solid rgba(255,255,255,0.1)", background: "transparent", color: T.sub }) }, "Dim")), tier === "gold" && why ? React.createElement("div", { style: { textAlign: "center", fontSize: 15, color: T.text, lineHeight: 1.5, fontWeight: 600, marginBottom: 20, minHeight: 40, padding: "0 8px" } }, React.createElement("span", { style: { color: T.sub, fontWeight: 500 } }, "You said this matters because\u2026 "), React.createElement("span", { style: { color: T.teal } }, why)) : React.createElement("div", { style: { textAlign: "center", fontSize: 14, color: T.text, lineHeight: 1.5, marginBottom: 20, minHeight: 40, padding: "0 8px" } }, React.createElement("span", { style: { color: T.sub } }, "Done when: "), doneLooks || activeTask), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10 } }, /* @__PURE__ */ React.createElement(
     "button",
@@ -1163,11 +1194,14 @@ const showToast = (msg) => {
   try {
     const el = document.createElement("div");
     el.textContent = msg;
-    el.setAttribute("role", "status");
+    el.setAttribute("aria-hidden", "true");
+    let live = document.getElementById("zi-live");
+    if (!live) { live = document.createElement("div"); live.id = "zi-live"; live.className = "zi-sr"; live.setAttribute("role", "status"); live.setAttribute("aria-live", "polite"); document.body.appendChild(live); }
+    live.textContent = ""; setTimeout(() => { live.textContent = msg; }, 60);
     el.style.cssText = "position:fixed;left:50%;bottom:calc(72px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:10001;background:#161d28;color:#F0F4F8;border:1px solid rgba(0,194,178,0.35);padding:10px 16px;border-radius:12px;font:600 13px 'DM Sans',sans-serif;max-width:86vw;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,0.4);transition:opacity .3s";
     document.body.appendChild(el);
-    setTimeout(() => { el.style.opacity = "0"; }, 2200);
-    setTimeout(() => { el.remove(); }, 2600);
+    setTimeout(() => { el.style.opacity = "0"; }, 3600);
+    setTimeout(() => { el.remove(); }, 4000);
   } catch (e) {}
 };
 const dlLabel = (txt, color, extra) => RC("div", { style: __spreadValues({ fontSize: 11, fontWeight: 700, letterSpacing: 1.1, textTransform: "uppercase", color: color || T.sub }, extra || {}) }, txt);
@@ -2774,7 +2808,7 @@ Write 3 short sections. Direct, data-first, no filler:
         tab === "focus" ? RC(FocusTab, { day, activeZoneKey, setActiveZoneKey, sessionDuration, setSessionDuration, onRequestStart: (k) => startSession(k), sessionHistory, setTab, onOpenClose: openClose }) : null,
         tab === "reflect" ? RC(ReflectTab, { day, today, weekRecord, rowsByDate, insightHistory, loadingInsight, insightError, onRefreshInsight: generateInsight, onOpenClose: openClose, setTab }) : null,
         tab === "progress" ? RC(ProgressTab, { showSettings, streak, bestStreak, shields, tierCfg, milestonePct, daysLeft, nextMilestone, totalPoints, currentLevel, tierHistory, isStreakMilestone, streakReport, setStreakReport, loadingStreakReport, generateStreakReport, streakTier, sessionHistory, rowsByDate, today, weekRecord, reminderTime, onReminderTime, emailOptIn, onEmailOptIn, userTz, onUseDeviceTz, morningPushOn, onMorningPush: toggleMorningPush, morningTime, onMorningTime, standalone: isStandalone(), onShareWeek: () => { track("share_tapped", { type: "rate" }); shareZonedInCard("rate", { kept: weekRecord.kept, of: weekRecord.committed }); } }) : null)),
-    RC("nav", { style: { position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 480, height: "calc(48px + env(safe-area-inset-bottom, 0px))", background: T.bg, borderTop: "1px solid rgba(240,244,248,0.08)", display: "flex", alignItems: "stretch", justifyContent: "space-around", paddingTop: 0, paddingLeft: 4, paddingRight: 4, paddingBottom: "env(safe-area-inset-bottom, 0px)", zIndex: 100 } },
+    RC("nav", { "aria-label": "Main", style: { position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 480, height: "calc(48px + env(safe-area-inset-bottom, 0px))", background: T.bg, borderTop: "1px solid rgba(240,244,248,0.08)", display: "flex", alignItems: "stretch", justifyContent: "space-around", paddingTop: 0, paddingLeft: 4, paddingRight: 4, paddingBottom: "env(safe-area-inset-bottom, 0px)", zIndex: 100 } },
       [{ id: "plan", label: "Plan" }, { id: "focus", label: "Focus" }, { id: "reflect", label: "Record" }, { id: "progress", label: "Progress" }].map((t) => RC("button", { key: t.id, onClick: () => setTab(t.id), "aria-current": tab === t.id ? "page" : void 0, style: btn({ flex: 1, minWidth: 0, height: 48, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 1, padding: 0, borderRadius: 0, background: "transparent", border: "none", color: tab === t.id ? T.teal : "rgba(240,244,248,0.6)", WebkitTapHighlightColor: "transparent", transition: "color var(--zi-quick) var(--zi-ease)" }) },
         RC(NavIcon, { id: t.id, active: tab === t.id }),
         RC("span", { style: { fontSize: 9.5, lineHeight: "11px", fontWeight: tab === t.id ? 700 : 500, letterSpacing: 0.1 } }, t.label)))));
