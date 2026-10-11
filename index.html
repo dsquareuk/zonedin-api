@@ -346,11 +346,11 @@ const obTrack = (event, props) => { try { if (window.zi) window.zi.track(event, 
 // ── ONBOARDING FLOW — OB-01 to OB-05 (promise → gold → done-when → commit → duration) ──
 const OnboardingFlow = ({ day, form, onCommitDay, onStartFirstSession }) => {
   const ce = React.createElement;
-  const [step, setStep] = useState(day && day.committed_at ? "duration" : "promise");
-  const [minutes, setMinutes] = useState(25);
+  const [step, setStep] = useState(day && day.committed_at ? "duration" : "three");
+  const [minutes, setMinutes] = useState(10);
   const startRef = useRef(Date.now());
   const stepStartRef = useRef(Date.now());
-  const STEP_NUM = { promise: 1, three: 2, ritual: 3, duration: 4 };
+  const STEP_NUM = { three: 1, ritual: 2, duration: 3 };
   useEffect(() => {
     stepStartRef.current = Date.now();
     obTrack("onboarding_step_viewed", { step: STEP_NUM[step], step_name: step });
@@ -364,31 +364,30 @@ const OnboardingFlow = ({ day, form, onCommitDay, onStartFirstSession }) => {
   const heading = (txt, mb) => ce("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 25, fontWeight: 900, color: T.text, letterSpacing: -0.5, lineHeight: 1.22, textAlign: "center", marginBottom: mb == null ? 10 : mb } }, txt);
   const sub = (txt, mb) => ce("div", { style: { fontSize: 14, color: T.sub, textAlign: "center", lineHeight: 1.6, marginBottom: mb == null ? 26 : mb } }, txt);
 
-  // OB-01 — Promise (kept), CTA now leads into Today's Three
-  if (step === "promise") return shell(
-    ce("div", { style: { display: "flex", justifyContent: "center", marginBottom: 28 } }, ce(ZonedInMark, { size: 56 })),
-    heading("Clarity beats chaos.", 26),
-    ce("div", { style: { display: "flex", flexDirection: "column", gap: 12, margin: "0 auto 34px", maxWidth: 280 } },
-      ["Choose what matters.", "Decide what done looks like.", "Commit to it.", "See it through."].map((line, i) =>
-        ce("div", { key: i, style: { display: "flex", alignItems: "center", gap: 12 } },
-          ce("span", { style: { width: 22, height: 22, borderRadius: 11, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, color: T.gold, background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.3)" } }, i + 1),
-          ce("span", { style: { fontSize: 16, fontWeight: 600, color: T.text } }, line)))),
-    ce("button", { onClick: () => go("three"), style: btnGold({ width: "100%", fontSize: 16, padding: "16px" }) }, "Choose your one thing →")
-  );
-
-  // OB-02 — Today's Three form with one-time hint
-  if (step === "three") return ce("div", { style: { position: "fixed", inset: 0, zIndex: 9998, background: T.bg, overflowY: "auto", padding: "calc(env(safe-area-inset-top,0px) + 22px) 0 calc(env(safe-area-inset-bottom,0px) + 24px)" } },
+  // OB-01 — Gold, finish line and session length on one screen (v50)
+  if (step === "three") return ce("div", { style: { position: "fixed", inset: 0, zIndex: 9998, background: T.bg, overflowY: "auto", padding: "calc(env(safe-area-inset-top,0px) + 26px) 0 calc(env(safe-area-inset-bottom,0px) + 24px)" } },
     ce("div", { className: "fade-up", style: { maxWidth: 420, margin: "0 auto" } },
-      ce("div", { style: { padding: "0 20px 12px" } },
-        ce("button", { onClick: () => setStep("promise"), style: { fontSize: 13, color: T.sub, background: "none", border: "none", cursor: "pointer", padding: "4px 0", marginBottom: 10, fontFamily: "'DM Sans',sans-serif" } }, "← Back"),
-        ce("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 24, fontWeight: 900, color: T.text, letterSpacing: -0.4 } }, "What’s the one thing that matters most today?")),
-      ce(TodaysThreeForm, __spreadProps(__spreadValues({ day }, form), { goldOnly: true, hint: "Just one today. Tomorrow you\u2019ll choose your Three.", onPromise: () => go("ritual") }))));
+      ce("div", { style: { padding: "0 20px 14px" } },
+        ce("div", { style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 16 } },
+          ce(ZonedInMark, { size: 28 }),
+          ce("span", { style: { fontSize: 12, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase", color: T.gold } }, "Clarity beats chaos.")),
+        ce("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 24, fontWeight: 900, color: T.text, letterSpacing: -0.4, lineHeight: 1.22, marginBottom: 8 } }, "What\u2019s the one thing that matters most today?"),
+        ce("div", { style: { fontSize: 14, color: T.sub, lineHeight: 1.55 } }, "Choose a step you can finish in this first session. We\u2019ll start the timer as soon as you commit.")),
+      ce(TodaysThreeForm, __spreadProps(__spreadValues({ day }, form), {
+        goldOnly: true,
+        hint: "Just one today. Tomorrow you\u2019ll choose your Three.",
+        commitLabel: "Commit to it",
+        beforeCommit: ce("div", { style: { margin: "4px 0 12px" } },
+          ce("div", { style: { fontSize: 11, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase", color: T.sub, marginBottom: 8 } }, "First session"),
+          ce(DurationChips, { value: minutes, onChange: (m) => { setMinutes(m); obTrack("onboarding_duration_selected", { minutes: m }); }, options: FIRST_DURATIONS })),
+        onPromise: () => go("ritual") }))));
 
   // OB-03 — the full Make your promise ritual
   if (step === "ritual") return ce(PromiseRitual, { day, onBack: () => setStep("three"), onIn: () => {
     obTrack("onboarding_first_commit", { seconds_since_start: Math.round((Date.now() - startRef.current) / 1000) });
     onCommitDay();
-    go("duration");
+    obTrack("onboarding_step_completed", { step: 2, step_name: "ritual", seconds_on_step: Math.round((Date.now() - stepStartRef.current) / 1000) });
+    onStartFirstSession(minutes);
   } });
 
   // OB-04 — Duration, future tense, then the first Gold session
@@ -399,10 +398,10 @@ const OnboardingFlow = ({ day, form, onCommitDay, onStartFirstSession }) => {
       day.gold_done_when ? ce("div", { style: { fontSize: 12, color: "rgba(245,158,11,0.8)", marginTop: 6 } }, "Done when: ", day.gold_done_when.trim()) : null),
     heading(OB_DURATION_HEADING, 22),
     ce("div", { style: { marginBottom: 12 } },
-      ce(DurationChips, { value: minutes, onChange: setMinutes })),
+      ce(DurationChips, { value: minutes, onChange: setMinutes, options: FIRST_DURATIONS })),
     sub(OB_DURATION_HELPER, 22),
     ce("button", { onClick: () => {
-      obTrack("onboarding_step_completed", { step: 4, step_name: "duration", seconds_on_step: Math.round((Date.now() - stepStartRef.current) / 1000) });
+      obTrack("onboarding_step_completed", { step: 3, step_name: "duration", seconds_on_step: Math.round((Date.now() - stepStartRef.current) / 1000) });
       onStartFirstSession(minutes);
     }, style: btnGold({ width: "100%", fontSize: 16, padding: "16px" }) }, obDurationCta(minutes))
   );
@@ -425,15 +424,19 @@ const IdentityNameScreen = ({ kept, initialName, onSave }) => {
   return ce("div", { style: { position: "fixed", inset: 0, zIndex: 9998, background: T.bg, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "28px 24px", overflowY: "auto" } },
     ce("div", { className: "fade-up", style: { maxWidth: 380, width: "100%" } },
       ce("div", { style: { display: "flex", justifyContent: "center", marginBottom: 14, color: T.teal } }, kept ? ce(CheckMark, { size: 34, color: T.teal }) : ce(TierMark, { tier: "gold", size: 34 })),
+      ce("div", { style: { textAlign: "center", marginBottom: 18 } },
+        ce("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 19, fontWeight: 800, color: kept ? T.teal : T.gold, marginBottom: 6 } }, kept ? "Kept. Evidence Added." : "Not quite."),
+        ce("div", { style: { fontSize: 14, color: T.sub, lineHeight: 1.55 } }, kept ? "That\u2019s your first piece of evidence. Your Record has started." : "You checked in, and that counts. Your Record starts today. Tomorrow you go again.")),
       ce("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 23, fontWeight: 900, color: T.text, letterSpacing: -0.4, lineHeight: 1.25, textAlign: "center", marginBottom: 22 } },
-        kept ? "You just kept your word. Who is that person becoming?" : "You showed up and checked in. Who are you becoming?"),
+        "Who are you becoming?"),
       ce("div", { style: { fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: T.teal, marginBottom: 10 } }, "I am becoming\u2026"),
       ce("div", { style: { display: "flex", flexDirection: "column", gap: 8, marginBottom: 10 } },
         OB_DEFAULT_IDENTITIES.map((d) => ce("button", { key: d, onClick: () => setIdentity(d), style: btn({ width: "100%", textAlign: "left", padding: "11px 14px", borderRadius: 12, fontSize: 14, fontWeight: 600, border: `1.5px solid ${identity === d ? T.teal : T.border}`, background: identity === d ? "rgba(0,194,178,0.1)" : "transparent", color: identity === d ? T.teal : T.text }) }, d))),
       ce("input", { type: "text", value: identity, onChange: (e) => setIdentity(e.target.value.slice(0, 60)), onFocus: () => setFocus("id"), onBlur: () => setFocus(null), placeholder: "or write your own", style: { ...inputStyle("id"), marginBottom: 22 } }),
       ce("div", { style: { fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: T.sub, marginBottom: 10 } }, "What should we call you?"),
       ce("input", { type: "text", value: name, maxLength: 16, onChange: (e) => setName(e.target.value.slice(0, 16)), onKeyDown: (e) => e.key === "Enter" && save(), onFocus: () => setFocus("name"), onBlur: () => setFocus(null), placeholder: "Your first name", style: { ...inputStyle("name"), marginBottom: 22 } }),
-      ce("button", { onClick: save, disabled: !ok, style: btnPrimary({ width: "100%", fontSize: 16, padding: "16px", opacity: ok ? 1 : 0.35, cursor: ok ? "pointer" : "not-allowed" }) }, ok ? "Let\u2019s go" : "Choose who you\u2019re becoming")
+      ce("button", { onClick: save, disabled: !ok, style: btnPrimary({ width: "100%", fontSize: 16, padding: "16px", opacity: ok ? 1 : 0.35, cursor: ok ? "pointer" : "not-allowed" }) }, ok ? "Let\u2019s go" : "Choose who you\u2019re becoming"),
+      ce("button", { onClick: () => { obTrack("onboarding_identity_skipped", { kept }); onSave({ identity: "", name: name.trim(), source: "skipped" }); }, style: { display: "block", margin: "14px auto 0", background: "none", border: "none", color: T.sub, fontSize: 13, cursor: "pointer", padding: "8px 12px", fontFamily: "'DM Sans',sans-serif" } }, "Skip for now")
     )
   );
 };
@@ -1161,7 +1164,7 @@ const PromiseRitual = ({ day, onBack, onIn }) => {
 };
 
 // ── DL-03 — TODAY'S THREE (morning form) ──────────────────────────────────
-const TodaysThreeForm = ({ day, onTask, onTaskBlur, onDoneWhen, onWhy, onPromise, hint, weekRecord, fromTomorrow, goldOnly, onAcceptSuggestion }) => {
+const TodaysThreeForm = ({ day, onTask, onTaskBlur, onDoneWhen, onWhy, onPromise, hint, weekRecord, fromTomorrow, goldOnly, onAcceptSuggestion, beforeCommit, commitLabel }) => {
   const [focus, setFocus] = useState(null);
   const missing = [];
   if (!day.gold.trim()) missing.push("your Gold task");
@@ -1200,7 +1203,8 @@ const TodaysThreeForm = ({ day, onTask, onTaskBlur, onDoneWhen, onWhy, onPromise
           onChange: (e) => onWhy(e.target.value), onFocus: () => setFocus("why"), onBlur: () => setFocus(null),
           style: __spreadProps(__spreadValues({}, dlInput(focus === "why", T.teal)), { marginTop: 8, fontSize: 13 }) }) : null);
     }),
-    RC("button", { onClick: () => ok && onPromise(), disabled: !ok, style: btnGold({ width: "100%", fontSize: 16, padding: "16px", marginTop: 6, opacity: ok ? 1 : 0.4, cursor: ok ? "pointer" : "not-allowed" }) }, "Commit to today"),
+    beforeCommit || null,
+    RC("button", { onClick: () => ok && onPromise(), disabled: !ok, style: btnGold({ width: "100%", fontSize: 16, padding: "16px", marginTop: 6, opacity: ok ? 1 : 0.4, cursor: ok ? "pointer" : "not-allowed" }) }, commitLabel || "Commit to today"),
     !ok && day.gold.trim() ? RC("div", { style: { fontSize: 12, color: T.sub, textAlign: "center", marginTop: 8 } }, "Still needed: ", missing.join(" \u00B7 "), ".") : null,
     weekRecord && weekRecord.committed > 0 ? RC("div", { style: { fontSize: 12, color: T.sub, textAlign: "center", marginTop: 16 } }, "ZonedIn Rate this week: ", RC("span", { style: { color: T.teal, fontWeight: 700 } }, weekRecord.kept, " of ", weekRecord.committed), " kept") : null);
 };
@@ -1345,7 +1349,8 @@ const LightKept = ({ kept, committed, onDone }) => {
 // ── DL-06 — one-tap confirm before a session ─────────────────────────────
 // One sheet: task, finish line, duration, Start. Opened straight from a Plan card.
 const DURATIONS = [15, 25, 45, 60, 90];
-const DurationChips = ({ value, onChange }) => RC("div", { role: "radiogroup", "aria-label": "Session length", style: { display: "flex", gap: 6 } }, DURATIONS.map((d) => RC("button", { key: d, role: "radio", "aria-checked": value === d, onClick: () => onChange(d), style: btn({ flex: 1, minHeight: 44, padding: "0 2px", borderRadius: 50, fontSize: 14, fontWeight: 700, border: `1.5px solid ${value === d ? T.teal : T.border2}`, background: value === d ? T.teal : "transparent", color: value === d ? T.bg : T.sub }) }, d, RC("span", { style: { fontSize: 11, fontWeight: 600 } }, " min"))));
+const FIRST_DURATIONS = [10, 15, 25];
+const DurationChips = ({ value, onChange, options }) => RC("div", { role: "radiogroup", "aria-label": "Session length", style: { display: "flex", gap: 6 } }, (options || DURATIONS).map((d) => RC("button", { key: d, role: "radio", "aria-checked": value === d, onClick: () => onChange(d), style: btn({ flex: 1, minHeight: 44, padding: "0 2px", borderRadius: 50, fontSize: 14, fontWeight: 700, border: `1.5px solid ${value === d ? T.teal : T.border2}`, background: value === d ? T.teal : "transparent", color: value === d ? T.bg : T.sub }) }, d, RC("span", { style: { fontSize: 11, fontWeight: 600 } }, " min"))));
 const FocusConfirmCard = ({ tier, task, doneWhen, why, minutes, onMinutes, identityStatement, onStart, onBack }) => {
   const cfg = DL_TIER[tier] || DL_TIER.gold;
   return RC("div", { style: { position: "fixed", inset: 0, zIndex: 9997, background: "rgba(0,0,0,0.88)", display: "flex", alignItems: "flex-end", justifyContent: "center", padding: "16px 16px calc(env(safe-area-inset-bottom,0px) + 16px)" } },
