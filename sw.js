@@ -1,9 +1,27 @@
-// ZonedIn Service Worker
-const CACHE = 'zonedin-v2';
-const ASSETS = ['/'];
+// ZonedIn Service Worker — v3 (instant open + offline)
+// The app shell lives on the phone. Opening ZonedIn never waits for the network:
+// the cached copy opens straight away and a fresh copy is fetched in the background
+// for next time. Data calls (Supabase, /api, analytics) always go to the network.
+const CACHE = 'zonedin-v3';
+const SHELL = [
+  '/',
+  '/manifest.json',
+  '/privacy.html',
+  '/vendor/react-18.3.1.min.js',
+  '/vendor/react-dom-18.3.1.min.js',
+  '/vendor/supabase-2.45.4.js',
+  '/fonts/syne-latin-700-normal.woff2',
+  '/fonts/syne-latin-800-normal.woff2',
+  '/fonts/dm-sans-latin-400-normal.woff2',
+  '/fonts/dm-sans-latin-500-normal.woff2',
+  '/fonts/dm-sans-latin-600-normal.woff2',
+  '/fonts/dm-sans-latin-700-normal.woff2',
+  '/icons/icon-192x192.png',
+  '/icons/icon-180x180.png'
+];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
+  e.waitUntil(caches.open(CACHE).then(c => Promise.all(SHELL.map(u => c.add(u).catch(() => {})))));
   self.skipWaiting();
 });
 
@@ -15,12 +33,34 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  if (e.request.method !== 'GET') return;
-  const u = e.request.url;
-  if (u.includes('supabase') || u.includes('anthropic') || u.includes('/api/') || u.includes('posthog')) return;
-  e.respondWith(
-    fetch(e.request).catch(() => caches.match(e.request))
-  );
+  const req = e.request;
+  if (req.method !== 'GET') return;
+  const url = new URL(req.url);
+  if (url.origin !== self.location.origin) return;            // Supabase, PostHog, fonts CDN etc.
+  if (url.pathname.startsWith('/api/')) return;                 // serverless functions: always live
+
+  // Opening the app: cached shell first, refresh in the background.
+  if (req.mode === 'navigate') {
+    e.respondWith(caches.open(CACHE).then(async c => {
+      const cached = await c.match('/');
+      const fresh = fetch(req).then(r => { if (r && r.ok && url.pathname === '/') c.put('/', r.clone()); return r; }).catch(() => null);
+      if (url.pathname !== '/' && url.pathname !== '/index.html') {
+        const page = await fresh; return page || (await c.match(url.pathname)) || cached || Response.error();
+      }
+      if (cached) { e.waitUntil(fresh); return cached; }
+      return (await fresh) || Response.error();
+    }));
+    return;
+  }
+
+  // Versioned static files: cache first.
+  e.respondWith(caches.open(CACHE).then(async c => {
+    const hit = await c.match(req);
+    if (hit) return hit;
+    const r = await fetch(req);
+    if (r && r.ok) c.put(req, r.clone());
+    return r;
+  }));
 });
 
 // Morning reminder: "Your Gold is waiting"

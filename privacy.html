@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <title>Privacy · ZonedIn</title>
+  <meta name="theme-color" content="#0a0e14"/>
+  <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32x32.png"/>
+  <style>
+    @font-face{font-family:'Syne';font-weight:800 900;font-display:swap;src:url(/fonts/syne-latin-800-normal.woff2) format('woff2');}
+    @font-face{font-family:'DM Sans';font-weight:400;font-display:swap;src:url(/fonts/dm-sans-latin-400-normal.woff2) format('woff2');}
+    @font-face{font-family:'DM Sans';font-weight:600 700;font-display:swap;src:url(/fonts/dm-sans-latin-700-normal.woff2) format('woff2');}
+    :root{--bg:#0a0e14;--card:#111720;--text:#F0F4F8;--sub:rgba(240,244,248,0.68);--line:rgba(255,255,255,0.08);--teal:#00C2B2;--gold:#F59E0B;}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:var(--bg);color:var(--text);font-family:'DM Sans',system-ui,sans-serif;line-height:1.65;font-size:16px;padding:calc(env(safe-area-inset-top,0px) + 28px) 20px calc(env(safe-area-inset-bottom,0px) + 48px)}
+    main{max-width:640px;margin:0 auto}
+    a{color:var(--teal)}
+    .back{display:inline-block;font-size:14px;text-decoration:none;margin-bottom:28px}
+    .eyebrow{font-size:12px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:var(--gold);margin-bottom:10px}
+    h1{font-family:'Syne',sans-serif;font-weight:900;font-size:32px;line-height:1.15;letter-spacing:-0.5px;margin-bottom:12px}
+    .lead{color:var(--sub);margin-bottom:28px}
+    h2{font-family:'Syne',sans-serif;font-weight:800;font-size:20px;margin:34px 0 10px}
+    p,li{color:var(--sub)}
+    p+p{margin-top:10px}
+    ul{padding-left:20px;margin-top:8px}
+    li{margin-bottom:6px}
+    strong{color:var(--text);font-weight:700}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 18px 16px;margin-top:12px}
+    table{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px}
+    th,td{text-align:left;vertical-align:top;padding:10px 8px;border-top:1px solid var(--line)}
+    th{color:var(--text);font-weight:700}
+    td{color:var(--sub)}
+    .foot{margin-top:40px;font-size:13px;color:var(--sub)}
+  </style>
+</head>
+<body>
+<main>
+  <a class="back" href="/">← Back to ZonedIn</a>
+  <div class="eyebrow">Privacy</div>
+  <h1>Your commitments are yours.</h1>
+  <p class="lead">ZonedIn keeps what it needs to run your day, and nothing it doesn't. No ads, and we never sell your data. Here is exactly what we keep, who helps us run the app, and how the AI works.</p>
+
+  <h2>What we keep</h2>
+  <ul>
+    <li><strong>Your account:</strong> your email address (to sign you in), the name you choose, and your time zone so your day starts and ends at the right time.</li>
+    <li><strong>Your days:</strong> Today's Three, what "done" looks like, why it matters, your check-ins (kept or not), and Close the Day answers such as energy, mood and any reflection you write.</li>
+    <li><strong>Your sessions:</strong> when you focused, for how long, and what on.</li>
+    <li><strong>Your insights:</strong> the insights written for you.</li>
+    <li><strong>Reminders:</strong> your reminder settings, and if you turn on morning reminders, the technical address your phone gives us to deliver them.</li>
+  </ul>
+
+  <h2>How the AI works</h2>
+  <div class="card">
+    <p>When you close your day, ZonedIn sends <strong>your recent commitments, check-ins, energy, mood and reflection</strong> to <strong>Claude</strong>, an AI made by Anthropic, which writes your insight. If you type tasks in plain language, that text is sent to Claude to sort into your Three.</p>
+    <p>Anthropic does not use data sent through its API to train its models. We don't send your email address or name with these requests.</p>
+    <p>The AI only ever suggests. It never marks anything as kept: only you do that, when you check in.</p>
+  </div>
+
+  <h2>Who helps us run ZonedIn</h2>
+  <table>
+    <tr><th>Service</th><th>What for</th></tr>
+    <tr><td>Supabase (EU, Ireland)</td><td>Stores your account and your days</td></tr>
+    <tr><td>Vercel</td><td>Hosts the app and its server functions</td></tr>
+    <tr><td>Anthropic (Claude)</td><td>Writes insights and sorts typed tasks</td></tr>
+    <tr><td>Resend</td><td>Sends the "Close your day" email, if you keep it on</td></tr>
+    <tr><td>PostHog (EU)</td><td>Counts how the app is used (for example, "a day was committed") so we can improve it. No screen recording.</td></tr>
+    <tr><td>Google</td><td>Only if you choose "Continue with Google" to sign in</td></tr>
+  </table>
+
+  <h2>On your phone</h2>
+  <p>ZonedIn keeps a copy of your recent days on your phone so it opens instantly and works without signal. Changes you make offline are saved on the phone and sync when you reconnect.</p>
+
+  <h2>Your choices</h2>
+  <ul>
+    <li><strong>Download your data:</strong> Settings → Download my data gives you everything as a file.</li>
+    <li><strong>Delete your account:</strong> Settings → Delete account &amp; data permanently removes your days, sessions, insights and sign-in.</li>
+    <li><strong>Emails and reminders:</strong> switch them off in Settings, or use the unsubscribe link in any email.</li>
+  </ul>
+  <p>Under UK data protection law you can also ask us what we hold about you, ask us to correct it, or complain to the Information Commissioner's Office (ico.org.uk).</p>
+
+  <h2>Contact</h2>
+  <p>Questions about your data: <a href="mailto:david.i.t.dada@gmail.com">david.i.t.dada@gmail.com</a></p>
+
+  <p class="foot">Last updated 12 October 2026. Clarity beats chaos.</p>
+</main>
+</body>
+</html>

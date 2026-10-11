@@ -86,11 +86,36 @@
       }
     };
   </script>
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <link rel="preload" href="/fonts/syne-latin-800-normal.woff2" as="font" type="font/woff2" crossorigin/>
+  <link rel="preload" href="/fonts/dm-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin/>
+  <style>
+    @font-face{font-family:'Syne';font-style:normal;font-weight:700;font-display:swap;src:url(/fonts/syne-latin-700-normal.woff2) format('woff2');}
+    @font-face{font-family:'Syne';font-style:normal;font-weight:800 900;font-display:swap;src:url(/fonts/syne-latin-800-normal.woff2) format('woff2');}
+    @font-face{font-family:'DM Sans';font-style:normal;font-weight:400;font-display:swap;src:url(/fonts/dm-sans-latin-400-normal.woff2) format('woff2');}
+    @font-face{font-family:'DM Sans';font-style:normal;font-weight:500;font-display:swap;src:url(/fonts/dm-sans-latin-500-normal.woff2) format('woff2');}
+    @font-face{font-family:'DM Sans';font-style:normal;font-weight:600;font-display:swap;src:url(/fonts/dm-sans-latin-600-normal.woff2) format('woff2');}
+    @font-face{font-family:'DM Sans';font-style:normal;font-weight:700 900;font-display:swap;src:url(/fonts/dm-sans-latin-700-normal.woff2) format('woff2');}
+  </style>
+  <script src="/vendor/react-18.3.1.min.js"></script>
+  <script src="/vendor/react-dom-18.3.1.min.js"></script>
+  <script src="/vendor/supabase-2.45.4.js"></script>
+  <script>
+    if (window.supabase && window.supabase.createClient) { window.__supabaseCreateClient = window.supabase.createClient; try { delete window.supabase; } catch (e) {} }
+  </script>
   <style>
     *{box-sizing:border-box;margin:0;padding:0;}
+    :root{--zi-quick:160ms;--zi-settle:320ms;--zi-ceremony:700ms;--zi-ease:cubic-bezier(.2,.8,.2,1);--zi-spring:cubic-bezier(.34,1.3,.64,1);}
+    button{-webkit-tap-highlight-color:transparent;}
+    button:not([disabled]):active{filter:brightness(0.9);}
+    #zi-splash{position:fixed;inset:0;z-index:2147483000;background:#0a0e14;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;transition:opacity var(--zi-settle) var(--zi-ease);}
+    #zi-splash.out{opacity:0;pointer-events:none;}
+    #zi-splash .zs-mark{animation:ziSplashIn 600ms var(--zi-spring) both;}
+    #zi-splash .zs-word{font-family:'Syne',sans-serif;font-weight:900;font-size:30px;letter-spacing:-0.5px;color:#F0F4F8;margin-top:28px;animation:ziSplashUp 500ms 220ms var(--zi-ease) both;}
+    #zi-splash .zs-line{font-size:15px;color:rgba(240,244,248,0.62);margin-top:10px;animation:ziSplashUp 500ms 380ms var(--zi-ease) both;}
+    #zi-splash .zs-day{font-size:13px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#F59E0B;margin-top:26px;opacity:0;animation:ziSplashUp 500ms 900ms var(--zi-ease) both;}
+    @keyframes ziSplashIn{from{opacity:0;transform:scale(0.9)}to{opacity:1;transform:scale(1)}}
+    @keyframes ziSplashUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    .zi-offline{position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 8px);z-index:9999;padding:7px 14px;border-radius:50px;background:rgba(17,23,32,0.96);border:1px solid rgba(255,255,255,0.12);color:rgba(240,244,248,0.85);font-size:12px;font-weight:600;white-space:nowrap;animation:fadeUp var(--zi-settle) var(--zi-ease) both;}
     html,body{height:100%;background:#0a0e14;font-family:'DM Sans',sans-serif;overflow:hidden;position:fixed;width:100%;} html::before{content:'';position:fixed;inset:0;background:#0a0e14;z-index:-1;}
     input,textarea,button{font-family:'DM Sans',sans-serif;}
     input:focus,textarea:focus{outline:none;}
@@ -114,26 +139,42 @@
     @keyframes borderDraw{from{height:0}to{height:100%}}
     @keyframes wordsFadeIn{0%{opacity:0;transform:translateY(12px)}100%{opacity:1;transform:translateY(0)}}
     @keyframes bgPulse{0%{background:#0a0e14}50%{background:#1a1200}100%{background:#0a0e14}}
-    .stamp-pop{animation:stampPop 0.35s cubic-bezier(0.34,1.4,0.64,1) both;}
-    .border-draw{animation:borderDraw 0.4s ease both;}
-    .words-fade{animation:wordsFadeIn 0.5s ease both;}
-    .bg-pulse{animation:bgPulse 0.5s ease both;}
+    .stamp-pop{animation:stampPop var(--zi-settle) var(--zi-spring) both;}
+    .border-draw{animation:borderDraw var(--zi-settle) var(--zi-ease) both;}
+    .words-fade{animation:wordsFadeIn var(--zi-settle) var(--zi-ease) both;}
+    .bg-pulse{animation:bgPulse var(--zi-ceremony) var(--zi-ease) both;}
     .splash-tagline{animation:splashTagline 1.2s 0.6s ease both;}
     .splash-ring{animation:ringExpand 0.9s 0.2s cubic-bezier(0.34,1.1,0.64,1) both;}
-    .fade-up{animation:fadeUp 0.3s ease both;}
-    .pop-in{animation:popIn 0.25s ease both;}
-    .slide-up{animation:slideUp 0.35s cubic-bezier(0.34,1.2,0.64,1) both;}
-    .gold-pulse{animation:goldPulse 0.8s ease-out;}
+    .fade-up{animation:fadeUp var(--zi-settle) var(--zi-ease) both;}
+    .pop-in{animation:popIn var(--zi-quick) var(--zi-ease) both;}
+    .slide-up{animation:slideUp var(--zi-settle) var(--zi-spring) both;}
+    .gold-pulse{animation:goldPulse var(--zi-ceremony) ease-out;}
     @media (prefers-reduced-motion: reduce){*,*::before,*::after{animation-duration:0.01ms !important;animation-delay:0ms !important;animation-iteration-count:1 !important;transition-duration:0.01ms !important;scroll-behavior:auto !important}.orbit-a,.orbit-b{display:none !important}}
   </style>
 </head>
 <body>
-  <div id="root" style="background:#0a0e14;"></div>
-  <script type="module">
-    import{createClient}from'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
-    window.__supabaseCreateClient=createClient;
-    window.dispatchEvent(new Event('supabase-ready'));
+  <div id="zi-splash" role="img" aria-label="ZonedIn. Clarity beats chaos.">
+    <svg class="zs-mark" width="112" height="112" viewBox="0 0 64 64" fill="none" aria-hidden="true"><circle cx="32" cy="32" r="26" stroke="rgba(255,255,255,0.12)" stroke-width="3"/><circle cx="32" cy="32" r="16" stroke="#00C2B2" stroke-width="5.5"/><circle cx="32" cy="32" r="7" fill="#111720"/><text x="32" y="36" text-anchor="middle" font-size="11" font-weight="900" fill="#F0F4F8" style="font-family:'Syne',sans-serif">Z</text></svg>
+    <div class="zs-word">ZonedIn</div>
+    <div class="zs-line">Clarity beats chaos.</div>
+    <div class="zs-day" id="zi-splash-day" hidden>A new day. Choose your three.</div>
+  </div>
+  <script>
+    // Fixed-length brand moment: ~2s on the first open of the day, ~1.3s otherwise. Never stretched by the network.
+    (function () {
+      var d = new Date(), key = d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(), last = null;
+      try { last = localStorage.getItem('zi_splash_day'); localStorage.setItem('zi_splash_day', key); } catch (e) {}
+      var firstToday = last !== key, ms = firstToday ? 2000 : 1300, el = document.getElementById('zi-splash');
+      if (firstToday) document.getElementById('zi-splash-day').hidden = false;
+      window.__ziSplashFirstToday = firstToday;
+      window.__ziSplashDone = new Promise(function (res) {
+        setTimeout(function () { el.classList.add('out'); setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); res(); }, 330); }, ms);
+      });
+      // Every tap gets a light haptic where the device supports it (Android). iOS ignores navigator.vibrate.
+      document.addEventListener('click', function (e) { var b = e.target && e.target.closest && e.target.closest('button:not([disabled])'); if (b && navigator.vibrate) { try { navigator.vibrate(6); } catch (_) {} } }, { passive: true });
+    })();
   </script>
+  <div id="root" style="background:#0a0e14;"></div>
   <script>
 var __defProp = Object.defineProperty;
 var __defProps = Object.defineProperties;
@@ -420,7 +461,7 @@ const IdentityNameScreen = ({ kept, initialName, onSave }) => {
     const id = identity.trim();
     onSave({ identity: id, name: name.trim(), source: OB_DEFAULT_IDENTITIES.includes(id) ? "default" : "custom" });
   };
-  const inputStyle = (key) => ({ width: "100%", padding: "14px 16px", borderRadius: 14, border: `2px solid ${focus === key ? T.teal : T.border}`, background: T.card, color: T.text, fontSize: 15, boxSizing: "border-box", outline: "none", transition: "all 0.2s", fontFamily: "'DM Sans',sans-serif" });
+  const inputStyle = (key) => ({ width: "100%", padding: "14px 16px", borderRadius: 14, border: `2px solid ${focus === key ? T.teal : T.border}`, background: T.card, color: T.text, fontSize: 15, boxSizing: "border-box", outline: "none", transition: "all var(--zi-quick) var(--zi-ease)", fontFamily: "'DM Sans',sans-serif" });
   return ce("div", { style: { position: "fixed", inset: 0, zIndex: 9998, background: T.bg, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "28px 24px", overflowY: "auto" } },
     ce("div", { className: "fade-up", style: { maxWidth: 380, width: "100%" } },
       ce("div", { style: { display: "flex", justifyContent: "center", marginBottom: 14, color: T.teal } }, kept ? ce(CheckMark, { size: 34, color: T.teal }) : ce(TierMark, { tier: "gold", size: 34 })),
@@ -478,10 +519,49 @@ const playGoldSound = () => {
   }
 };
 const card = (e = {}) => __spreadValues({ background: T.card, borderRadius: 20, border: `1px solid ${T.border}`, padding: "18px 20px" }, e);
-const btn = (e = {}) => __spreadValues({ border: "none", borderRadius: 50, cursor: "pointer", fontFamily: "'DM Sans',sans-serif", fontWeight: 700, transition: "all 0.2s" }, e);
+const btn = (e = {}) => __spreadValues({ border: "none", borderRadius: 50, cursor: "pointer", fontFamily: "'DM Sans',sans-serif", fontWeight: 700, transition: "all var(--zi-quick) var(--zi-ease)" }, e);
 const btnPrimary = (e = {}) => btn(__spreadValues({ background: `linear-gradient(135deg,${T.teal},${T.teal2})`, color: "#0a0e14", padding: "14px 28px", fontSize: 15, boxShadow: `0 6px 24px rgba(0,194,178,0.25)` }, e));
 const btnGold = (e = {}) => btn(__spreadValues({ background: `linear-gradient(135deg,${T.gold},${T.gold2})`, color: "#1a1200", padding: "16px 28px", fontSize: 16, fontWeight: 900, boxShadow: `0 8px 28px rgba(245,158,11,0.35)` }, e));
 const ZonedInMark = ({ size = 40 }) => /* @__PURE__ */ React.createElement("svg", { width: size, height: size, viewBox: "0 0 64 64", fill: "none" }, /* @__PURE__ */ React.createElement("circle", { cx: "32", cy: "32", r: "26", stroke: T.border2, strokeWidth: "3" }), /* @__PURE__ */ React.createElement("circle", { cx: "32", cy: "32", r: "16", stroke: T.teal, strokeWidth: "5.5" }), /* @__PURE__ */ React.createElement("circle", { cx: "32", cy: "32", r: "7", fill: T.card }), /* @__PURE__ */ React.createElement("text", { x: "32", y: "36", textAnchor: "middle", fontSize: "11", fontWeight: "900", fill: T.text, style: { fontFamily: "'Syne',sans-serif" } }, "Z"));
+// ── Motion + haptics (v51): three timings used everywhere ──
+const MOTION = { quick: 160, settle: 320, ceremony: 700 };
+const HAPTIC = { tap: 6, settle: 14, success: [12, 50, 24], ceremony: [18, 70, 28, 70, 44] };
+const haptic = (k) => { try { if (navigator.vibrate) navigator.vibrate(HAPTIC[k] || 6); } catch (_) {} };
+// ── Offline (v51): last-known data on the phone + a write queue that syncs when back online ──
+const OUTBOX_KEY = "zi_outbox";
+const isNetErr = (e) => !!e && !e.code && /fetch|network|load failed|offline/i.test(String(e.message || e));
+const outboxLen = () => { try { return (JSON.parse(localStorage.getItem(OUTBOX_KEY) || "[]") || []).length; } catch (_) { return 0; } };
+const outboxPush = (job) => { let q = []; try { q = JSON.parse(localStorage.getItem(OUTBOX_KEY) || "[]") || []; } catch (_) {} q.push(job); try { localStorage.setItem(OUTBOX_KEY, JSON.stringify(q.slice(-300))); } catch (_) {} window.dispatchEvent(new Event("zi-outbox")); };
+const runDbJob = (j) => j.op === "insert" ? supabase.from(j.t).insert(j.v) : supabase.from(j.t).upsert(j.v, j.o || undefined);
+const dbWrite = async (j) => {
+  if (navigator.onLine === false) { outboxPush(j); return { error: null, queued: true }; }
+  let r;
+  try { r = await runDbJob(j); } catch (e) { r = { error: e }; }
+  if (r && r.error && isNetErr(r.error)) { outboxPush(j); return { error: null, queued: true }; }
+  return r || { error: null };
+};
+let outboxFlushing = false;
+const flushOutbox = async () => {
+  if (outboxFlushing || navigator.onLine === false) return;
+  outboxFlushing = true;
+  try {
+    let q = []; try { q = JSON.parse(localStorage.getItem(OUTBOX_KEY) || "[]") || []; } catch (_) {}
+    while (q.length) {
+      let r; try { r = await runDbJob(q[0]); } catch (e) { r = { error: e }; }
+      if (r && r.error && isNetErr(r.error)) break;
+      if (r && r.error) console.warn("outbox drop:", r.error.message);
+      q = q.slice(1); try { localStorage.setItem(OUTBOX_KEY, JSON.stringify(q)); } catch (_) {}
+    }
+  } finally { outboxFlushing = false; window.dispatchEvent(new Event("zi-outbox")); }
+};
+const OrbitLoader = ({ caption }) => RC("div", { style: { minHeight: "100vh", background: T.bg, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24 } },
+  RC("div", { style: { textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center" } },
+    RC("div", { style: { position: "relative", width: 180, height: 180, margin: "0 auto" } },
+      RC("div", { style: { position: "absolute", inset: -16, borderRadius: "50%", background: "radial-gradient(circle, rgba(0,194,178,0.18) 0%, rgba(0,194,178,0.04) 50%, transparent 70%)" } }),
+      RC("div", { style: { position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" } }, RC(ZonedInMark, { size: 144 })),
+      RC("div", { className: "orbit-a", style: { position: "absolute", top: "50%", left: "50%", marginTop: -6, marginLeft: -6, width: 12, height: 12, borderRadius: "50%", background: T.teal, boxShadow: `0 0 12px ${T.teal}, 0 0 24px rgba(0,194,178,0.4)` } }),
+      RC("div", { className: "orbit-b", style: { position: "absolute", top: "50%", left: "50%", marginTop: -5, marginLeft: -5, width: 10, height: 10, borderRadius: "50%", background: T.gold, boxShadow: `0 0 10px ${T.gold}, 0 0 20px rgba(245,158,11,0.4)` } })),
+    RC("div", { style: { marginTop: 32, minHeight: 20, fontSize: 13, color: T.sub, lineHeight: 1.6 } }, caption || "")));
 const AuthScreen = () => {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
@@ -1043,7 +1123,7 @@ const showToast = (msg) => {
   } catch (e) {}
 };
 const dlLabel = (txt, color, extra) => RC("div", { style: __spreadValues({ fontSize: 11, fontWeight: 700, letterSpacing: 1.1, textTransform: "uppercase", color: color || T.sub }, extra || {}) }, txt);
-const dlInput = (focused, color) => ({ width: "100%", padding: "11px 13px", borderRadius: 12, border: `1.5px solid ${focused ? color : T.border}`, background: T.bg, color: T.text, fontSize: 14, boxSizing: "border-box", outline: "none", transition: "border-color 0.15s", fontFamily: "'DM Sans',sans-serif" });
+const dlInput = (focused, color) => ({ width: "100%", padding: "11px 13px", borderRadius: 12, border: `1.5px solid ${focused ? color : T.border}`, background: T.bg, color: T.text, fontSize: 14, boxSizing: "border-box", outline: "none", transition: "border-color var(--zi-quick) var(--zi-ease)", fontFamily: "'DM Sans',sans-serif" });
 
 // ── HOLD RING — 2s press-and-hold (pointer, Space or Enter). Tap fallback after two short presses. ──
 const HoldRing = ({ onCommit, holdMs, color }) => {
@@ -1076,7 +1156,7 @@ const HoldRing = ({ onCommit, holdMs, color }) => {
     setProgress(100);
     setPhase("done");
     chime();
-    try { if (navigator.vibrate) navigator.vibrate(40); } catch (_) {}
+    haptic("ceremony");
     setTimeout(() => onCommit(), 650);
   };
   const start = (e) => {
@@ -1107,7 +1187,7 @@ const HoldRing = ({ onCommit, holdMs, color }) => {
       onKeyUp: (e) => { if (isKey(e)) { e.preventDefault(); cancel(); } },
       onBlur: cancel,
       onContextMenu: (e) => e.preventDefault(),
-      style: { position: "relative", width: S, height: S, borderRadius: "50%", border: "none", padding: 0, cursor: "pointer", background: phase === "done" ? `${col}26` : phase === "holding" ? `${col}14` : "rgba(255,255,255,0.03)", userSelect: "none", WebkitUserSelect: "none", touchAction: "none", WebkitTouchCallout: "none", WebkitTapHighlightColor: "transparent", transition: "background 0.2s" }
+      style: { position: "relative", width: S, height: S, borderRadius: "50%", border: "none", padding: 0, cursor: "pointer", background: phase === "done" ? `${col}26` : phase === "holding" ? `${col}14` : "rgba(255,255,255,0.03)", userSelect: "none", WebkitUserSelect: "none", touchAction: "none", WebkitTouchCallout: "none", WebkitTapHighlightColor: "transparent", transition: "background var(--zi-quick) var(--zi-ease)" }
     },
       RC("svg", { width: S, height: S, viewBox: `0 0 ${S} ${S}`, style: { position: "absolute", inset: 0, transform: "rotate(-90deg)", pointerEvents: "none" } },
         RC("circle", { cx: S / 2, cy: S / 2, r, fill: "none", stroke: "rgba(255,255,255,0.09)", strokeWidth: 5 }),
@@ -1282,7 +1362,7 @@ const VerdictBlock = ({ day, isPast, big }) => {
   }, [c.kept, animate]);
   const lineDelay = (i) => animate ? { animationDelay: `${0.25 + c.kept * 0.26 + i * 0.12}s` } : {};
   return RC("div", { style: { textAlign: "center" } },
-    RC("div", { "aria-label": `${c.kept} of ${c.committed} kept`, style: { fontFamily: "'Syne',sans-serif", fontSize: big ? 76 : 46, fontWeight: 900, color: shown === c.committed && c.committed ? T.teal : T.text, letterSpacing: -3, lineHeight: 1, transition: "color 0.3s" } }, RC("span", { className: animate && shown ? "stamp-pop" : "", key: shown, style: { display: "inline-block" } }, shown), RC("span", { style: { color: T.sub, fontSize: big ? 44 : 28, letterSpacing: -1 } }, " / ", c.committed)),
+    RC("div", { "aria-label": `${c.kept} of ${c.committed} kept`, style: { fontFamily: "'Syne',sans-serif", fontSize: big ? 76 : 46, fontWeight: 900, color: shown === c.committed && c.committed ? T.teal : T.text, letterSpacing: -3, lineHeight: 1, transition: "color var(--zi-settle) var(--zi-ease)" } }, RC("span", { className: animate && shown ? "stamp-pop" : "", key: shown, style: { display: "inline-block" } }, shown), RC("span", { style: { color: T.sub, fontSize: big ? 44 : 28, letterSpacing: -1 } }, " / ", c.committed)),
     RC("div", { className: animate ? "words-fade" : "", style: __spreadValues({ fontSize: big ? 17 : 14, fontWeight: 700, color: T.text, marginTop: 10, marginBottom: 16 }, animate ? { animationDelay: `${0.2 + c.kept * 0.26}s` } : {}) }, verdictLine(c.kept, c.committed)),
     RC("div", { style: { display: "flex", flexDirection: "column", gap: 6, textAlign: "left" } }, tiers.map((t, i) => {
       const kept = day.outcomes[t] === "kept";
@@ -1391,7 +1471,7 @@ const CloseTheDay = ({ day, weekRecord, summaryOnly, firstTime, onAnswer, onFini
   const shell = (kids) => RC("div", { style: { position: "fixed", inset: 0, zIndex: 9999, background: T.bg, display: "flex", flexDirection: "column", padding: "calc(env(safe-area-inset-top,0px) + 14px) 22px calc(env(safe-area-inset-bottom,0px) + 18px)", overflowY: "auto" } },
     RC("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", minHeight: 32, marginBottom: 8 } },
       RC("button", { onClick: onDismiss, "aria-label": "Close", style: { fontSize: 14, color: T.sub, background: "none", border: "none", cursor: "pointer", padding: "0 10px 0 0", minHeight: 44, fontFamily: "'DM Sans',sans-serif" } }, summaryOnly ? "Done" : "← Not yet"),
-      summaryOnly ? null : RC("div", { style: { display: "flex", gap: 6 } }, [1, 2, 3, 4].map((i) => RC("div", { key: i, style: { width: i === screen ? 18 : 6, height: 6, borderRadius: 99, background: i <= screen ? T.teal : "rgba(255,255,255,0.1)", transition: "all 0.3s" } }))),
+      summaryOnly ? null : RC("div", { style: { display: "flex", gap: 6 } }, [1, 2, 3, 4].map((i) => RC("div", { key: i, style: { width: i === screen ? 18 : 6, height: 6, borderRadius: 99, background: i <= screen ? T.teal : "rgba(255,255,255,0.1)", transition: "all var(--zi-settle) var(--zi-ease)" } }))),
       RC("div", { style: { width: 50 } })),
     RC("div", { key: screen, className: "fade-up", style: { flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", maxWidth: 400, width: "100%", margin: "0 auto" } }, kids));
   const title = (t, s) => RC(React.Fragment, null,
@@ -1498,7 +1578,7 @@ const TopBar = ({ tab, greetMsg, userName, identityStatement, dateStr, streak, s
     else { const c = dayCounts(day, true); sub = `Day closed · ${c.kept} of ${c.committed} kept`; }
   }
   const icon = { width: 24, height: 24, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": true };
-  return ce("header", { style: { flexShrink: 0, position: "relative", zIndex: 50, background: T.bg, paddingTop: "calc(env(safe-area-inset-top, 0px) + 10px)", paddingLeft: 20, paddingRight: 16, paddingBottom: 10, borderBottom: `1px solid ${scrolled ? T.border : "transparent"}`, transition: "border-color 0.2s ease", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 } },
+  return ce("header", { style: { flexShrink: 0, position: "relative", zIndex: 50, background: T.bg, paddingTop: "calc(env(safe-area-inset-top, 0px) + 10px)", paddingLeft: 20, paddingRight: 16, paddingBottom: 10, borderBottom: `1px solid ${scrolled ? T.border : "transparent"}`, transition: "border-color var(--zi-quick) var(--zi-ease)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 } },
     ce("div", { style: { minWidth: 0, flex: 1 } },
       ce("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: "clamp(17px, 5.3vw, 21px)", fontWeight: 700, color: T.text, letterSpacing: -0.3, lineHeight: 1.25, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" } }, title),
       sub ? ce("div", { style: { fontSize: 12, marginTop: 3, color: subTeal ? T.teal : T.sub, fontWeight: subTeal ? 600 : 400, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, sub) : null),
@@ -1584,7 +1664,8 @@ const insightCardEl = (ins, latest) => RC("div", { key: (ins.date || "") + (late
   RC("div", { style: { padding: "10px 16px", background: latest ? "rgba(0,194,178,0.07)" : "rgba(255,255,255,0.02)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 } },
     RC("span", { style: { fontSize: 12, fontWeight: 700, color: latest ? T.teal : T.sub, letterSpacing: 0.3 } }, latest ? "Tonight’s insight" : "Insight · " + fmtDay(ins.date, { weekday: "short", day: "numeric", month: "short" })),
     RC("span", { style: { display: "flex", gap: 6, color: T.sub } }, ins.mood ? RC(MoodIcon, { val: ins.mood, size: 16 }) : null, ins.energy ? RC(EnergyIcon, { val: ins.energy, size: 16 }) : null)),
-  RC("div", { style: { padding: "12px 16px", fontSize: 13, lineHeight: 1.8, color: latest ? "rgba(240,244,248,0.9)" : T.sub, whiteSpace: "pre-wrap" } }, ins.text));
+  RC("div", { style: { padding: "12px 16px", fontSize: 13, lineHeight: 1.8, color: latest ? "rgba(240,244,248,0.9)" : T.sub, whiteSpace: "pre-wrap" } }, ins.text),
+  latest ? RC("div", { style: { padding: "0 16px 12px", fontSize: 11, color: T.sub2, lineHeight: 1.5 } }, "Written by Claude, Anthropic\u2019s AI, from your commitments and check-ins. Not used to train AI models. ", RC("a", { href: "/privacy.html", style: { color: T.teal, textDecoration: "none" } }, "How we use AI")) : null);
 
 const RecordDay = ({ date, row, insight }) => {
   const [open, setOpen] = useState(false);
@@ -1596,7 +1677,7 @@ const RecordDay = ({ date, row, insight }) => {
       RC("span", { style: { flex: 1, minWidth: 0 } },
         RC("span", { style: { display: "block", fontSize: 14, fontWeight: 700 } }, fmtDay(date, { weekday: "short", day: "numeric", month: "short" })),
         RC("span", { style: { display: "block", fontSize: 12, color: T.sub, marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, row.gold || "")),
-      RC("span", { "aria-hidden": true, style: { color: T.sub, fontSize: 14, transform: open ? "rotate(90deg)" : "none", transition: "transform 0.15s" } }, "›")),
+      RC("span", { "aria-hidden": true, style: { color: T.sub, fontSize: 14, transform: open ? "rotate(90deg)" : "none", transition: "transform var(--zi-quick) var(--zi-ease)" } }, "›")),
     open ? RC("div", { className: "fade-up", style: { padding: "4px 14px 14px" } },
       RC("div", { style: { fontSize: 13, fontWeight: 700, color: T.text, marginBottom: 10 } }, verdictLine(c.kept, c.committed)),
       dayCommittedTiers(row).map((t) => {
@@ -1663,7 +1744,7 @@ const ProgressTab = ({ onShareWeek, morningPushOn, onMorningPush, morningTime, o
       React.createElement("span", { style: { display: "inline-flex", alignItems: "center", gap: 4 } }, React.createElement(ShieldMark, { size: 14 }), "Shield ", React.createElement("b", { style: { color: T.text } }, shields || 0), "/1")),
     React.createElement("div", { style: { height: 3, borderRadius: 99, background: "rgba(255,255,255,0.06)", overflow: "hidden", margin: "12px 0 6px" } }, React.createElement("div", { style: { height: "100%", borderRadius: 99, width: `${milestonePct}%`, background: T.gold, transition: "width 0.6s ease" } })),
     React.createElement("div", { style: { fontSize: 12, color: T.sub } }, streak === 0 ? "Keep today\u2019s Gold to start counting" : daysLeft === 0 ? `Day ${nextMilestone} \u2014 milestone reached` : `${daysLeft} more ${daysLeft === 1 ? "day" : "days"} to your ${nextMilestone}-day milestone`)),
-  React.createElement("button", { onClick: () => setMoreStats((v) => !v), "aria-expanded": moreStats, style: btn({ display: "flex", alignItems: "center", justifyContent: "space-between", width: "calc(100% - 32px)", margin: "0 16px 12px", minHeight: 44, padding: "0 16px", borderRadius: 14, background: "transparent", border: `1px solid ${T.border}`, color: T.sub, fontSize: 13 }) }, "More stats", React.createElement("span", { "aria-hidden": true, style: { transform: moreStats ? "rotate(90deg)" : "none", transition: "transform 0.15s" } }, "›")),
+  React.createElement("button", { onClick: () => setMoreStats((v) => !v), "aria-expanded": moreStats, style: btn({ display: "flex", alignItems: "center", justifyContent: "space-between", width: "calc(100% - 32px)", margin: "0 16px 12px", minHeight: 44, padding: "0 16px", borderRadius: 14, background: "transparent", border: `1px solid ${T.border}`, color: T.sub, fontSize: 13 }) }, "More stats", React.createElement("span", { "aria-hidden": true, style: { transform: moreStats ? "rotate(90deg)" : "none", transition: "transform var(--zi-quick) var(--zi-ease)" } }, "›")),
   moreStats && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, margin: "0 16px 12px" } },
     /* @__PURE__ */ React.createElement("div", { style: { flex: 1, ...card(), textAlign: "center", padding: "14px 10px" } },
       /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 28, fontWeight: 900, color: T.teal, letterSpacing: -1 } }, tierHistory ? tierHistory.length : 0),
@@ -1691,8 +1772,8 @@ const ProgressTab = ({ onShareWeek, morningPushOn, onMorningPush, morningTime, o
       React.createElement("div", { style: { padding: "14px 16px", borderRadius: 14, background: T.card, border: `1px solid ${T.border}`, marginBottom: 16 } },
         React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 } },
           React.createElement("div", null, React.createElement("div", { style: { fontSize: 14, fontWeight: 700, color: T.text } }, "Tomorrow\u2019s Gold, each morning"), React.createElement("div", { style: { fontSize: 12, color: T.sub, marginTop: 2 } }, standalone || !isIOS() ? "One notification. Only if you haven\u2019t committed yet." : "Add ZonedIn to your Home Screen to turn this on.")),
-          React.createElement("button", { role: "switch", "aria-checked": !!morningPushOn, "aria-label": "Morning reminder", onClick: () => onMorningPush(!morningPushOn), style: { width: 46, height: 28, borderRadius: 14, border: "none", cursor: "pointer", position: "relative", flexShrink: 0, background: morningPushOn ? T.teal : "rgba(255,255,255,0.15)", transition: "background 0.2s", padding: 0 } },
-            React.createElement("span", { style: { position: "absolute", top: 3, left: morningPushOn ? 21 : 3, width: 22, height: 22, borderRadius: 11, background: "#fff", transition: "left 0.2s" } }))),
+          React.createElement("button", { role: "switch", "aria-checked": !!morningPushOn, "aria-label": "Morning reminder", onClick: () => onMorningPush(!morningPushOn), style: { width: 46, height: 28, borderRadius: 14, border: "none", cursor: "pointer", position: "relative", flexShrink: 0, background: morningPushOn ? T.teal : "rgba(255,255,255,0.15)", transition: "background var(--zi-quick) var(--zi-ease)", padding: 0 } },
+            React.createElement("span", { style: { position: "absolute", top: 3, left: morningPushOn ? 21 : 3, width: 22, height: 22, borderRadius: 11, background: "#fff", transition: "left var(--zi-quick) var(--zi-ease)" } }))),
         React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 12, opacity: morningPushOn ? 1 : 0.5 } },
           React.createElement("span", { style: { fontSize: 13, color: T.sub } }, "Send at"),
           React.createElement("input", { type: "time", "aria-label": "Morning reminder time", value: morningTime || "07:30", onChange: (e) => onMorningTime(e.target.value), style: { background: T.bg, color: T.text, border: `1px solid ${T.border2}`, borderRadius: 10, padding: "7px 10px", fontSize: 14, colorScheme: "dark", minHeight: 40 } }))),
@@ -1700,8 +1781,8 @@ const ProgressTab = ({ onShareWeek, morningPushOn, onMorningPush, morningTime, o
       React.createElement("div", { style: { padding: "14px 16px", borderRadius: 14, background: T.card, border: `1px solid ${T.border}` } },
         React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 } },
           React.createElement("div", null, React.createElement("div", { style: { fontSize: 14, fontWeight: 700, color: T.text } }, "\u201CClose your day\u201D email"), React.createElement("div", { style: { fontSize: 11, color: T.sub, marginTop: 2 } }, "Only on days you committed and haven\u2019t closed.")),
-          React.createElement("button", { role: "switch", "aria-checked": !!emailOptIn, onClick: () => onEmailOptIn(!emailOptIn), style: { width: 46, height: 28, borderRadius: 14, border: "none", cursor: "pointer", position: "relative", flexShrink: 0, background: emailOptIn ? T.teal : "rgba(255,255,255,0.15)", transition: "background 0.2s" } },
-            React.createElement("span", { style: { position: "absolute", top: 3, left: emailOptIn ? 21 : 3, width: 22, height: 22, borderRadius: 11, background: "#fff", transition: "left 0.2s" } }))),
+          React.createElement("button", { role: "switch", "aria-checked": !!emailOptIn, onClick: () => onEmailOptIn(!emailOptIn), style: { width: 46, height: 28, borderRadius: 14, border: "none", cursor: "pointer", position: "relative", flexShrink: 0, background: emailOptIn ? T.teal : "rgba(255,255,255,0.15)", transition: "background var(--zi-quick) var(--zi-ease)" } },
+            React.createElement("span", { style: { position: "absolute", top: 3, left: emailOptIn ? 21 : 3, width: 22, height: 22, borderRadius: 11, background: "#fff", transition: "left var(--zi-quick) var(--zi-ease)" } }))),
         React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 12, opacity: emailOptIn ? 1 : 0.4 } },
           React.createElement("span", { style: { fontSize: 13, color: T.sub } }, "Send at"),
           React.createElement("input", { type: "time", value: reminderTime || "20:30", disabled: !emailOptIn, onChange: (e) => onReminderTime(e.target.value), style: { background: T.bg, color: T.text, border: `1px solid ${T.border2}`, borderRadius: 10, padding: "7px 10px", fontSize: 14, colorScheme: "dark" } })),
@@ -1710,6 +1791,24 @@ const ProgressTab = ({ onShareWeek, morningPushOn, onMorningPush, morningTime, o
           userTz !== deviceTz() ? React.createElement("button", { onClick: onUseDeviceTz, style: btn({ background: "none", color: T.teal, fontSize: 12, padding: "0 4px", minHeight: 44 }) }, "Use ", deviceTz()) : null))),
     showSettings && /* @__PURE__ */ React.createElement("div", { className: "fade-up", style: { fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: T.sub, marginBottom: 10 } }, "Account"),
     showSettings && /* @__PURE__ */ React.createElement("button", { onClick: () => supabase.auth.signOut(), style: btn({ width: "100%", padding: "11px", borderRadius: 12, border: `1px solid ${T.border}`, background: "transparent", color: T.sub, fontSize: 13, marginBottom: 8 }) }, "Sign out"),
+    showSettings && /* @__PURE__ */ React.createElement("button", { onClick: async () => {
+      try {
+        const uid = (await supabase.auth.getUser()).data.user?.id;
+        if (!uid) return;
+        const [p, z, se, ins] = await Promise.all([
+          supabase.from("profiles").select("*").eq("id", uid).single(),
+          supabase.from("zones").select("*").eq("user_id", uid).order("date", { ascending: true }),
+          supabase.from("sessions").select("*").eq("user_id", uid).order("created_at", { ascending: true }),
+          supabase.from("insights").select("*").eq("user_id", uid).order("created_at", { ascending: true })
+        ]);
+        const out = { exported_at: new Date().toISOString(), app: "ZonedIn", profile: p.data || null, days: z.data || [], sessions: se.data || [], insights: ins.data || [] };
+        const blob = new Blob([JSON.stringify(out, null, 2)], { type: "application/json" });
+        const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "zonedin-data-" + new Date().toISOString().slice(0, 10) + ".json";
+        document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+        if (window.zi) window.zi.track("data_exported", {});
+      } catch (e) { alert("Couldn\u2019t export right now. Check your connection and try again."); }
+    }, style: btn({ width: "100%", padding: "11px", borderRadius: 12, border: `1px solid ${T.border}`, background: "transparent", color: T.text, fontSize: 13, marginBottom: 8 }) }, "Download my data"),
+    showSettings && /* @__PURE__ */ React.createElement("a", { href: "/privacy.html", style: { display: "block", textAlign: "center", padding: "11px", borderRadius: 12, border: `1px solid ${T.border}`, color: T.sub, fontSize: 13, textDecoration: "none", marginBottom: 8 } }, "Privacy & how we use AI"),
     showSettings && /* @__PURE__ */ React.createElement("button", { onClick: async () => {
       if(!(window.confirm("Delete your account and all data permanently? This cannot be undone.") && window.confirm("Are you sure? All your sessions, insights and progress will be lost for good."))) return;
       try {
@@ -1720,6 +1819,12 @@ const ProgressTab = ({ onShareWeek, morningPushOn, onMorningPush, morningTime, o
           await supabase.from("insights").delete().eq("user_id", uid);
           await supabase.from("push_subscriptions").delete().eq("user_id", uid);
           await supabase.from("profiles").delete().eq("id", uid);
+          // v51: remove the sign-in itself too (server-side, needs the service key)
+          try {
+            const tok = (await supabase.auth.getSession()).data.session?.access_token;
+            if (tok) await fetch("/api/delete-account", { method: "POST", headers: { Authorization: "Bearer " + tok } });
+          } catch (_) {}
+          try { localStorage.removeItem("zi_cache_" + uid); localStorage.removeItem(OUTBOX_KEY); } catch (_) {}
         }
         await supabase.auth.signOut();
       } catch(e) { alert("Error deleting account. Please contact support."); }
@@ -1756,7 +1861,7 @@ const PMFModal = ({ userName, streak, sessionCount, onAnswer }) => {
                 style: btn({ width: "100%", padding: "16px 20px", borderRadius: 16, textAlign: "left", display: "flex", alignItems: "center", gap: 12,
                   border: `1.5px solid ${sel ? o.color : T.border}`,
                   background: sel ? o.color+'18' : T.card,
-                  transform: sel ? "scale(0.98)" : "scale(1)", transition: "all 0.2s"
+                  transform: sel ? "scale(0.98)" : "scale(1)", transition: "all var(--zi-quick) var(--zi-ease)"
                 })},
                 /* @__PURE__ */ React.createElement("span", { style: { fontSize: 15, fontWeight: 700, color: sel ? o.color : T.text, flex: 1 } }, o.label),
                 sel && /* @__PURE__ */ React.createElement("span", { style: { fontSize: 14, color: o.color } }, "\u2713")
@@ -1783,7 +1888,15 @@ const ZonedInMVP = () => {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   // Full splash on first launch only; returning users get straight in.
-  const SPLASH_MIN_MS = LS.get("zi_splash_seen", false) ? 500 : (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 1200 : 3800);
+  // v51: the brand splash is static HTML with a fixed length; this loader always follows it briefly.
+  const SPLASH_MIN_MS = 0;
+  const LOADER_MIN_MS = 700;
+  const [introHold, setIntroHold] = useState(true);
+  useEffect(() => {
+    let t;
+    (window.__ziSplashDone || Promise.resolve()).then(() => { t = setTimeout(() => setIntroHold(false), LOADER_MIN_MS); });
+    return () => clearTimeout(t);
+  }, []);
   useEffect(() => {
     const splashStart = Date.now();
     const finishLoading = (u) => {
@@ -1811,6 +1924,9 @@ const ZonedInMVP = () => {
 
   const [tab, setTab] = useState("plan");
   const [dbLoading, setDbLoading] = useState(false);
+  const [offlineMode, setOfflineMode] = useState(typeof navigator !== "undefined" && navigator.onLine === false);
+  const [offlineEmpty, setOfflineEmpty] = useState(false);
+  const [queued, setQueued] = useState(outboxLen());
   const [today, setToday] = useState(() => localDay());
   const todayRef = useRef(today);
   // reward layer (Progress)
@@ -1895,13 +2011,13 @@ const ZonedInMVP = () => {
   // ── persistence ──
   const saveProfile = useCallback(async (u) => {
     if (!user) return;
-    const { error } = await supabase.from("profiles").upsert(__spreadValues({ id: user.id }, u));
+    const { error } = await dbWrite({ t: "profiles", op: "upsert", v: __spreadValues({ id: user.id }, u) });
     if (error) console.warn("profile save:", error.message);
   }, [user]);
   const saveDayRow = useCallback(async (date, partial) => {
     if (!user) return;
     setSavingZones(true);
-    const { error } = await supabase.from("zones").upsert(__spreadValues({ user_id: user.id, date }, partial), { onConflict: "user_id,date" });
+    const { error } = await dbWrite({ t: "zones", op: "upsert", v: __spreadValues({ user_id: user.id, date }, partial), o: { onConflict: "user_id,date" } });
     if (error) console.warn("zones save:", error.message);
     setSavingZones(false);
   }, [user]);
@@ -1919,7 +2035,7 @@ const ZonedInMVP = () => {
   };
   const saveSessionToDB = useCallback(async (s) => {
     if (!user) return;
-    const { error } = await supabase.from("sessions").insert({ user_id: user.id, zone_label: s.zone, zone_emoji: s.emoji, zone_key: s.zoneKey, minutes: s.minutes, completed: !!s.completed, task_completed: !!s.taskCompleted, date: s.date, commitment_statement: s.doneLooks || null, started_at: s.startedAt || null, difficulty: s.difficulty || null, confidence_before: s.confidence || null, reckoned_without_session: !!s.reckonedWithoutSession });
+    const { error } = await dbWrite({ t: "sessions", op: "insert", v: { user_id: user.id, zone_label: s.zone, zone_emoji: s.emoji, zone_key: s.zoneKey, minutes: s.minutes, completed: !!s.completed, task_completed: !!s.taskCompleted, date: s.date, commitment_statement: s.doneLooks || null, started_at: s.startedAt || null, difficulty: s.difficulty || null, confidence_before: s.confidence || null, reckoned_without_session: !!s.reckonedWithoutSession } });
     if (error) console.warn("session save:", error.message);
   }, [user]);
   const updateLastSession = useCallback(async (difficulty) => {
@@ -1929,7 +2045,7 @@ const ZonedInMVP = () => {
   }, [user]);
   const saveInsightToDB = useCallback(async (i) => {
     if (!user) return;
-    await supabase.from("insights").insert({ user_id: user.id, date: i.date, text: i.text, energy: i.energy, mood: i.mood });
+    await dbWrite({ t: "insights", op: "insert", v: { user_id: user.id, date: i.date, text: i.text, energy: i.energy, mood: i.mood } });
   }, [user]);
   const applyStreak = (st) => {
     if (!st.changed) return;
@@ -1944,7 +2060,30 @@ const ZonedInMVP = () => {
   const loadAllData = async (silent) => {
     if (!silent) setDbLoading(true);
     try {
-      const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+      // v51: fetch everything at once; if the network fails, open from the copy kept on this phone.
+      const cacheKey = "zi_cache_" + user.id;
+      let profile = null, zrowsAll = null, sessionsAll = null, insightsAll = null, offline = navigator.onLine === false;
+      if (!offline) {
+        await flushOutbox();
+        const since = addDays(localDay(), -43);
+        const res = await Promise.all([
+          supabase.from("profiles").select("*").eq("id", user.id).single(),
+          supabase.from("zones").select("*").eq("user_id", user.id).gte("date", since).order("date", { ascending: true }),
+          supabase.from("sessions").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(60),
+          supabase.from("insights").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(7)
+        ].map((p) => Promise.resolve(p).catch((e) => ({ error: e }))));
+        if (res.some((r) => r && r.error && isNetErr(r.error))) offline = true;
+        else {
+          [profile, zrowsAll, sessionsAll, insightsAll] = res.map((r) => (r ? r.data : null) || null);
+          try { localStorage.setItem(cacheKey, JSON.stringify({ at: Date.now(), profile, zrows: zrowsAll, sessions: sessionsAll, insights: insightsAll })); } catch (_) {}
+        }
+      }
+      if (offline) {
+        let c = null; try { c = JSON.parse(localStorage.getItem(cacheKey) || "null"); } catch (_) {}
+        if (!c) { setOfflineMode(true); setOfflineEmpty(true); return; }
+        profile = c.profile; zrowsAll = c.zrows; sessionsAll = c.sessions; insightsAll = c.insights;
+      }
+      setOfflineMode(offline); setOfflineEmpty(false);
       const tz = (profile && profile.user_timezone) || deviceTz();
       setUserTz(tz); setUserTzState(USER_TZ);
       if (profile && !profile.user_timezone) saveProfile({ user_timezone: tz });
@@ -1971,7 +2110,7 @@ const ZonedInMVP = () => {
         }
       }
       // zones: last 6 weeks for the weekly record, Days won and late reckoning
-      const { data: zrows } = await supabase.from("zones").select("*").eq("user_id", user.id).gte("date", addDays(t, -42)).order("date", { ascending: true });
+      const zrows = zrowsAll;
       const map = {};
       (zrows || []).forEach((z) => { map[z.date] = rowToDay(z); });
       const nowIso = new Date().toISOString();
@@ -2028,9 +2167,9 @@ const ZonedInMVP = () => {
       setRows(map);
       const firstPending = dayCommittedTiers(tr).find((k) => tr.outcomes[k] === "pending");
       setActiveZoneKey(firstPending || "gold");
-      const { data: sessions } = await supabase.from("sessions").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(60);
+      const sessions = sessionsAll;
       if (sessions) setSessionHistory(sessions.map((s) => ({ date: s.date, zone: s.zone_label, emoji: s.zone_emoji, zoneKey: s.zone_key, minutes: s.minutes, completed: s.completed, taskCompleted: s.task_completed, doneLooks: s.commitment_statement, startedAt: s.started_at || null, reckonedWithoutSession: !!s.reckoned_without_session })));
-      const { data: insights } = await supabase.from("insights").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(7);
+      const insights = insightsAll;
       if (insights) setInsightHistory(insights.map((i) => ({ date: i.date, text: i.text, energy: i.energy, mood: i.mood })));
     } catch (e) {
       console.error(e);
@@ -2039,6 +2178,13 @@ const ZonedInMVP = () => {
       setDataReady(true);
     }
   };
+  useEffect(() => {
+    const onQ = () => setQueued(outboxLen());
+    const onOnline = () => { setOfflineMode(false); flushOutbox().then(() => { if (user) loadAllData(true); }); };
+    const onOffline = () => setOfflineMode(true);
+    window.addEventListener("zi-outbox", onQ); window.addEventListener("online", onOnline); window.addEventListener("offline", onOffline);
+    return () => { window.removeEventListener("zi-outbox", onQ); window.removeEventListener("online", onOnline); window.removeEventListener("offline", onOffline); };
+  }, [user]);
   // Day rollover while the app stays open (never mid-session).
   useEffect(() => {
     if (!user) return;
@@ -2413,25 +2559,15 @@ Write 3 short sections. Direct, data-first, no filler:
     LS.set(`zi_nudge_days_${nudgeKind}`, [...nudgeDays, today].slice(-3));
     track("nudge_shown", { kind: nudgeKind, showing: nudgeDays.length + 1 });
   }, [nudgeKind, nudgeRetired, tab, day.committed_at, today]);
-  if (authLoading) return RC("div", { style: { minHeight: "100vh", background: T.bg, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24 } },
-    RC("div", { style: { textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center" } },
-      RC("div", { className: "splash-logo", style: { position: "relative", width: 180, height: 180, margin: "0 auto 0" } },
-        RC("div", { className: "splash-ring", style: { position: "absolute", inset: -16, borderRadius: "50%", background: "radial-gradient(circle, rgba(0,194,178,0.18) 0%, rgba(0,194,178,0.04) 50%, transparent 70%)" } }),
-        RC("div", { style: { position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" } }, RC(ZonedInMark, { size: 144 })),
-        RC("div", { className: "orbit-a", style: { position: "absolute", top: "50%", left: "50%", marginTop: -6, marginLeft: -6, width: 12, height: 12, borderRadius: "50%", background: T.teal, boxShadow: `0 0 12px ${T.teal}, 0 0 24px rgba(0,194,178,0.4)` } }),
-        RC("div", { className: "orbit-b", style: { position: "absolute", top: "50%", left: "50%", marginTop: -5, marginLeft: -5, width: 10, height: 10, borderRadius: "50%", background: T.gold, boxShadow: `0 0 10px ${T.gold}, 0 0 20px rgba(245,158,11,0.4)` } })),
-      RC("div", { className: "splash-tagline", style: { marginTop: 36 } },
-        RC("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 28, fontWeight: 900, color: T.text, letterSpacing: -0.5, marginBottom: 10 } }, "ZonedIn"),
-        RC("div", { style: { fontSize: 14, color: T.sub, lineHeight: 1.65, maxWidth: 260 } }, "Clarity beats chaos."))));
+  if (authLoading || introHold) return RC(OrbitLoader, { caption: "" });
   if (!user) return RC(AuthScreen, null);
-  if (dbLoading) return RC("div", { style: { minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center" } },
-    RC("div", { style: { textAlign: "center" } },
-      RC("div", { style: { position: "relative", width: 120, height: 120, margin: "0 auto 24px" } },
-        RC("div", { style: { position: "absolute", inset: 0, borderRadius: "50%", background: "radial-gradient(circle, rgba(0,194,178,0.15) 0%, transparent 70%)" } }),
-        RC("div", { style: { position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" } }, RC(ZonedInMark, { size: 96 })),
-        RC("div", { className: "orbit-a", style: { position: "absolute", top: "50%", left: "50%", marginTop: -5, marginLeft: -5, width: 10, height: 10, borderRadius: "50%", background: T.teal, boxShadow: `0 0 8px ${T.teal}` } }),
-        RC("div", { className: "orbit-b", style: { position: "absolute", top: "50%", left: "50%", marginTop: -4, marginLeft: -4, width: 8, height: 8, borderRadius: "50%", background: T.gold, boxShadow: `0 0 6px ${T.gold}` } })),
-      RC("p", { style: { color: T.sub, fontSize: 12, maxWidth: 240, margin: "0 auto", lineHeight: 1.6 } }, "Loading your day…")));
+  if (dbLoading) return RC(OrbitLoader, { caption: "Loading your day\u2026" });
+  if (offlineEmpty) return RC("div", { style: { minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center", padding: 28 } },
+    RC("div", { className: "fade-up", style: { maxWidth: 320, textAlign: "center" } },
+      RC("div", { style: { display: "flex", justifyContent: "center", marginBottom: 18 } }, RC(ZonedInMark, { size: 64 })),
+      RC("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 22, fontWeight: 900, color: T.text, marginBottom: 10 } }, "You\u2019re offline"),
+      RC("div", { style: { fontSize: 14, color: T.sub, lineHeight: 1.6, marginBottom: 22 } }, "Connect once on this phone and ZonedIn will keep your day here, so it opens even without signal."),
+      RC("button", { onClick: () => { setOfflineEmpty(false); loadAllData(false); }, style: btnGold({ width: "100%", fontSize: 15, padding: "14px" }) }, "Try again")));
 
   const reckonBase = reckon ? (reckon.date === today ? day : yRow && yRow.date === reckon.date ? yRow.day : null) : null;
   const onboardingOpen = !hasOnboarded && !obFirstSession && !obIdentity;
@@ -2459,6 +2595,7 @@ Write 3 short sections. Direct, data-first, no filler:
         RC("button", { onClick: async () => { await shareZonedInCard("milestone", { days: milestoneShare }); setMilestoneShare(null); }, style: btnPrimary({ width: "100%", fontSize: 15, marginBottom: 10 }) }, "Share this"),
         RC("button", { onClick: () => setMilestoneShare(null), style: btn({ width: "100%", background: "none", color: T.sub, fontSize: 13, padding: "8px" }) }, "Continue →"))) : null,
     showRecovery && hasOnboarded ? RC(RecoveryScreen, { bestStreak, userName, identityStatement, onStart: () => { setShowRecovery(false); setTab(day.committed_at ? "focus" : "plan"); }, onDismiss: () => setShowRecovery(false) }) : null,
+    (offlineMode || queued > 0) ? RC("div", { className: "zi-offline", role: "status", "aria-live": "polite" }, offlineMode ? "Offline \u00B7 saved on this phone, syncs when you\u2019re back" : "Syncing\u2026") : null,
     onboardingOpen ? RC(OnboardingFlow, { day, form, onCommitDay: () => { LS.set("zi_first_day", todayRef.current); commitDay(); }, onStartFirstSession: startOnboardingSession }) : null,
     obIdentity ? RC(IdentityNameScreen, { kept: obIdentity === "kept", initialName: userName, onSave: completeOnboarding }) : null,
     confirmTier ? RC(FocusConfirmCard, { tier: confirmTier, task: day[confirmTier], doneWhen: day[`${confirmTier}_done_when`], why: day.gold_why, minutes: sessionDuration, onMinutes: setSessionDuration, identityStatement, onStart: () => startSession(confirmTier), onBack: () => setConfirmTier(null) }) : null,
@@ -2476,7 +2613,7 @@ Write 3 short sections. Direct, data-first, no filler:
         tab === "reflect" ? RC(ReflectTab, { day, today, weekRecord, rowsByDate, insightHistory, loadingInsight, insightError, onRefreshInsight: generateInsight, onOpenClose: openClose, setTab }) : null,
         tab === "progress" ? RC(ProgressTab, { showSettings, streak, bestStreak, shields, tierCfg, milestonePct, daysLeft, nextMilestone, totalPoints, currentLevel, tierHistory, isStreakMilestone, streakReport, setStreakReport, loadingStreakReport, generateStreakReport, streakTier, sessionHistory, rowsByDate, today, weekRecord, reminderTime, onReminderTime, emailOptIn, onEmailOptIn, userTz, onUseDeviceTz, morningPushOn, onMorningPush: toggleMorningPush, morningTime, onMorningTime, standalone: isStandalone(), onShareWeek: () => { track("share_tapped", { type: "rate" }); shareZonedInCard("rate", { kept: weekRecord.kept, of: weekRecord.committed }); } }) : null)),
     RC("nav", { style: { position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 480, height: "calc(48px + env(safe-area-inset-bottom, 0px))", background: T.bg, borderTop: "1px solid rgba(240,244,248,0.08)", display: "flex", alignItems: "stretch", justifyContent: "space-around", paddingTop: 0, paddingLeft: 4, paddingRight: 4, paddingBottom: "env(safe-area-inset-bottom, 0px)", zIndex: 100 } },
-      [{ id: "plan", label: "Plan" }, { id: "focus", label: "Focus" }, { id: "reflect", label: "Record" }, { id: "progress", label: "Progress" }].map((t) => RC("button", { key: t.id, onClick: () => setTab(t.id), "aria-current": tab === t.id ? "page" : void 0, style: btn({ flex: 1, minWidth: 0, height: 48, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 1, padding: 0, borderRadius: 0, background: "transparent", border: "none", color: tab === t.id ? T.teal : "rgba(240,244,248,0.6)", WebkitTapHighlightColor: "transparent", transition: "color 0.15s ease" }) },
+      [{ id: "plan", label: "Plan" }, { id: "focus", label: "Focus" }, { id: "reflect", label: "Record" }, { id: "progress", label: "Progress" }].map((t) => RC("button", { key: t.id, onClick: () => setTab(t.id), "aria-current": tab === t.id ? "page" : void 0, style: btn({ flex: 1, minWidth: 0, height: 48, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 1, padding: 0, borderRadius: 0, background: "transparent", border: "none", color: tab === t.id ? T.teal : "rgba(240,244,248,0.6)", WebkitTapHighlightColor: "transparent", transition: "color var(--zi-quick) var(--zi-ease)" }) },
         RC(NavIcon, { id: t.id, active: tab === t.id }),
         RC("span", { style: { fontSize: 9.5, lineHeight: "11px", fontWeight: tab === t.id ? 700 : 500, letterSpacing: 0.1 } }, t.label)))));
 };
