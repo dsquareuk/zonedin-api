@@ -1859,7 +1859,7 @@ const RecordDay = ({ date, row, insight }) => {
       insight ? RC("div", { style: { marginTop: 10 } }, insightCardEl(insight, false)) : null) : null);
 };
 
-const ReflectTab = ({ day, today, weekRecord, rowsByDate, insightHistory, loadingInsight, insightError, onRefreshInsight, onOpenClose, setTab }) => {
+const ReflectTab = ({ reviews, onOpenReview, day, today, weekRecord, rowsByDate, insightHistory, loadingInsight, insightError, onRefreshInsight, onOpenClose, setTab }) => {
   const [showAll, setShowAll] = useState(false);
   const committed = !!day.committed_at;
   const closed = !!day.closed_at;
@@ -1870,6 +1870,12 @@ const ReflectTab = ({ day, today, weekRecord, rowsByDate, insightHistory, loadin
   const orphanInsights = insightHistory.filter((i) => i !== todays && !(i.date && pastDates.includes(i.date)));
   return RC("div", { className: "fade-up" },
     RC("div", { style: { padding: "2px 20px 14px", fontSize: 13, color: T.sub, lineHeight: 1.5 } }, "Every commitment you made, and how it went."),
+    (reviews || []).length ? RC("div", { style: { margin: "0 16px 12px", display: "flex", flexDirection: "column", gap: 8 } },
+      (reviews || []).slice(0, 6).map((r) => RC("button", { key: r.id || r.created_at, onClick: () => onOpenReview(r), style: { display: "flex", alignItems: "center", gap: 12, width: "100%", textAlign: "left", padding: "14px 16px", borderRadius: 14, cursor: "pointer", fontFamily: "'DM Sans',sans-serif", background: T.tealBg, border: `1px solid ${T.teal}40`, color: T.text } },
+        RC("span", { style: { flex: 1 } },
+          RC("span", { style: { display: "block", fontSize: 11, fontWeight: 800, letterSpacing: 1.1, textTransform: "uppercase", color: T.teal } }, r.kind === "two_week" ? "Your first two weeks" : "Monthly review"),
+          RC("span", { style: { display: "block", fontSize: 15, fontWeight: 700, marginTop: 3 } }, (r.content && r.content.headline) || "Your review")),
+        RC("span", { "aria-hidden": true, style: { color: T.teal, fontWeight: 800 } }, "→")))) : null,
     closed
       ? RC("div", { style: __spreadProps(__spreadValues({}, card()), { margin: "0 16px 12px", padding: "20px 18px" }) }, dlLabel("Today", T.teal, { textAlign: "center", marginBottom: 14 }), RC(VerdictBlock, { day }),
           weekRecord && weekRecord.committed ? RC("div", { style: { fontSize: 13, color: T.sub, textAlign: "center", marginTop: 14 } }, "ZonedIn Rate this week: ", weekRecord.kept, " of ", weekRecord.committed, " kept · ", weekRecord.pct, "%") : null)
@@ -1906,7 +1912,7 @@ const AppearanceSetting = () => {
           transition: "background var(--zi-quick) var(--zi-ease), color var(--zi-quick) var(--zi-ease)" } }, o.label))),
     React.createElement("div", { style: { fontSize: 12, color: T.sub2, marginTop: 8 } }, "Saved to your account, so it follows you to any device."));
 };
-const ProgressTab = ({ onShareWeek, morningPushOn, onMorningPush, morningTime, onMorningTime, standalone, showSettings, streak, bestStreak, shields, tierCfg, milestonePct, daysLeft, nextMilestone, totalPoints, currentLevel, tierHistory, isStreakMilestone, streakReport, setStreakReport, loadingStreakReport, generateStreakReport, streakTier, sessionHistory, rowsByDate, today, weekRecord, reminderTime, onReminderTime, emailOptIn, onEmailOptIn, userTz, onUseDeviceTz }) => { const [moreStats, setMoreStats] = useState(false); return /* @__PURE__ */ React.createElement("div", { className: "fade-up" },
+const ProgressTab = ({ planInfo, onShareWeek, morningPushOn, onMorningPush, morningTime, onMorningTime, standalone, showSettings, streak, bestStreak, shields, tierCfg, milestonePct, daysLeft, nextMilestone, totalPoints, currentLevel, tierHistory, isStreakMilestone, streakReport, setStreakReport, loadingStreakReport, generateStreakReport, streakTier, sessionHistory, rowsByDate, today, weekRecord, reminderTime, onReminderTime, emailOptIn, onEmailOptIn, userTz, onUseDeviceTz }) => { const [moreStats, setMoreStats] = useState(false); return /* @__PURE__ */ React.createElement("div", { className: "fade-up" },
   /* @__PURE__ */ React.createElement("div", { style: { height: 4 } }),
   React.createElement("div", { style: { ...card(), margin: "0 16px 12px", textAlign: "center", padding: "24px 20px 18px" } },
     React.createElement("div", { style: { fontSize: 12, fontWeight: 700, letterSpacing: 1.1, textTransform: "uppercase", color: T.teal } }, "ZonedIn Rate \u00B7 this week"),
@@ -1947,6 +1953,7 @@ const ProgressTab = ({ onShareWeek, morningPushOn, onMorningPush, morningTime, o
         )
   ),
   /* @__PURE__ */ React.createElement("div", { style: { padding: "0 16px 20px" } },  showSettings && React.createElement("div", { className: "fade-up", style: { marginBottom: 16 } },
+      React.createElement(PlanSetting, { info: planInfo }),
       React.createElement(AppearanceSetting),
       React.createElement("div", { style: { fontSize: 11, fontWeight: 700, letterSpacing: 1.1, textTransform: "uppercase", color: T.sub, marginBottom: 10 } }, "Morning reminder"),
       React.createElement("div", { style: { padding: "14px 16px", borderRadius: 14, background: T.card, border: `1px solid ${T.border}`, marginBottom: 16 } },
@@ -2107,6 +2114,111 @@ const WeekRecap = ({ data, onShare, onClose }) => {
       RC("button", { onClick: onShare, style: btnPrimary({ width: "100%", fontSize: 15, padding: "14px", marginBottom: 8 }) }, "Share my week"),
       RC("button", { onClick: onClose, style: btn({ width: "100%", fontSize: 14, background: "transparent", color: T.sub, minHeight: 44 }) }, "Start next week →")));
 };
+// ═══ v56 — 17-day trial · day-14 review · paywall (days 15–17) · read-only from day 18 ═══
+const ZI_TRIAL_DAYS = 17, ZI_REVIEW_DAY = 14;
+const ZI_PRICE = { year: "£39", yearWeekly: "75p a week", month: "£5.99" };
+const ziSubActive = (s) => !!(s && ["active", "trialing", "past_due", "comp"].includes(s.status));
+const ziDayDiff = (a, b) => { const p = (s) => { const [y, m, d] = s.split("-").map(Number); return Date.UTC(y, m - 1, d); }; return Math.round((p(b) - p(a)) / 864e5); };
+const ziApi = async (path, body) => {
+  const tok = (await supabase.auth.getSession()).data.session?.access_token;
+  const r = await fetch(path, { method: body === undefined ? "GET" : "POST", headers: Object.assign({ "Content-Type": "application/json" }, tok ? { Authorization: "Bearer " + tok } : {}), body: body === undefined ? undefined : JSON.stringify(body) });
+  let data = {}; try { data = await r.json(); } catch (_) {}
+  return { ok: r.ok, status: r.status, data };
+};
+const ZI_SAMPLE_REVIEW = { kind: "two_week", period_start: "", period_end: "", stats: { period: { days: 14 }, committed_days: 13, gold_kept: 11, kept_rate: 79, best_run: 6, forecast: { baseline_gold_kept: 10, improved_gold_kept: 13 } },
+  content: { headline: "11 of 14 days, Gold kept.", what_worked: ["Every Gold you committed to before 9am was kept.", "Your longest run was 6 days in a row."], pattern: "Your Gold slips when you commit after lunch: 2 of 5 kept.", prediction: "If nothing changes, expect about 10 Golds kept in the next 14 days. Commit before 9am and 13 is within reach.", next_14_days: ["Commit to your Gold before 9am, every weekday.", "Set Sunday evening's Tomorrow's Gold. Mondays were your most-missed day.", "Start a 25-minute focus session on Gold before opening email."], one_line: "Clarity beats chaos. Keep choosing it." } };
+
+const ReviewScreen = ({ review, onClose }) => {
+  const c = (review && review.content) || {}, s = (review && review.stats) || {};
+  const first = review && review.kind === "two_week";
+  const f = s.forecast || {};
+  const days = (s.period && s.period.days) || 14;
+  const lift = (f.improved_gold_kept || 0) - (f.baseline_gold_kept || 0);
+  const sec = (label, kids, col) => RC("div", { style: { margin: "0 0 14px", padding: "16px 16px", borderRadius: 16, background: T.card, border: `1px solid ${T.border}` } },
+    RC("div", { style: { fontSize: 11, fontWeight: 700, letterSpacing: 1.1, textTransform: "uppercase", color: col || T.sub, marginBottom: 10 } }, label), kids);
+  return RC("div", { role: "dialog", "aria-modal": true, "aria-label": first ? "Your first two weeks" : "Your month", className: "fade-up", style: { position: "fixed", inset: 0, zIndex: 9998, background: T.bg, overflowY: "auto", WebkitOverflowScrolling: "touch" } },
+    RC("div", { style: { maxWidth: 480, margin: "0 auto", padding: "calc(env(safe-area-inset-top,0px) + 28px) 18px calc(env(safe-area-inset-bottom,0px) + 28px)" } },
+      RC("div", { style: { fontSize: 12, fontWeight: 800, letterSpacing: 1.3, textTransform: "uppercase", color: T.teal, marginBottom: 10 } }, first ? "Your first two weeks, ZonedIn" : "Your month, ZonedIn"),
+      RC("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 30, fontWeight: 800, lineHeight: 1.15, color: T.text, marginBottom: 18, textWrap: "balance" } }, c.headline || ""),
+      RC("div", { style: { display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8, marginBottom: 14 } },
+        [[`${s.gold_kept != null ? s.gold_kept : "–"}/${days}`, "Gold kept"], [s.kept_rate != null ? s.kept_rate + "%" : "–", "ZonedIn Rate"], [s.best_run != null ? String(s.best_run) : "–", "Best run"]].map(([v, l]) =>
+          RC("div", { key: l, style: { padding: "14px 8px", borderRadius: 14, background: T.card, border: `1px solid ${T.border}`, textAlign: "center" } },
+            RC("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 22, fontWeight: 800, color: T.text, fontVariantNumeric: "tabular-nums" } }, v),
+            RC("div", { style: { fontSize: 11, color: T.sub, marginTop: 4, fontWeight: 600 } }, l)))),
+      (c.what_worked || []).length ? sec("What worked", RC("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, c.what_worked.map((w, i) => RC("div", { key: i, style: { display: "flex", gap: 10, fontSize: 14, lineHeight: 1.5, color: T.text } }, RC("span", { "aria-hidden": true, style: { color: T.teal, fontWeight: 800 } }, "✓"), w))), T.teal) : null,
+      c.pattern ? sec("Your pattern", RC("div", { style: { fontSize: 15, lineHeight: 1.55, color: T.text } }, c.pattern), T.gold) : null,
+      sec("Your next 14 days", RC("div", null,
+        RC("div", { style: { display: "flex", alignItems: "flex-end", gap: 12, marginBottom: 12 } },
+          RC("div", null, RC("div", { style: { fontSize: 11, color: T.sub, fontWeight: 600, marginBottom: 2 } }, "If nothing changes"), RC("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 26, fontWeight: 800, color: T.sub } }, f.baseline_gold_kept != null ? f.baseline_gold_kept : "–")),
+          RC("div", { "aria-hidden": true, style: { fontSize: 20, color: T.sub, paddingBottom: 4 } }, "→"),
+          RC("div", null, RC("div", { style: { fontSize: 11, color: T.teal, fontWeight: 700, marginBottom: 2 } }, "With the plan below"), RC("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 26, fontWeight: 800, color: T.teal } }, f.improved_gold_kept != null ? f.improved_gold_kept : "–")),
+          RC("div", { style: { fontSize: 12, color: T.sub, paddingBottom: 6 } }, "Golds kept", lift > 0 ? ` · +${lift}` : "")),
+        c.prediction ? RC("div", { style: { fontSize: 14, lineHeight: 1.55, color: T.text, marginBottom: 12 } }, c.prediction) : null,
+        RC("ol", { style: { listStyle: "none", display: "flex", flexDirection: "column", gap: 8 } }, (c.next_14_days || []).map((a, i) => RC("li", { key: i, style: { display: "flex", gap: 10, fontSize: 14, lineHeight: 1.5, color: T.text, padding: "10px 12px", borderRadius: 12, background: T.tealBg } },
+          RC("span", { style: { fontWeight: 800, color: T.teal, fontVariantNumeric: "tabular-nums" } }, i + 1), a)))), T.teal),
+      c.one_line ? RC("div", { style: { textAlign: "center", fontSize: 15, fontStyle: "italic", color: T.sub, margin: "6px 0 20px" } }, c.one_line) : null,
+      RC("div", { style: { display: "flex", flexDirection: "column", gap: 10 } },
+        s.gold_kept != null ? RC("button", { onClick: () => shareZonedInCard("rate", { kept: s.gold_kept, of: days }), style: btn({ background: "none", border: `1px solid ${T.border2}`, color: T.text, minHeight: 48, fontSize: 15 }) }, "Share my two weeks") : null,
+        RC("button", { onClick: onClose, style: btnPrimary({ minHeight: 52, fontSize: 16 }) }, first ? "Carry this into tomorrow →" : "Done →"))));
+};
+
+const Paywall = ({ mode, trialDay, review, busy, error, onSubscribe, onClose, onViewRecord }) => {
+  const [plan, setPlan] = useState("year");
+  const s = (review && review.stats) || null;
+  const left = Math.max(0, ZI_TRIAL_DAYS - trialDay + 1);
+  const locked = mode === "locked";
+  const head = s && s.gold_kept != null ? `${s.gold_kept} of ${(s.period && s.period.days) || 14} days Gold kept.` : locked ? "Your trial has ended." : "Keep going with ZonedIn.";
+  const opt = (id, title, sub, badge) => RC("button", { role: "radio", "aria-checked": plan === id, onClick: () => setPlan(id),
+    style: { display: "flex", alignItems: "center", gap: 12, width: "100%", textAlign: "left", padding: "14px 16px", borderRadius: 16, cursor: "pointer", fontFamily: "'DM Sans',sans-serif",
+      background: plan === id ? T.tealBg : T.card, border: `1.5px solid ${plan === id ? T.teal : T.border2}`, color: T.text } },
+    RC("span", { "aria-hidden": true, style: { width: 20, height: 20, borderRadius: "50%", flexShrink: 0, border: `2px solid ${plan === id ? T.teal : T.border2}`, boxShadow: plan === id ? `inset 0 0 0 4px ${T.card}` : "none", background: plan === id ? T.teal : "transparent" } }),
+    RC("span", { style: { flex: 1 } }, RC("span", { style: { display: "block", fontSize: 16, fontWeight: 800 } }, title), RC("span", { style: { display: "block", fontSize: 13, color: T.sub, marginTop: 2 } }, sub)),
+    badge ? RC("span", { style: { fontSize: 11, fontWeight: 800, color: T.teal, background: T.tealBg, padding: "4px 8px", borderRadius: 50 } }, badge) : null);
+  return RC("div", { role: "dialog", "aria-modal": true, "aria-label": "Choose your ZonedIn plan", className: "fade-up", style: { position: "fixed", inset: 0, zIndex: 9999, background: T.bg, overflowY: "auto" } },
+    RC("div", { style: { maxWidth: 480, margin: "0 auto", padding: "calc(env(safe-area-inset-top,0px) + 34px) 20px calc(env(safe-area-inset-bottom,0px) + 24px)", display: "flex", flexDirection: "column", minHeight: "100%" } },
+      RC("div", { style: { fontSize: 12, fontWeight: 800, letterSpacing: 1.3, textTransform: "uppercase", color: locked ? T.sub : T.gold, marginBottom: 12 } },
+        locked ? "Your record is safe" : left <= 1 ? "Last day of full ZonedIn" : `${left} days of full ZonedIn left`),
+      RC("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 30, fontWeight: 800, lineHeight: 1.15, color: T.text, marginBottom: 12, textWrap: "balance" } }, head),
+      RC("div", { style: { fontSize: 16, lineHeight: 1.55, color: T.sub, marginBottom: 6 } }, "Every kept commitment is evidence of who you’re becoming."),
+      RC("div", { style: { fontSize: 16, lineHeight: 1.55, color: T.text, marginBottom: 22 } }, locked ? "Subscribe to commit to today’s three again." : "Keep committing to your top three. Your next review arrives in a month."),
+      RC("div", { role: "radiogroup", "aria-label": "Plan", style: { display: "flex", flexDirection: "column", gap: 10, marginBottom: 18 } },
+        opt("year", `${ZI_PRICE.year} a year`, `${ZI_PRICE.yearWeekly}, billed yearly`, "Best value"),
+        opt("month", `${ZI_PRICE.month} a month`, "Billed monthly")),
+      error ? RC("div", { role: "alert", style: { fontSize: 14, color: T.gold, marginBottom: 12, lineHeight: 1.5 } }, error) : null,
+      RC("button", { onClick: () => onSubscribe(plan), disabled: busy, style: btnPrimary({ minHeight: 54, fontSize: 17, opacity: busy ? 0.6 : 1 }) }, busy ? "Opening secure checkout…" : "Continue with ZonedIn →"),
+      RC("div", { style: { fontSize: 13, color: T.sub, textAlign: "center", marginTop: 10, lineHeight: 1.5 } }, "Cancel anytime in Settings. Your record is always yours."),
+      RC("div", { style: { flex: 1, minHeight: 16 } }),
+      locked
+        ? RC("button", { onClick: onViewRecord, style: btn({ background: "none", color: T.sub, fontSize: 15, minHeight: 48, marginTop: 8 }) }, "View my record")
+        : RC("button", { onClick: onClose, style: btn({ background: "none", color: T.sub, fontSize: 15, minHeight: 48, marginTop: 8 }) }, left <= 1 ? "Not now · last day today" : `Not now · ${left} days left`)));
+};
+
+const PlanSetting = ({ info }) => {
+  if (!info || !info.ready) return null;
+  const { sub, trialDay, enabled, onUpgrade, onManage } = info;
+  const active = ziSubActive(sub);
+  const left = Math.max(0, ZI_TRIAL_DAYS - trialDay + 1);
+  const end = sub && sub.current_period_end ? new Date(sub.current_period_end).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }) : null;
+  const steps = [["Day 1", "Full ZonedIn"], [`Day ${ZI_REVIEW_DAY}`, "Your two-week review"], [`Day ${ZI_TRIAL_DAYS}`, "Last day of the trial"]];
+  return React.createElement("div", { style: { marginBottom: 16 } },
+    React.createElement("div", { style: { fontSize: 11, fontWeight: 700, letterSpacing: 1.1, textTransform: "uppercase", color: T.sub, marginBottom: 10 } }, "Your plan"),
+    React.createElement("div", { style: { padding: "14px 16px", borderRadius: 14, background: T.card, border: `1px solid ${T.border}` } },
+      active
+        ? React.createElement("div", null,
+            React.createElement("div", { style: { fontSize: 15, fontWeight: 700, color: T.text } }, sub.status === "comp" ? "ZonedIn · complimentary" : `ZonedIn · ${sub.plan_interval === "month" ? "monthly" : "yearly"}`),
+            end ? React.createElement("div", { style: { fontSize: 13, color: T.sub, marginTop: 4 } }, sub.cancel_at_period_end ? `Ends ${end}. Your record stays yours.` : `Renews ${end}`) : null,
+            sub.stripe_customer_id && sub.status !== "comp" ? React.createElement("button", { onClick: onManage, style: btn({ marginTop: 12, background: "none", border: `1px solid ${T.border2}`, color: T.text, minHeight: 44, padding: "0 16px", fontSize: 14 }) }, "Manage or cancel") : null)
+        : React.createElement("div", null,
+            React.createElement("div", { style: { fontSize: 15, fontWeight: 700, color: T.text } }, trialDay <= ZI_TRIAL_DAYS ? `Free trial · day ${trialDay} of ${ZI_TRIAL_DAYS}` : "Trial ended"),
+            React.createElement("div", { style: { fontSize: 13, color: T.sub, marginTop: 4, lineHeight: 1.5 } }, trialDay <= ZI_TRIAL_DAYS ? `${left} day${left === 1 ? "" : "s"} of full ZonedIn left. No card needed until you choose.` : "Your record is safe and always yours. Subscribe to commit again."),
+            React.createElement("ol", { style: { listStyle: "none", display: "flex", flexDirection: "column", gap: 6, marginTop: 12 } }, steps.map(([d, t], i) => {
+              const n = [1, ZI_REVIEW_DAY, ZI_TRIAL_DAYS][i], done = trialDay >= n;
+              return React.createElement("li", { key: d, style: { display: "flex", gap: 10, fontSize: 13, color: done ? T.text : T.sub } },
+                React.createElement("span", { style: { width: 56, fontWeight: 700, color: done ? T.teal : T.sub, fontVariantNumeric: "tabular-nums" } }, d), t);
+            })),
+            enabled ? React.createElement("button", { onClick: onUpgrade, style: btnPrimary({ marginTop: 12, minHeight: 44, padding: "0 18px", fontSize: 14 }) }, `See plans · from ${ZI_PRICE.yearWeekly}`) : null)));
+};
+
 const ZonedInMVP = () => {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -2443,7 +2555,107 @@ const ZonedInMVP = () => {
     onDoneWhen: (k, v) => patchDay({ [`${k}_done_when`]: v }, true),
     onWhy: (v) => patchDay({ gold_why: v }, true)
   };
+  // ── v56 — trial, reviews and paywall ──
+  const [pw, setPw] = useState({ ready: false, enabled: false, sub: null, reviews: [], createdAt: null });
+  const [paywall, setPaywall] = useState(null);
+  const [reviewOpen, setReviewOpen] = useState(null);
+  const [payBusy, setPayBusy] = useState(false);
+  const [payErr, setPayErr] = useState("");
+  const reviewBusy = useRef(false);
+  const [reviewFailed, setReviewFailed] = useState(false);
+  const preview = useRef((() => { try { return new URLSearchParams(location.search).get("preview"); } catch (_) { return null; } })());
+  const trialDay = pw.createdAt ? ziDayDiff(localDay(new Date(pw.createdAt)), today) + 1 : 1;
+  const paid = ziSubActive(pw.sub);
+  const twoWeek = pw.reviews.find((r) => r.kind === "two_week") || null;
+  const latestReview = pw.reviews[0] || null;
+  const phase = !pw.ready || !pw.enabled || paid ? "open" : trialDay > ZI_TRIAL_DAYS ? "locked" : trialDay > ZI_REVIEW_DAY ? "offer" : "trial";
+
+  const loadPlan = async () => {
+    if (!user || navigator.onLine === false) return;
+    try {
+      const [p, s, r, cfg] = await Promise.all([
+        supabase.from("profiles").select("created_at").eq("id", user.id).single(),
+        supabase.from("subscriptions").select("*").eq("user_id", user.id).maybeSingle(),
+        supabase.from("reviews").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(24),
+        fetch("/api/checkout").then((x) => x.json()).catch(() => ({ enabled: false }))
+      ]);
+      // If the paywall tables aren't there yet, behave exactly as before: no paywall.
+      if (s.error || r.error || !p.data) { setPw((x) => __spreadProps(__spreadValues({}, x), { ready: false })); return; }
+      setPw({ ready: true, enabled: !!(cfg && cfg.enabled), sub: s.data || null, reviews: r.data || [], createdAt: p.data.created_at });
+    } catch (_) {}
+  };
+  useEffect(() => { loadPlan(); }, [user && user.id, today]);
+
+  const requestReview = async (kind) => {
+    if (reviewBusy.current || navigator.onLine === false) return null;
+    reviewBusy.current = true;
+    try {
+      const { ok, data } = await ziApi("/api/review", { kind });
+      if (ok && data.review) {
+        setPw((x) => __spreadProps(__spreadValues({}, x), { reviews: [data.review].concat(x.reviews) }));
+        track("review_ready", { kind, gold_kept: data.review.stats && data.review.stats.gold_kept });
+        return data.review;
+      }
+    } catch (_) {} finally { reviewBusy.current = false; }
+    return null;
+  };
+
+  // Catch-up: day 15+ with no two-week review yet (missed Close the Day on day 14) → make it now.
+  // Subscribers get a monthly review every 28 days.
+  useEffect(() => {
+    if (!pw.ready || !hasOnboarded || reviewOpen) return;
+    if (!twoWeek && trialDay > ZI_REVIEW_DAY) { if (!reviewFailed) requestReview("two_week").then((rv) => { if (rv) setReviewOpen(rv); else setReviewFailed(true); }); return; }
+    if (paid && (!latestReview || Date.now() - new Date(latestReview.created_at).getTime() >= 28 * 864e5) && trialDay >= 28) {
+      requestReview("monthly").then((rv) => { if (rv) { setReviewOpen(rv); showToast("Your monthly review is ready."); } });
+    }
+  }, [pw.ready, hasOnboarded, trialDay, paid, !!twoWeek, latestReview && latestReview.id]);
+
+  // Days 15–17: the offer comes first, once a day. Day 18+: read-only until they subscribe.
+  useEffect(() => {
+    if (preview.current || !pw.ready || !hasOnboarded || reviewOpen || paywall || sessionActive || closeView) return;
+    // The review always comes before the offer.
+    if (!twoWeek && trialDay > ZI_REVIEW_DAY && !reviewFailed && navigator.onLine !== false) return;
+    if (phase === "offer") {
+      if (LS.get("zi_pw_seen", "") === today) return;
+      LS.set("zi_pw_seen", today);
+      setPaywall({ mode: "offer" }); track("paywall_shown", { mode: "offer", trial_day: trialDay });
+    } else if (phase === "locked" && LS.get("zi_pw_locked_seen", "") !== today) {
+      LS.set("zi_pw_locked_seen", today);
+      setPaywall({ mode: "locked" }); track("paywall_shown", { mode: "locked", trial_day: trialDay });
+    }
+  }, [phase, pw.ready, hasOnboarded, !!reviewOpen, sessionActive, !!closeView, today, !!twoWeek, reviewFailed]);
+
+  // Returning from Stripe, and the design previews (?preview=review | offer | locked).
+  useEffect(() => {
+    let q; try { q = new URLSearchParams(location.search); } catch (_) { return; }
+    const clean = () => { try { history.replaceState(history.state, "", location.pathname); } catch (_) {} };
+    if (q.get("preview")) {
+      const v = q.get("preview");
+      if (v === "review") setReviewOpen(ZI_SAMPLE_REVIEW);
+      if (v === "offer" || v === "locked") setPaywall({ mode: v, sample: true });
+    } else if (q.get("paid") === "1") {
+      clean(); showToast("Payment received. Welcome to ZonedIn.");
+      track("subscribed_return", {});
+      let n = 0; const t = setInterval(() => { n++; loadPlan(); if (n >= 10) clearInterval(t); }, 3000);
+    } else if (q.get("paywall") === "1") { clean(); setTimeout(() => setPaywall({ mode: phase === "locked" ? "locked" : "offer" }), 600); }
+  }, [user && user.id]);
+
+  const subscribe = async (interval) => {
+    if (paywall && paywall.sample) { setPayErr("Preview only. Payments start once Stripe is connected."); return; }
+    setPayBusy(true); setPayErr("");
+    track("checkout_started", { interval, trial_day: trialDay, mode: paywall && paywall.mode });
+    const { ok, data, status } = await ziApi("/api/checkout", { interval }).catch(() => ({ ok: false, data: {} }));
+    if (ok && data.url) { location.href = data.url; return; }
+    setPayBusy(false);
+    setPayErr(status === 503 ? "Payments aren’t open yet. Keep going, nothing is lost." : status === 409 ? "You’re already subscribed. Pull to refresh." : "Couldn’t open checkout. Check your connection and try again.");
+  };
+  const manageSub = async () => {
+    const { ok, data } = await ziApi("/api/portal", {}).catch(() => ({ ok: false, data: {} }));
+    if (ok && data.url) location.href = data.url; else showToast("Couldn’t open billing. Try again shortly.");
+  };
+  const planInfo = { ready: pw.ready, sub: pw.sub, trialDay, enabled: pw.enabled, onUpgrade: () => setPaywall({ mode: phase === "locked" ? "locked" : "offer" }), onManage: manageSub };
   const commitDay = () => {
+    if (phase === "locked") { setPaywall({ mode: "locked" }); track("paywall_shown", { mode: "locked", from: "commit", trial_day: trialDay }); return; }
     const d = dayRef.current;
     const tiers = DL_TIERS.filter((k) => (d[k] || "").trim());
     const outcomes = {};
@@ -2639,6 +2851,7 @@ const ZonedInMVP = () => {
     setTab("plan");
     logTodayPoints(false);
     if (!insightHistory.some((i) => i.date === todayRef.current)) generateInsight();
+    if (pw.ready && !twoWeek && trialDay >= ZI_REVIEW_DAY) requestReview("two_week").then((rv) => { if (rv) setReviewOpen(rv); });
   };
 
   // ── DL-11 — evening insight (automatic on close, manual refresh) ──
@@ -2857,14 +3070,21 @@ Write 3 short sections. Direct, data-first, no filler:
     showGoldComplete ? RC(GoldCompleteScreen, { goldTask: day.gold, streak, identityStatement, doneLooks: day.gold_done_when, withSession: !!(afterGold && afterGold.withSession), onDismiss: onGoldCompleteDismiss }) : null,
     recommit ? RC(RecommitSheet, { task: recommit.task, rolls: recommit.rolls, withSession: recommit.withSession, onRecommit: doRecommit, onLetGo: declineRecommit }) : null,
     lightKept ? RC(LightKept, { kept: lightKept.kept, committed: lightKept.committed, onDone: () => setLightKept(null) }) : null,
+    reviewOpen ? RC(ReviewScreen, { review: reviewOpen, onClose: () => setReviewOpen(null) }) : null,
+    paywall ? RC(Paywall, { mode: paywall.mode, trialDay: paywall.sample ? 16 : trialDay, review: paywall.sample ? ZI_SAMPLE_REVIEW : twoWeek, busy: payBusy, error: payErr, onSubscribe: subscribe,
+      onClose: () => { setPaywall(null); setPayErr(""); track("paywall_dismissed", { trial_day: trialDay }); },
+      onViewRecord: () => { setPaywall(null); setPayErr(""); setTab("reflect"); } }) : null,
     closeView ? RC(CloseTheDay, { day, weekRecord, summaryOnly: closeView.summary, firstTime: closeView.firstTime, onAnswer: (k, kept) => answer({ tier: k, withSession: false, date: todayRef.current }, kept), onFinish: finishClose, onDismiss: () => setCloseView(null) }) : null,
     RC(TopBar, { tab, greetMsg, userName, identityStatement, dateStr, streak, savingZones, scrolled: headerScrolled, settingsOpen: showSettings, onSettings: () => setShowSettings((s) => !s), day, onCloseToday: () => openClose("reflect") }),
     RC("div", { style: { flex: 1, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden" } },
       RC("div", { key: tab, className: "tab-scroll", onScroll: (e) => { const s = e.currentTarget.scrollTop > 4; if (s !== headerScrolled) setHeaderScrolled(s); }, style: { flex: 1, minHeight: 0, height: "100%", paddingBottom: "calc(56px + env(safe-area-inset-bottom, 0px))" } },
-        tab === "plan" && !onboardingOpen ? RC(PlanTab, { day, today, yRow: yRow ? yRow.day : null, form, onPromise: () => setShowPromise(true), weekRecord, fromTomorrow, sessionHistory, activeTier: sessionActive ? activeZoneKey : null, onStartFocus: (k) => { setActiveZoneKey(k); setConfirmTier(k); }, showThreeIntro: firstDay && hasOnboarded && !threeIntroDismissed, onDismissThreeIntro: () => { setThreeIntroDismissed(true); LS.set("zi_three_intro_dismissed", true); }, onReckonNow: (k) => setReckon({ tier: k, withSession: false, date: todayRef.current }), onEditSave, onOpenClose: openClose, eveningNow, onAnswerYesterday, onShareDay: shareDayCard, onViewSummary: () => openClose("plan"), onAcceptSuggestion: form.onAcceptSuggestion, nudge }) : null,
+        tab === "plan" && phase === "locked" ? RC("button", { onClick: () => setPaywall({ mode: "locked" }), style: { display: "block", width: "calc(100% - 32px)", margin: "4px 16px 12px", padding: "14px 16px", textAlign: "left", borderRadius: 14, cursor: "pointer", fontFamily: "'DM Sans',sans-serif", background: T.goldBg, border: `1px solid ${T.gold}55`, color: T.text } },
+          RC("span", { style: { display: "block", fontSize: 15, fontWeight: 800 } }, "Your trial has ended"),
+          RC("span", { style: { display: "block", fontSize: 13, color: T.sub, marginTop: 3, lineHeight: 1.5 } }, `Your record is safe. Subscribe from ${ZI_PRICE.yearWeekly} to commit again →`)) : null,
+        tab === "plan" && !onboardingOpen ? RC(PlanTab, { day, today, yRow: yRow ? yRow.day : null, form, onPromise: () => { if (phase === "locked") { setPaywall({ mode: "locked" }); track("paywall_shown", { mode: "locked", from: "commit", trial_day: trialDay }); return; } setShowPromise(true); }, weekRecord, fromTomorrow, sessionHistory, activeTier: sessionActive ? activeZoneKey : null, onStartFocus: (k) => { setActiveZoneKey(k); setConfirmTier(k); }, showThreeIntro: firstDay && hasOnboarded && !threeIntroDismissed, onDismissThreeIntro: () => { setThreeIntroDismissed(true); LS.set("zi_three_intro_dismissed", true); }, onReckonNow: (k) => setReckon({ tier: k, withSession: false, date: todayRef.current }), onEditSave, onOpenClose: openClose, eveningNow, onAnswerYesterday, onShareDay: shareDayCard, onViewSummary: () => openClose("plan"), onAcceptSuggestion: form.onAcceptSuggestion, nudge }) : null,
         tab === "focus" ? RC(FocusTab, { day, activeZoneKey, setActiveZoneKey, sessionDuration, setSessionDuration, onRequestStart: (k) => startSession(k), sessionHistory, setTab, onOpenClose: openClose }) : null,
-        tab === "reflect" ? RC(ReflectTab, { day, today, weekRecord, rowsByDate, insightHistory, loadingInsight, insightError, onRefreshInsight: generateInsight, onOpenClose: openClose, setTab }) : null,
-        tab === "progress" ? RC(ProgressTab, { showSettings, streak, bestStreak, shields, tierCfg, milestonePct, daysLeft, nextMilestone, totalPoints, currentLevel, tierHistory, isStreakMilestone, streakReport, setStreakReport, loadingStreakReport, generateStreakReport, streakTier, sessionHistory, rowsByDate, today, weekRecord, reminderTime, onReminderTime, emailOptIn, onEmailOptIn, userTz, onUseDeviceTz, morningPushOn, onMorningPush: toggleMorningPush, morningTime, onMorningTime, standalone: isStandalone(), onShareWeek: () => { track("share_tapped", { type: "rate" }); shareZonedInCard("rate", { kept: weekRecord.kept, of: weekRecord.committed }); } }) : null)),
+        tab === "reflect" ? RC(ReflectTab, { reviews: pw.reviews, onOpenReview: setReviewOpen, day, today, weekRecord, rowsByDate, insightHistory, loadingInsight, insightError, onRefreshInsight: generateInsight, onOpenClose: openClose, setTab }) : null,
+        tab === "progress" ? RC(ProgressTab, { planInfo, showSettings, streak, bestStreak, shields, tierCfg, milestonePct, daysLeft, nextMilestone, totalPoints, currentLevel, tierHistory, isStreakMilestone, streakReport, setStreakReport, loadingStreakReport, generateStreakReport, streakTier, sessionHistory, rowsByDate, today, weekRecord, reminderTime, onReminderTime, emailOptIn, onEmailOptIn, userTz, onUseDeviceTz, morningPushOn, onMorningPush: toggleMorningPush, morningTime, onMorningTime, standalone: isStandalone(), onShareWeek: () => { track("share_tapped", { type: "rate" }); shareZonedInCard("rate", { kept: weekRecord.kept, of: weekRecord.committed }); } }) : null)),
     RC("nav", { "aria-label": "Main", style: { position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 480, height: "calc(48px + env(safe-area-inset-bottom, 0px))", background: T.bg, borderTop: "1px solid rgba(var(--zi-ink),0.08)", display: "flex", alignItems: "stretch", justifyContent: "space-around", paddingTop: 0, paddingLeft: 4, paddingRight: 4, paddingBottom: "env(safe-area-inset-bottom, 0px)", zIndex: 100 } },
       [{ id: "plan", label: "Plan" }, { id: "focus", label: "Focus" }, { id: "reflect", label: "Record" }, { id: "progress", label: "Progress" }].map((t) => RC("button", { key: t.id, onClick: () => setTab(t.id), "aria-current": tab === t.id ? "page" : void 0, style: btn({ flex: 1, minWidth: 0, height: 48, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 1, padding: 0, borderRadius: 0, background: "transparent", border: "none", color: tab === t.id ? T.teal : "rgba(var(--zi-ink),0.6)", WebkitTapHighlightColor: "transparent", transition: "color var(--zi-quick) var(--zi-ease)" }) },
         RC(NavIcon, { id: t.id, active: tab === t.id }),
