@@ -157,6 +157,8 @@
     input:focus,textarea:focus{outline:none;}
     :focus-visible{outline:2px solid #00E5D4 !important;outline-offset:3px !important;}
     input:focus-visible,textarea:focus-visible,select:focus-visible{outline:none !important;box-shadow:0 0 0 2px #00E5D4 !important;}
+    @keyframes ziNudge{0%,100%{box-shadow:0 0 0 0 rgba(0,194,178,.45)}50%{box-shadow:0 0 0 7px rgba(0,194,178,0)}}
+    .zi-fb-nudge{animation:ziNudge 1.6s ease 2}
     .zi-sr{position:absolute !important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;}
     @media (forced-colors: active){:focus-visible{outline:2px solid CanvasText !important;}}
     #root{height:100%;height:100dvh;overflow:hidden;display:flex;flex-direction:column;position:relative;}
@@ -1732,7 +1734,7 @@ const NavIcon = ({ id, active }) => {
     ce("rect", { x: 16, y: 3.7, width: 4.2, height: 16.6, rx: 1.3, fill: active ? cc : "none" }));
 };
 
-const TopBar = ({ tab, greetMsg, userName, identityStatement, dateStr, streak, savingZones, scrolled, settingsOpen, onSettings, day, onCloseToday }) => {
+const TopBar = ({ tab, greetMsg, userName, identityStatement, dateStr, streak, savingZones, scrolled, settingsOpen, onSettings, day, onCloseToday, onFeedback, feedbackNudge }) => {
   const ce = React.createElement;
   const committed = !!(day && day.committed_at);
   const closed = !!(day && day.closed_at);
@@ -1754,6 +1756,7 @@ const TopBar = ({ tab, greetMsg, userName, identityStatement, dateStr, streak, s
         ce("svg", icon, ce("path", { d: "M13 2L4.5 13.5H12L11 22l8.5-11.5H12L13 2z" })),
         ce("span", { style: { fontSize: 16, fontWeight: 700, color: T.text } }, streak)) : null,
       tab === "reflect" && committed ? ce("button", { onClick: onCloseToday, style: btn({ padding: "7px 12px", borderRadius: 50, fontSize: 12, fontWeight: 700, border: `1.5px solid ${closed ? "rgba(34,197,94,0.35)" : "rgba(0,194,178,0.45)"}`, background: closed ? "rgba(34,197,94,0.08)" : "rgba(0,194,178,0.1)", color: closed ? "#22C55E" : T.teal }) }, closed ? "Today closed ✓" : "Close today →") : null,
+      onFeedback ? ce("button", { onClick: onFeedback, "aria-label": "Send feedback", className: feedbackNudge ? "zi-fb-nudge" : "", style: btn({ padding: "6px 11px", borderRadius: 50, fontSize: 12, fontWeight: 700, border: `1px solid ${feedbackNudge ? T.teal : T.border2}`, background: feedbackNudge ? T.tealBg : "none", color: feedbackNudge ? T.teal : T.sub }) }, feedbackNudge ? "How’s it going?" : "Feedback") : null,
       tab === "progress" ? ce("button", { onClick: onSettings, "aria-label": "Settings", style: btn({ background: "none", border: "none", padding: 10, margin: -6, display: "flex", color: settingsOpen ? T.teal : T.text }) },
         ce("svg", icon, ce("circle", { cx: 12, cy: 12, r: 3 }),
           ce("path", { d: "M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" }))) : null));
@@ -2219,6 +2222,39 @@ const PlanSetting = ({ info }) => {
             enabled ? React.createElement("button", { onClick: onUpgrade, style: btnPrimary({ marginTop: 12, minHeight: 44, padding: "0 18px", fontSize: 14 }) }, `See plans · from ${ZI_PRICE.yearWeekly}`) : null)));
 };
 
+const ZI_FB_KINDS = [["confusing", "😕", "Confusing"], ["annoying", "😤", "Annoying"], ["idea", "💡", "Idea"], ["bug", "🐞", "Bug"], ["love", "❤️", "Love it"]];
+const FeedbackSheet = ({ onSend, onClose }) => {
+  const [kind, setKind] = useState(null);
+  const [msg, setMsg] = useState("");
+  const [state, setState] = useState("idle");
+  const send = async () => {
+    if (!kind || !msg.trim() || state === "sending") return;
+    setState("sending");
+    const ok = await onSend(kind, msg.trim());
+    setState(ok ? "sent" : "error");
+    if (ok) setTimeout(onClose, 1600);
+  };
+  return RC("div", { onClick: (e) => { if (e.target === e.currentTarget) onClose(); }, style: { position: "fixed", inset: 0, zIndex: 9997, background: "rgba(var(--zi-scrim),0.7)", display: "flex", alignItems: "flex-end", justifyContent: "center" } },
+    RC("div", { role: "dialog", "aria-modal": true, "aria-labelledby": "zi-fb-h", className: "fade-up", style: { width: "100%", maxWidth: 480, background: T.card, borderRadius: "22px 22px 0 0", border: `1px solid ${T.border2}`, padding: "22px 18px calc(env(safe-area-inset-bottom,0px) + 18px)" } },
+      state === "sent"
+        ? RC("div", { role: "status", style: { textAlign: "center", padding: "26px 0" } },
+            RC("div", { style: { fontFamily: "'Syne',sans-serif", fontSize: 22, fontWeight: 800, color: T.text, marginBottom: 6 } }, "Thanks."),
+            RC("div", { style: { fontSize: 15, color: T.sub } }, "It comes straight to me. I read every one."))
+        : RC("div", null,
+            RC("div", { id: "zi-fb-h", style: { fontFamily: "'Syne',sans-serif", fontSize: 20, fontWeight: 800, color: T.text, marginBottom: 4 } }, "What’s on your mind?"),
+            RC("div", { style: { fontSize: 13, color: T.sub, marginBottom: 14 } }, "Honest is best. It goes straight to the founder."),
+            RC("div", { role: "radiogroup", "aria-label": "Type of feedback", style: { display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 12 } },
+              ZI_FB_KINDS.map(([id, em, label]) => RC("button", { key: id, role: "radio", "aria-checked": kind === id, onClick: () => setKind(id),
+                style: { display: "flex", alignItems: "center", gap: 6, padding: "9px 13px", minHeight: 40, borderRadius: 50, cursor: "pointer", fontFamily: "'DM Sans',sans-serif", fontSize: 14, fontWeight: 700,
+                  background: kind === id ? T.tealBg : "transparent", border: `1.5px solid ${kind === id ? T.teal : T.border2}`, color: kind === id ? T.teal : T.text } },
+                RC("span", { "aria-hidden": true }, em), label))),
+            RC("textarea", { value: msg, onChange: (e) => setMsg(e.target.value.slice(0, 2000)), "aria-label": "Your feedback", placeholder: kind === "bug" ? "What happened, and what did you expect?" : kind === "love" ? "What did you like?" : "Tell me in a line or two…", rows: 4,
+              style: { width: "100%", fontFamily: "'DM Sans',sans-serif", fontSize: 16, color: T.text, background: T.bg, border: `1px solid ${T.border2}`, borderRadius: 14, padding: "12px 14px", resize: "none", marginBottom: 12 } }),
+            state === "error" ? RC("div", { role: "alert", style: { fontSize: 14, color: T.gold, marginBottom: 10 } }, "Couldn’t send. Check your connection and try again.") : null,
+            RC("div", { style: { display: "flex", gap: 10 } },
+              RC("button", { onClick: onClose, style: btn({ flex: "0 0 auto", background: "none", border: `1px solid ${T.border2}`, color: T.sub, minHeight: 48, padding: "0 18px", fontSize: 15 }) }, "Cancel"),
+              RC("button", { onClick: send, disabled: !kind || !msg.trim() || state === "sending", style: btnPrimary({ flex: 1, minHeight: 48, fontSize: 15, opacity: !kind || !msg.trim() ? 0.5 : 1 }) }, state === "sending" ? "Sending…" : "Send →")))));
+};
 const ZonedInMVP = () => {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -2653,6 +2689,20 @@ const ZonedInMVP = () => {
     const { ok, data } = await ziApi("/api/portal", {}).catch(() => ({ ok: false, data: {} }));
     if (ok && data.url) location.href = data.url; else showToast("Couldn’t open billing. Try again shortly.");
   };
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const feedbackNudge = hasOnboarded && (trialDay === 3 || trialDay === 10) && LS.get("zi_fb_nudge", "") !== today;
+  const openFeedback = () => { if (feedbackNudge) LS.set("zi_fb_nudge", today); setFeedbackOpen(true); track("feedback_opened", { tab, trial_day: trialDay, nudged: !!feedbackNudge }); };
+  const sendFeedback = async (kind, message) => {
+    if (!user) return false;
+    const platform = /iPhone|iPad|iPod/.test(navigator.userAgent) ? "iPhone" : /Android/.test(navigator.userAgent) ? "Android" : "Desktop";
+    const screen = { plan: "Plan", focus: "Focus", reflect: "Record", progress: "Progress" }[tab] || tab;
+    try {
+      const { error } = await supabase.from("feedback").insert({ user_id: user.id, kind, message, screen, trial_day: pw.createdAt ? trialDay : null, platform });
+      if (error) return false;
+      track("feedback_sent", { kind, screen, trial_day: trialDay });
+      return true;
+    } catch (_) { return false; }
+  };
   const planInfo = { ready: pw.ready, sub: pw.sub, trialDay, enabled: pw.enabled, onUpgrade: () => setPaywall({ mode: phase === "locked" ? "locked" : "offer" }), onManage: manageSub };
   const commitDay = () => {
     if (phase === "locked") { setPaywall({ mode: "locked" }); track("paywall_shown", { mode: "locked", from: "commit", trial_day: trialDay }); return; }
@@ -3070,12 +3120,13 @@ Write 3 short sections. Direct, data-first, no filler:
     showGoldComplete ? RC(GoldCompleteScreen, { goldTask: day.gold, streak, identityStatement, doneLooks: day.gold_done_when, withSession: !!(afterGold && afterGold.withSession), onDismiss: onGoldCompleteDismiss }) : null,
     recommit ? RC(RecommitSheet, { task: recommit.task, rolls: recommit.rolls, withSession: recommit.withSession, onRecommit: doRecommit, onLetGo: declineRecommit }) : null,
     lightKept ? RC(LightKept, { kept: lightKept.kept, committed: lightKept.committed, onDone: () => setLightKept(null) }) : null,
+    feedbackOpen ? RC(FeedbackSheet, { onSend: sendFeedback, onClose: () => setFeedbackOpen(false) }) : null,
     reviewOpen ? RC(ReviewScreen, { review: reviewOpen, onClose: () => setReviewOpen(null) }) : null,
     paywall ? RC(Paywall, { mode: paywall.mode, trialDay: paywall.sample ? 16 : trialDay, review: paywall.sample ? ZI_SAMPLE_REVIEW : twoWeek, busy: payBusy, error: payErr, onSubscribe: subscribe,
       onClose: () => { setPaywall(null); setPayErr(""); track("paywall_dismissed", { trial_day: trialDay }); },
       onViewRecord: () => { setPaywall(null); setPayErr(""); setTab("reflect"); } }) : null,
     closeView ? RC(CloseTheDay, { day, weekRecord, summaryOnly: closeView.summary, firstTime: closeView.firstTime, onAnswer: (k, kept) => answer({ tier: k, withSession: false, date: todayRef.current }, kept), onFinish: finishClose, onDismiss: () => setCloseView(null) }) : null,
-    RC(TopBar, { tab, greetMsg, userName, identityStatement, dateStr, streak, savingZones, scrolled: headerScrolled, settingsOpen: showSettings, onSettings: () => setShowSettings((s) => !s), day, onCloseToday: () => openClose("reflect") }),
+    RC(TopBar, { onFeedback: hasOnboarded ? openFeedback : null, feedbackNudge, tab, greetMsg, userName, identityStatement, dateStr, streak, savingZones, scrolled: headerScrolled, settingsOpen: showSettings, onSettings: () => setShowSettings((s) => !s), day, onCloseToday: () => openClose("reflect") }),
     RC("div", { style: { flex: 1, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden" } },
       RC("div", { key: tab, className: "tab-scroll", onScroll: (e) => { const s = e.currentTarget.scrollTop > 4; if (s !== headerScrolled) setHeaderScrolled(s); }, style: { flex: 1, minHeight: 0, height: "100%", paddingBottom: "calc(56px + env(safe-area-inset-bottom, 0px))" } },
         tab === "plan" && phase === "locked" ? RC("button", { onClick: () => setPaywall({ mode: "locked" }), style: { display: "block", width: "calc(100% - 32px)", margin: "4px 16px 12px", padding: "14px 16px", textAlign: "left", borderRadius: 14, cursor: "pointer", fontFamily: "'DM Sans',sans-serif", background: T.goldBg, border: `1px solid ${T.gold}55`, color: T.text } },

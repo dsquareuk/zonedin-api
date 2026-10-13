@@ -9,8 +9,24 @@ module.exports = async function handler(req, res) {
   const want = `Bearer ${process.env.CRON_SECRET || ""}`, got = req.headers.authorization || "";
   if (!process.env.CRON_SECRET || got.length !== want.length || !crypto.timingSafeEqual(Buffer.from(got), Buffer.from(want))) return res.status(401).end();
   if (!process.env.RESEND_API_KEY || !process.env.FOUNDER_EMAIL || !process.env.EMAIL_FROM) return res.status(503).json({ error: "email not configured" });
-  let r = req.body; if (typeof r === "string") { try { r = JSON.parse(r); } catch (_) { r = {}; } }
-  r = r && r.record ? r.record : r || {};
+  let body = req.body; if (typeof body === "string") { try { body = JSON.parse(body); } catch (_) { body = {}; } }
+  body = body || {};
+  const r = body.record || body;
+  if (body.type === "feedback") {
+    const label = { confusing: "😕 Confusing", annoying: "😤 Annoying", idea: "💡 Idea", bug: "🐞 Bug", love: "❤️ Love it" }[r.kind] || r.kind;
+    const fhtml = `<div style="font-family:system-ui,sans-serif;font-size:15px;line-height:1.6;color:#0F141C">
+      <p style="font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#007A70;font-weight:700;margin:0 0 8px">Beta feedback · ${esc(label)}</p>
+      <p style="font-size:18px;margin:0 0 14px;white-space:pre-wrap">${esc(r.message)}</p>
+      <p style="margin:0;color:#555">${esc(r.name)} &lt;${esc(r.email)}&gt;<br>Screen: ${esc(r.screen || "–")} · Trial day ${esc(r.trial_day || "–")} · ${esc(r.platform || "–")}</p>
+      <p style="margin:14px 0 0;color:#555">Reply to this email to answer them directly.</p></div>`;
+    const fs = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ from: process.env.EMAIL_FROM, to: process.env.FOUNDER_EMAIL, subject: `Feedback (${String(label)}): ${String(r.message || "").slice(0, 50)}`, html: fhtml, reply_to: r.email || undefined })
+    });
+    if (!fs.ok) { console.log("feedback alert error:", fs.status, await fs.text()); return res.status(502).json({ error: "send failed" }); }
+    return res.status(200).json({ ok: true });
+  }
   const html = `<div style="font-family:system-ui,sans-serif;font-size:15px;line-height:1.6;color:#0F141C">
     <p style="font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#007A70;font-weight:700;margin:0 0 8px">New ZonedIn beta sign-up</p>
     <p style="font-size:20px;font-weight:700;margin:0 0 12px">${esc(r.name)} &lt;${esc(r.email)}&gt;</p>
