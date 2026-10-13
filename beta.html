@@ -94,13 +94,20 @@ footer a{color:var(--sub)}
     <label class="consent"><input type="checkbox" id="consent" name="consent" required/>I’m happy for ZonedIn to email me about the beta. I can ask to be removed at any time.</label>
     <div class="err" id="err" role="alert" hidden></div>
     <button type="submit" id="go">Join the beta →</button>
-    <p class="small">Free during the beta. No card needed.</p>
+    <p class="small">Free during the beta. No card needed. Start straight away.</p>
   </form>
 
   <div class="done in" id="done" hidden>
-    <div style="font-size:13px;font-weight:700;letter-spacing:1.3px;text-transform:uppercase;color:var(--teal)">You’re on the list</div>
+    <div style="font-size:13px;font-weight:700;letter-spacing:1.3px;text-transform:uppercase;color:var(--teal)">You’re in</div>
     <h2 id="done-h">Thanks.</h2>
-    <p>We’ll email you within 48 hours with your invite and how to get started. Know someone who’d keep their word to themselves? Send them this:</p>
+    <p>Your 17 days start today. Open the app on your phone and choose your first Gold: the one thing that matters most.</p>
+    <a href="/" id="start" style="display:flex;align-items:center;justify-content:center;min-height:54px;border-radius:50px;font-weight:700;font-size:17px;color:#0a0e14;text-decoration:none;background:linear-gradient(135deg,var(--teal),var(--teal2));margin-bottom:18px">Start now →</a>
+    <ol style="text-align:left;font-size:14px;line-height:1.6;color:var(--sub);padding-left:20px;margin-bottom:20px">
+      <li><b style="color:var(--text)">iPhone:</b> open in Safari, tap Share, then “Add to Home Screen”.</li>
+      <li><b style="color:var(--text)">Android:</b> open in Chrome, tap ⋮, then “Add to Home screen”.</li>
+      <li>Sign in with the same email, commit to your Gold, and close the day tonight.</li>
+    </ol>
+    <p>Know someone who’d keep their word to themselves? Send them this:</p>
     <div class="share"><input type="text" id="link" readonly aria-label="Beta link"/><button type="button" id="copy">Copy</button></div>
   </div>
 
