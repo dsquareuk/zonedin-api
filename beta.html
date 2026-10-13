@@ -122,10 +122,12 @@ footer a{color:var(--sub)}
     if(!d.phone) return fail('Choose iPhone or Android.');
     if(!document.getElementById('consent').checked) return fail('Tick the box so we can email you your invite.');
     d.source=src; go.disabled=true; go.textContent='Joining…';
-    fetch('/api/beta-signup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)})
-      .then(function(r){return r.json().then(function(j){return{ok:r.ok,j:j};});})
-      .then(function(x){
-        if(!x.ok) throw new Error(x.j&&x.j.error||'failed');
+    if(d.website){f.hidden=true;document.getElementById('done').hidden=false;return;}
+    var row={name:d.name.trim().slice(0,60),email:d.email.trim().toLowerCase().slice(0,160),role:d.role,goal:(d.goal||'').trim().slice(0,300),phone:d.phone,source:src,consent:true};
+    fetch('https://takormabbagvdckpxpox.supabase.co/rest/v1/beta_signups',{method:'POST',headers:{'Content-Type':'application/json',apikey:'sb_publishable_yOWhO9_U1TkyUmsvHy1CCQ_vDl9TTUi',Authorization:'Bearer sb_publishable_yOWhO9_U1TkyUmsvHy1CCQ_vDl9TTUi',Prefer:'return=minimal'},body:JSON.stringify(row)})
+      .then(function(r){
+        // 409 = this email is already on the list, which is fine.
+        if(!r.ok&&r.status!==409) throw new Error('failed');
         try{window.posthog&&posthog.capture('beta_signup',{source:src,role:d.role,phone:d.phone});}catch(_){}
         f.hidden=true; document.getElementById('done-h').textContent='Thanks, '+d.name.trim().split(' ')[0]+'.'; document.getElementById('done').hidden=false; window.scrollTo(0,0);
       })
