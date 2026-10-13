@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<title>Join the ZonedIn beta — Clarity beats chaos.</title>
+<meta name="description" content="ZonedIn helps you cut through the noise, commit to your top three each day, and see them through. Join the first 25 beta testers."/>
+<meta property="og:title" content="Join the ZonedIn beta"/>
+<meta property="og:description" content="Cut through the noise. Commit to your top three. See them through. 25 places."/>
+<meta name="theme-color" content="#0a0e14"/>
+<link rel="icon" href="/icons/icon-192x192.png"/>
+<style>
+@font-face{font-family:'Syne';font-weight:800;src:url(/fonts/syne-latin-800-normal.woff2) format('woff2');font-display:swap}
+@font-face{font-family:'DM Sans';font-weight:400;src:url(/fonts/dm-sans-latin-400-normal.woff2) format('woff2');font-display:swap}
+@font-face{font-family:'DM Sans';font-weight:600;src:url(/fonts/dm-sans-latin-600-normal.woff2) format('woff2');font-display:swap}
+@font-face{font-family:'DM Sans';font-weight:700;src:url(/fonts/dm-sans-latin-700-normal.woff2) format('woff2');font-display:swap}
+:root{--bg:#0a0e14;--card:#111720;--line:rgba(240,244,248,.12);--text:#F0F4F8;--sub:rgba(240,244,248,.66);--teal:#00C2B2;--teal2:#00E5D4;--gold:#F59E0B;--dia:#60A5FA;--plat:#A78BFA;color-scheme:dark}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--text);font-family:'DM Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:520px;margin:0 auto;padding:calc(env(safe-area-inset-top,0px) + 36px) 20px calc(env(safe-area-inset-bottom,0px) + 40px)}
+.brand{display:flex;align-items:center;gap:10px;font-family:'Syne',sans-serif;font-weight:800;font-size:20px;margin-bottom:36px}
+.mark{width:30px;height:30px;border-radius:50%;border:3px solid var(--teal);display:grid;place-items:center;font-size:13px;color:var(--teal)}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:var(--gold);margin-bottom:14px}
+h1{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(34px,9vw,46px);line-height:1.05;letter-spacing:-.5px;margin-bottom:16px;text-wrap:balance}
+.lede{font-size:17px;line-height:1.55;color:var(--sub);margin-bottom:28px}
+.three{display:flex;flex-direction:column;gap:8px;margin-bottom:28px}
+.t{display:flex;gap:12px;align-items:baseline;padding:12px 14px;border-radius:14px;background:var(--card);border:1px solid var(--line);font-size:15px;line-height:1.4}
+.t b{font-family:'Syne',sans-serif;font-size:14px;min-width:74px}
+.gold b{color:var(--gold)}.dia b{color:var(--dia)}.plat b{color:var(--plat)}
+.what{font-size:15px;line-height:1.6;color:var(--sub);margin-bottom:30px}
+.what strong{color:var(--text)}
+form{display:flex;flex-direction:column;gap:16px;padding:22px 18px;border-radius:20px;background:var(--card);border:1px solid var(--line)}
+.f{display:flex;flex-direction:column;gap:7px}
+label{font-size:14px;font-weight:700}
+.hint{font-size:13px;color:var(--sub);font-weight:400}
+input[type=text],input[type=email],select,textarea{font:inherit;font-size:16px;color:var(--text);background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:13px 14px;width:100%}
+textarea{min-height:76px;resize:vertical}
+input:focus-visible,select:focus-visible,textarea:focus-visible{outline:none;box-shadow:0 0 0 2px var(--teal2)}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.seg label{display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);font-weight:600;cursor:pointer}
+.seg input{accent-color:var(--teal)}
+.seg label:has(input:checked){border-color:var(--teal);background:rgba(0,194,178,.1)}
+.consent{display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.5;color:var(--sub);font-weight:400}
+.consent input{margin-top:3px;accent-color:var(--teal);width:18px;height:18px;flex-shrink:0}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+button{font:inherit;font-size:17px;font-weight:700;border:none;border-radius:50px;min-height:54px;cursor:pointer;color:#0a0e14;background:linear-gradient(135deg,var(--teal),var(--teal2))}
+button:disabled{opacity:.6}
+button:focus-visible{outline:2px solid var(--teal2);outline-offset:3px}
+.err{font-size:14px;color:var(--gold);line-height:1.5}
+.small{font-size:13px;color:var(--sub);text-align:center;line-height:1.5}
+.done{text-align:center;padding:34px 20px;border-radius:20px;background:var(--card);border:1px solid rgba(0,194,178,.35)}
+.done h2{font-family:'Syne',sans-serif;font-size:28px;margin:10px 0 10px}
+.done p{color:var(--sub);line-height:1.6;font-size:15px;margin-bottom:18px}
+.share{display:flex;gap:8px}
+.share input{font-size:14px}
+.share button{font-size:14px;min-height:46px;padding:0 16px;flex-shrink:0}
+footer{margin-top:30px;text-align:center;font-size:13px;color:var(--sub);line-height:1.6}
+footer a{color:var(--sub)}
+@media (prefers-reduced-motion:no-preference){.in{animation:up .5s cubic-bezier(.2,.8,.2,1) both}@keyframes up{from{opacity:0;transform:translateY(8px)}}}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <div class="brand"><span class="mark" aria-hidden="true">Z</span>ZonedIn</div>
+  <div class="eyebrow">Beta · 25 places</div>
+  <h1>Clarity beats chaos.</h1>
+  <p class="lede">Cut through the noise. Commit to your top three each day. See them through.</p>
+  <div class="three" aria-label="How a day works">
+    <div class="t gold"><b>Gold</b><span>The one thing that matters most today</span></div>
+    <div class="t dia"><b>Diamond</b><span>A second task</span></div>
+    <div class="t plat"><b>Platinum</b><span>A stretch task</span></div>
+  </div>
+  <p class="what">Each morning you commit to your three. You focus on them. Each evening you answer honestly: <strong>did you keep your commitment?</strong> After two weeks you get a review of how you work best, and a plan to get more done in the next two.</p>
+
+  <form id="f" novalidate>
+    <div class="f"><label for="name">First name</label><input id="name" name="name" type="text" autocomplete="given-name" required maxlength="60"/></div>
+    <div class="f"><label for="email">Email</label><input id="email" name="email" type="email" autocomplete="email" inputmode="email" required maxlength="160"/></div>
+    <div class="f"><label for="role">Which fits you best?</label>
+      <select id="role" name="role" required>
+        <option value="">Choose one</option>
+        <option>Running a business or side project</option>
+        <option>Employed, with goals outside work</option>
+        <option>Freelance or self-employed</option>
+        <option>Student</option>
+        <option>Something else</option>
+      </select></div>
+    <div class="f"><label for="goal">What’s one thing you keep meaning to do, but don’t? <span class="hint">Optional, but it helps us.</span></label><textarea id="goal" name="goal" maxlength="300"></textarea></div>
+    <div class="f"><span style="font-size:14px;font-weight:700" id="phone-l">Your phone</span>
+      <div class="seg" role="radiogroup" aria-labelledby="phone-l">
+        <label><input type="radio" name="phone" value="iphone" required/>iPhone</label>
+        <label><input type="radio" name="phone" value="android"/>Android</label>
+      </div></div>
+    <div class="hp" aria-hidden="true"><label for="website">Website</label><input id="website" name="website" type="text" tabindex="-1" autocomplete="off"/></div>
+    <label class="consent"><input type="checkbox" id="consent" name="consent" required/>I’m happy for ZonedIn to email me about the beta. I can ask to be removed at any time.</label>
+    <div class="err" id="err" role="alert" hidden></div>
+    <button type="submit" id="go">Join the beta →</button>
+    <p class="small">Free during the beta. No card needed.</p>
+  </form>
+
+  <div class="done in" id="done" hidden>
+    <div style="font-size:13px;font-weight:700;letter-spacing:1.3px;text-transform:uppercase;color:var(--teal)">You’re on the list</div>
+    <h2 id="done-h">Thanks.</h2>
+    <p>We’ll email you within 48 hours with your invite and how to get started. Know someone who’d keep their word to themselves? Send them this:</p>
+    <div class="share"><input type="text" id="link" readonly aria-label="Beta link"/><button type="button" id="copy">Copy</button></div>
+  </div>
+
+  <footer>Every kept commitment is evidence of who you’re becoming.<br/><a href="/privacy.html">Privacy</a></footer>
+</main>
+<script>
+(function(){
+  var q=new URLSearchParams(location.search), src=(q.get('src')||q.get('utm_source')||document.referrer.replace(/^https?:\/\//,'').split('/')[0]||'direct').slice(0,60);
+  var link=location.origin+'/beta.html';
+  document.getElementById('link').value=link+'?src=friend';
+  var f=document.getElementById('f'), err=document.getElementById('err'), go=document.getElementById('go');
+  function fail(m){err.textContent=m;err.hidden=false;}
+  f.addEventListener('submit',function(e){
+    e.preventDefault(); err.hidden=true;
+    var d=Object.fromEntries(new FormData(f).entries());
+    if(!d.name||!d.name.trim()) return fail('Add your first name.');
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email||'')) return fail('That email doesn’t look right. Check it and try again.');
+    if(!d.role) return fail('Choose the option that fits you best.');
+    if(!d.phone) return fail('Choose iPhone or Android.');
+    if(!document.getElementById('consent').checked) return fail('Tick the box so we can email you your invite.');
+    d.source=src; go.disabled=true; go.textContent='Joining…';
+    fetch('/api/beta-signup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)})
+      .then(function(r){return r.json().then(function(j){return{ok:r.ok,j:j};});})
+      .then(function(x){
+        if(!x.ok) throw new Error(x.j&&x.j.error||'failed');
+        try{window.posthog&&posthog.capture('beta_signup',{source:src,role:d.role,phone:d.phone});}catch(_){}
+        f.hidden=true; document.getElementById('done-h').textContent='Thanks, '+d.name.trim().split(' ')[0]+'.'; document.getElementById('done').hidden=false; window.scrollTo(0,0);
+      })
+      .catch(function(){go.disabled=false;go.textContent='Join the beta →';fail('Couldn’t save that. Check your connection and try again.');});
+  });
+  document.getElementById('copy').addEventListener('click',function(){
+    var i=document.getElementById('link'),b=this;
+    (navigator.clipboard?navigator.clipboard.writeText(i.value):Promise.reject()).then(function(){b.textContent='Copied';},function(){i.select();});
+  });
+})();
+</script>
+</body>
+</html>
