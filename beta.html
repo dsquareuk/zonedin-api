@@ -4,9 +4,9 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <title>Join the ZonedIn beta — Clarity beats chaos.</title>
-<meta name="description" content="ZonedIn helps you cut through the noise, commit to your top three each day, and see them through. Join the first 25 beta testers."/>
+<meta name="description" content="ZonedIn helps you cut through the noise, commit to your top three each day, and see them through. Join the beta."/>
 <meta property="og:title" content="Join the ZonedIn beta"/>
-<meta property="og:description" content="Cut through the noise. Commit to your top three. See them through. 25 places."/>
+<meta property="og:description" content="Cut through the noise. Commit to your top three. See them through."/>
 <meta name="theme-color" content="#0a0e14"/>
 <link rel="icon" href="/icons/icon-192x192.png"/>
 <style>
@@ -58,11 +58,15 @@ footer{margin-top:30px;text-align:center;font-size:13px;color:var(--sub);line-he
 footer a{color:var(--sub)}
 @media (prefers-reduced-motion:no-preference){.in{animation:up .5s cubic-bezier(.2,.8,.2,1) both}@keyframes up{from{opacity:0;transform:translateY(8px)}}}
 </style>
+<script>
+    !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(a!==void 0?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return a!=="posthog"&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys getNextSurveyStep onSessionId".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+try{posthog.init('phc_yS3gvBMbLsgRe9YrUTmEUqPfHyFQP4pKuTbgfv7YdVmf',{api_host:'https://eu.i.posthog.com',autocapture:false,capture_pageview:false,capture_pageleave:false,disable_session_recording:true,persistence:'localStorage'});}catch(e){}
+</script>
 </head>
 <body>
 <main class="wrap">
   <div class="brand"><span class="mark" aria-hidden="true">Z</span>ZonedIn</div>
-  <div class="eyebrow">Beta · 25 places</div>
+  <div class="eyebrow">Free beta</div>
   <h1>Clarity beats chaos.</h1>
   <p class="lede">Cut through the noise. Commit to your top three each day. See them through.</p>
   <div class="three" aria-label="How a day works">
@@ -100,8 +104,8 @@ footer a{color:var(--sub)}
   <div class="done in" id="done" hidden>
     <div style="font-size:13px;font-weight:700;letter-spacing:1.3px;text-transform:uppercase;color:var(--teal)">You’re in</div>
     <h2 id="done-h">Thanks.</h2>
-    <p>Your 17 days start today. Open the app on your phone and choose your first Gold: the one thing that matters most.</p>
-    <a href="/" id="start" style="display:flex;align-items:center;justify-content:center;min-height:54px;border-radius:50px;font-weight:700;font-size:17px;color:#0a0e14;text-decoration:none;background:linear-gradient(135deg,var(--teal),var(--teal2));margin-bottom:18px">Start now →</a>
+    <p>You can start today. Open the app on your phone and choose your first Gold: the one thing that matters most.</p>
+    <a href="/" id="start" onclick="try{posthog.capture('beta_start_clicked')}catch(e){}" style="display:flex;align-items:center;justify-content:center;min-height:54px;border-radius:50px;font-weight:700;font-size:17px;color:#0a0e14;text-decoration:none;background:linear-gradient(135deg,var(--teal),var(--teal2));margin-bottom:18px">Start now →</a>
     <ol style="text-align:left;font-size:14px;line-height:1.6;color:var(--sub);padding-left:20px;margin-bottom:20px">
       <li><b style="color:var(--text)">iPhone:</b> open in Safari, tap Share, then “Add to Home Screen”.</li>
       <li><b style="color:var(--text)">Android:</b> open in Chrome, tap ⋮, then “Add to Home screen”.</li>
@@ -117,9 +121,14 @@ footer a{color:var(--sub)}
 (function(){
   var q=new URLSearchParams(location.search), src=(q.get('src')||q.get('utm_source')||document.referrer.replace(/^https?:\/\//,'').split('/')[0]||'direct').slice(0,60);
   var link=location.origin+'/beta.html';
+  function ev(n,p){try{window.posthog&&posthog.capture(n,Object.assign({source:src},p||{}));}catch(_){}}
+  ev('beta_page_viewed',{referrer:document.referrer.slice(0,120)});
+  var started=false;
+  document.getElementById('f').addEventListener('focusin',function(){if(!started){started=true;ev('beta_form_started');}});
+  var sc=false;window.addEventListener('scroll',function(){if(!sc&&window.scrollY>200){sc=true;ev('beta_page_scrolled');}},{passive:true});
   document.getElementById('link').value=link+'?src=friend';
   var f=document.getElementById('f'), err=document.getElementById('err'), go=document.getElementById('go');
-  function fail(m){err.textContent=m;err.hidden=false;}
+  function fail(m){err.textContent=m;err.hidden=false;ev('beta_form_error',{message:m.slice(0,60)});}
   f.addEventListener('submit',function(e){
     e.preventDefault(); err.hidden=true;
     var d=Object.fromEntries(new FormData(f).entries());
@@ -135,7 +144,7 @@ footer a{color:var(--sub)}
       .then(function(r){
         // 409 = this email is already on the list, which is fine.
         if(!r.ok&&r.status!==409) throw new Error('failed');
-        try{window.posthog&&posthog.capture('beta_signup',{source:src,role:d.role,phone:d.phone});}catch(_){}
+        ev('beta_signup',{role:d.role,phone:d.phone});
         f.hidden=true; document.getElementById('done-h').textContent='Thanks, '+d.name.trim().split(' ')[0]+'.'; document.getElementById('done').hidden=false; window.scrollTo(0,0);
       })
       .catch(function(){go.disabled=false;go.textContent='Join the beta →';fail('Couldn’t save that. Check your connection and try again.');});
