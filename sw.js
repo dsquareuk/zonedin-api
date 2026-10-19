@@ -1,8 +1,7 @@
 // ZonedIn Service Worker — v3 (instant open + offline)
-// The app shell lives on the phone. Opening ZonedIn never waits for the network:
-// the cached copy opens straight away and a fresh copy is fetched in the background
-// for next time. Data calls (Supabase, /api, analytics) always go to the network.
-const CACHE = 'zonedin-v3';
+// The app shell lives on the phone. Opening ZonedIn waits at most 1.5s for a fresh copy
+// (covered by the splash); with a slow or no connection the cached copy opens instead. Data calls (Supabase, /api, analytics) always go to the network.
+const CACHE = 'zonedin-v4';
 const SHELL = [
   '/',
   '/manifest.json',
@@ -47,7 +46,12 @@ self.addEventListener('fetch', e => {
       if (url.pathname !== '/' && url.pathname !== '/index.html') {
         const page = await fresh; return page || (await c.match(url.pathname)) || cached || Response.error();
       }
-      if (cached) { e.waitUntil(fresh); return cached; }
+      // v4: try the network first for a moment (hidden behind the splash), so new releases show on the next open.
+      if (cached) {
+        const quick = await Promise.race([fresh, new Promise(r => setTimeout(() => r(null), 1500))]);
+        if (quick && quick.ok) return quick;
+        e.waitUntil(fresh); return cached;
+      }
       return (await fresh) || Response.error();
     }));
     return;

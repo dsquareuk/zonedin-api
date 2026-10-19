@@ -1733,9 +1733,14 @@ const CloseTheDay = ({ day, weekRecord, summaryOnly, firstTime, onAnswer, onFini
 
 // ── DL-12 — DAYS WON (5-week calendar) ───────────────────────────────────
 const DaysWonGrid = ({ rowsByDate, today }) => {
-  const start = addDays(weekStart(today), -28);
+  // v58: show only the weeks since you started (up to 5), not five empty weeks on day one.
+  const thisWeek = weekStart(today);
+  const firstDay = Object.keys(rowsByDate || {}).filter((d) => d <= today && rowsByDate[d] && rowsByDate[d].committed_at).sort()[0] || today;
+  let weeks = 1;
+  for (let w = thisWeek; w > weekStart(firstDay) && weeks < 5; w = addDays(w, -7)) weeks += 1;
+  const start = addDays(thisWeek, -7 * (weeks - 1));
   const cells = [];
-  for (let i = 0; i < 35; i++) cells.push(addDays(start, i));
+  for (let i = 0; i < weeks * 7; i++) cells.push(addDays(start, i));
   const col = (d) => {
     if (d > today) return { bg: "transparent", b: "rgba(var(--zi-line),0.03)", label: "" };
     const r = rowsByDate[d];
@@ -1750,7 +1755,7 @@ const DaysWonGrid = ({ rowsByDate, today }) => {
   // Shape cues so the grid doesn't rely on colour alone: a tick for all kept, a dot for some.
   const cue = (m, small) => m === "all" ? RC("span", { style: { position: small ? "static" : "absolute", right: 3, bottom: 2, color: T.bg, display: "flex" } }, RC(CheckMark, { size: small ? 8 : 9 })) : m === "some" ? RC("span", { style: { position: small ? "static" : "absolute", right: 4, bottom: 4, width: small ? 4 : 5, height: small ? 4 : 5, borderRadius: 3, background: T.text, display: "block" } }) : null;
   return RC("div", { style: __spreadProps(__spreadValues({}, card()), { margin: "0 16px 12px" }) },
-    RC("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 12 } }, dlLabel("Days won", T.teal), RC("span", { style: { fontSize: 11, color: T.sub } }, "last 5 weeks")),
+    RC("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 12 } }, dlLabel("Days won", T.teal), RC("span", { style: { fontSize: 11, color: T.sub } }, weeks === 1 ? "this week" : `last ${weeks} weeks`)),
     RC("div", { style: { display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 5, marginBottom: 6 } }, ["M", "T", "W", "T", "F", "S", "S"].map((l, i) => RC("div", { key: i, style: { fontSize: 11, color: T.sub2, textAlign: "center", fontWeight: 700 } }, l))),
     RC("div", { style: { display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 5 } }, cells.map((d) => {
       const s = col(d);
