@@ -1059,14 +1059,16 @@ const verdictLine = (kept, committed) => {
 };
 // R8 — kept ÷ committed, Monday–Sunday, user's timezone. Legacy days (no committed_at) are excluded.
 const weekRecordFor = (rowsByDate, today) => {
-  let kept = 0, committed = 0;
+  let kept = 0, committed = 0, goldKept = 0, goldDays = 0;
   for (let d = weekStart(today); d <= today; d = addDays(d, 1)) {
     const r = rowsByDate[d];
     if (!r || !r.committed_at) continue;
     const c = dayCounts(r, d < today);
     kept += c.kept; committed += c.committed;
+    goldDays++; if (r.outcomes && r.outcomes.gold === "kept") goldKept++;
   }
-  return { kept, committed, pct: committed ? Math.round((kept / committed) * 100) : 0 };
+  let dayN = 1; for (let d = weekStart(today); d < today; d = addDays(d, 1)) dayN++;
+  return { kept, committed, goldKept, goldDays, dayN, pct: committed ? Math.round((kept / committed) * 100) : 0 };
 };
 // R7 — streak = consecutive days Gold was kept. Pure so it can run during load and in handlers.
 const streakAfterGold = (s, day, kept) => {
@@ -1187,7 +1189,7 @@ const RecommitSheet = ({ task, rolls, withSession, onRecommit, onLetGo }) => {
   return RCx("div", { style: { position: "fixed", inset: 0, zIndex: 9998, background: "rgba(var(--zi-scrim),0.92)", display: "flex", alignItems: "flex-end", justifyContent: "center", padding: "16px 16px calc(env(safe-area-inset-bottom,0px) + 16px)" } },
     RCx("div", { className: "slide-up", role: "dialog", "aria-label": "Make it tomorrow's Gold", style: { background: T.card, borderRadius: 28, padding: "26px 22px 18px", maxWidth: 420, width: "100%", border: `1px solid ${T.border2}` } },
       RCx("div", { style: { fontFamily: "'Space Grotesk',sans-serif", fontSize: 22, fontWeight: 900, color: T.text, marginBottom: 6, textAlign: "center" } }, "Not today."),
-      RCx("div", { style: { fontSize: 14, color: T.sub, lineHeight: 1.5, marginBottom: 16, textAlign: "center" } }, third ? "Third time this has rolled forward — what’s actually in the way? Make it smaller, or let it go." : "Make it tomorrow’s Gold? Smaller is fine."),
+      RCx("div", { style: { fontSize: 14, color: T.sub, lineHeight: 1.5, marginBottom: 16, textAlign: "center" } }, third ? "Third time this has rolled forward — what’s actually in the way? Make it smaller, or let it go." : (window.__ziGoldMisses || 0) >= 3 ? "Three in a row. Let this one go, or make tomorrow’s Gold something new and small." : (window.__ziGoldMisses || 0) >= 2 ? "Two in a row. That’s information, not failure. What’s the 20-minute version of tomorrow’s Gold?" : "Make it tomorrow’s Gold? Smaller is fine."),
       RCx("label", { htmlFor: "zi-recommit", style: { fontSize: 12, color: T.sub, display: "block", marginBottom: 6 } }, "Tomorrow’s Gold"),
       RCx("input", { id: "zi-recommit", type: "text", value: txt, maxLength: 80, onChange: (e) => setTxt(e.target.value), style: { width: "100%", padding: "13px 14px", borderRadius: 12, border: `1.5px solid rgba(245,158,11,0.45)`, background: T.bg, color: T.text, fontSize: 15, boxSizing: "border-box", outline: "none", fontFamily: "'DM Sans',sans-serif", marginBottom: 14 } }),
       withSession ? RCx("div", { style: { marginBottom: 14 } }, RCx(DifficultyRow, { value: difficulty, onChange: setDifficulty })) : null,
@@ -1223,12 +1225,12 @@ const enableMorningPush = async (userId) => {
 const disableMorningPush = async () => {
   try { const reg = await navigator.serviceWorker.ready; const sub = await reg.pushManager.getSubscription(); if (sub) { await supabase.from("push_subscriptions").delete().eq("endpoint", sub.endpoint); await sub.unsubscribe(); } } catch (e) {}
 };
-const NudgeCard = ({ title, body, cta, onCta, onDismiss, note }) => RCx("div", { className: "pop-in", style: { margin: "4px 16px 12px", padding: "15px 16px 8px", borderRadius: 18, background: T.card, border: `1px solid ${T.border2}` } },
-  RCx("div", { style: { fontSize: 15, fontWeight: 800, color: T.text, marginBottom: 4 } }, title),
-  RCx("div", { style: { fontSize: 13, color: T.sub, lineHeight: 1.5 } }, body),
+const NudgeCard = ({ title, body, cta, onCta, onDismiss, note }) => RCx("div", { className: "pop-in", style: { margin: "4px 16px 12px", padding: "10px 12px 4px 14px", borderRadius: 14, background: T.card, border: `1px solid ${T.border}` } },
+  RCx("div", { style: { fontSize: 14, fontWeight: 700, color: T.text } }, title),
+  RCx("div", { style: { fontSize: 12, color: T.sub, lineHeight: 1.45, marginTop: 2 } }, body),
   note ? RCx("div", { style: { fontSize: 12, color: T.teal, marginTop: 6 } }, note) : null,
-  RCx("div", { style: { display: "flex", gap: 8, marginTop: 8 } },
-    cta ? RCx("button", { onClick: onCta, style: btnPrimary({ padding: "0 18px", minHeight: 44, fontSize: 14, boxShadow: "none" }) }, cta) : null,
+  RCx("div", { style: { display: "flex", gap: 8, marginTop: 4 } },
+    cta ? RCx("button", { onClick: onCta, style: btn({ padding: "0 14px", minHeight: 40, fontSize: 13, background: "none", border: `1px solid ${T.teal}`, color: T.teal }) }, cta) : null,
     RCx("button", { onClick: onDismiss, style: btn({ background: "none", color: T.sub, fontSize: 14, minHeight: 44, padding: "0 12px" }) }, "Not now")));
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -1408,7 +1410,7 @@ const TypeItOut = ({ onSorted }) => {
       RC("button", { onClick: go, disabled: !txt.trim() || busy, style: btnPrimary({ flex: 2, fontSize: 14, padding: "12px", opacity: txt.trim() && !busy ? 1 : 0.45 }) }, busy ? "Sorting\u2026" : "Sort into my Three"),
       RC("button", { onClick: () => { setOpen(false); setMsg(""); }, style: btn({ flex: 1, fontSize: 13, background: "transparent", border: `1px solid ${T.border}`, color: T.sub, borderRadius: 50 }) }, "Cancel")),
     msg ? RC("div", { style: { fontSize: 12, color: T.sub, marginTop: 8, lineHeight: 1.5 } }, msg) : null,
-    RC("div", { style: { fontSize: 11, color: T.sub2, marginTop: 8 } }, "Sorted by Claude, Anthropic\u2019s AI. You decide what you commit to."));
+    RC("div", { style: { fontSize: 11, color: T.sub2, marginTop: 8 } }, "Sorted by AI. You decide what you commit to."));
 };
 const TodaysThreeForm = ({ day, onTask, onTaskBlur, onDoneWhen, onWhy, onPromise, hint, weekRecord, fromTomorrow, goldOnly, onAcceptSuggestion, beforeCommit, commitLabel }) => {
   const [focus, setFocus] = useState(null);
@@ -1526,15 +1528,16 @@ const DayInProgress = ({ day, today, sessionHistory, activeTier, onStartFocus, o
   const others = pending.filter((t) => t !== next);
   const ringState = (t) => day.outcomes[t] === "kept" ? "kept" : day.outcomes[t] === "not_kept" ? "not_kept" : t === next ? "next" : "pending";
   const rate = weekRecord && weekRecord.committed ? weekRecord.pct : null;
-  const delta = rate != null && prevWeekRecord && prevWeekRecord.committed ? rate - prevWeekRecord.pct : null;
+  const delta = rate != null && weekRecord.dayN >= 3 && prevWeekRecord && prevWeekRecord.committed ? rate - prevWeekRecord.pct : null;
   if (editing) return RC("div", { className: "fade-up", style: { padding: "4px 16px 20px" } },
     RC(TaskCard, { t: editing, day, status: "not_started", onStartFocus, onReckonNow, onEditSave, startEditing: true, onEditDone: () => setEditing(null) }));
   const ncfg = next ? DL_TIER[next] : null;
   return RC("div", { className: "fade-up", style: { padding: "4px 16px 20px" } },
     RC("div", { style: { display: "grid", gridTemplateColumns: `repeat(${tiers.length}, minmax(0, 1fr))`, gap: 4, margin: "6px 0 4px", maxWidth: tiers.length === 1 ? 140 : "none", marginLeft: tiers.length === 1 ? "auto" : 0, marginRight: tiers.length === 1 ? "auto" : 0 } },
       tiers.map((t) => RC(TierRing, { key: t, t, state: ringState(t) }))),
-    rate != null ? RC("div", { style: { textAlign: "center", fontSize: 13, color: T.sub, margin: "10px 0 16px" } }, "ZonedIn Rate this week ", RC("b", { style: { color: T.text } }, rate, "%"),
+    rate != null ? RC("div", { style: { textAlign: "center", fontSize: 13, color: T.sub, margin: "10px 0 16px" } }, "Gold kept this week ", RC("b", { style: { color: T.text } }, weekRecord.goldKept, " of ", weekRecord.goldDays), RC("span", { style: { color: T.sub } }, " \u00B7 ZonedIn Rate ", rate, "%"),
       delta != null ? RC("span", { style: { display: "inline-block", marginLeft: 6, padding: "2px 8px", borderRadius: 10, fontSize: 12, fontWeight: 700, background: delta > 0 ? "rgba(0,194,178,0.14)" : "rgba(var(--zi-line),0.06)", color: delta > 0 ? T.teal : T.sub } }, delta > 0 ? `up ${delta} pts` : delta < 0 ? `down ${-delta} pts` : "same as last week") : null) : RC("div", { style: { height: 14 } }),
+    window.__ziReviewIn != null ? RC("div", { style: { textAlign: "center", fontSize: 12, color: T.sub, margin: "-8px 0 14px" } }, window.__ziReviewIn === 0 ? "Your two-week review arrives tonight" : `Your two-week review arrives in ${window.__ziReviewIn} day${window.__ziReviewIn === 1 ? "" : "s"}`) : null,
     next ? RC("section", { "aria-label": "Up next", className: "pop-in", style: { padding: 18, borderRadius: 22, background: next === "gold" ? ncfg.bg : T.card, border: `1px solid ${ncfg.color}59`, display: "flex", flexDirection: "column", gap: 8, marginBottom: 10 } },
       RC("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between" } },
         RC("span", { style: { fontSize: 11, fontWeight: 700, letterSpacing: 1.3, textTransform: "uppercase", color: ncfg.color } }, "Up next · ", ncfg.label),
@@ -1542,6 +1545,7 @@ const DayInProgress = ({ day, today, sessionHistory, activeTier, onStartFocus, o
       RC("div", { style: { fontSize: 20, fontWeight: 700, color: T.text, lineHeight: 1.3, wordBreak: "break-word" } }, day[next]),
       RC("div", { style: { fontSize: 14, color: T.sub } }, "Done when: ", RC("span", { style: { color: T.text } }, day[`${next}_done_when`])),
       day.edited_after_commit && day.edited_after_commit[next] ? RC("div", { style: { fontSize: 12, color: T.sub, fontStyle: "italic" } }, "Changed after you committed") : null,
+      (() => { if (next !== "gold") return null; const R = window.__ziRows || {}; let d = addDays(today, -1), from = null; while (R[d] && R[d].gold && R[d].gold.trim() === (day.gold || "").trim() && R[d].outcomes && R[d].outcomes.gold === "not_kept") { from = d; d = addDays(d, -1); } return from ? RC("div", { style: { fontSize: 12, color: T.gold, fontWeight: 600 } }, "Carried from ", fmtDay(from, { weekday: "long" }), " \u00B7 uses today\u2019s Gold") : null; })(),
       RC("div", { style: { display: "flex", gap: 10, marginTop: 6 } },
         RC("button", { onClick: () => onStartFocus(next), style: btn({ flex: 1, minHeight: 52, padding: "0 12px", borderRadius: 26, background: next === "gold" ? `linear-gradient(135deg,${T.gold},${T.gold2})` : ncfg.color, color: next === "gold" ? "var(--zi-on-gold)" : T.bg, fontSize: 16, fontWeight: 800 }) }, "Get ZonedIn →"),
         RC("button", { onClick: () => onReckonNow(next), style: btn({ minHeight: 52, padding: "0 18px", borderRadius: 26, background: "transparent", border: `1.5px solid ${T.border2}`, color: T.text, fontSize: 15 }) }, "Check in"))) : null,
@@ -1800,13 +1804,13 @@ const TopBar = ({ tab, greetMsg, userName, identityStatement, dateStr, streak, s
   return ce("header", { style: { flexShrink: 0, position: "relative", zIndex: 50, background: T.bg, paddingTop: "calc(env(safe-area-inset-top, 0px) + 10px)", paddingLeft: 20, paddingRight: 16, paddingBottom: 10, borderBottom: `1px solid ${scrolled ? T.border : "transparent"}`, transition: "border-color var(--zi-quick) var(--zi-ease)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 } },
     ce("div", { style: { minWidth: 0, flex: 1 } },
       ce("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: "clamp(17px, 5.3vw, 21px)", fontWeight: 700, color: T.text, letterSpacing: -0.3, lineHeight: 1.25, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" } }, title),
-      sub ? ce("div", { style: { fontSize: 12, marginTop: 3, color: subTeal ? T.teal : T.sub, fontWeight: subTeal ? 600 : 400, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, sub) : null),
+      sub ? ce("div", { style: { fontSize: 12, marginTop: 3, color: subTeal ? T.teal : T.sub, fontWeight: subTeal ? 600 : 400, lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" } }, sub) : null),
     ce("div", { style: { display: "flex", alignItems: "center", gap: 14, flexShrink: 0 } },
       tab === "plan" && savingZones ? ce("span", { style: { fontSize: 10, color: T.teal, fontWeight: 700 } }, "saving…") : null,
       tab === "plan" ? ce("div", { title: "days Gold kept", "aria-label": `${streak} days Gold kept`, style: { display: "flex", alignItems: "center", gap: 4, color: streak > 0 ? T.gold : T.sub } },
         ce("svg", icon, ce("path", { d: "M13 2L4.5 13.5H12L11 22l8.5-11.5H12L13 2z" })),
-        ce("span", { style: { fontSize: 16, fontWeight: 700, color: T.text } }, streak)) : null,
-      tab === "reflect" && committed ? ce("button", { onClick: onCloseToday, style: btn({ padding: "7px 12px", borderRadius: 50, fontSize: 12, fontWeight: 700, border: `1.5px solid ${closed ? "rgba(34,197,94,0.35)" : "rgba(0,194,178,0.45)"}`, background: closed ? "rgba(34,197,94,0.08)" : "rgba(0,194,178,0.1)", color: closed ? "#22C55E" : T.teal }) }, closed ? "Today closed ✓" : "Close today →") : null,
+        ce("span", { style: { fontSize: 16, fontWeight: 700, color: T.text } }, streak), ce("span", { style: { fontSize: 11, fontWeight: 600, color: T.sub, marginLeft: 1 } }, streak === 1 ? "day" : "days")) : null,
+      false ? ce("button", { onClick: onCloseToday, style: btn({ padding: "7px 12px", borderRadius: 50, fontSize: 12, fontWeight: 700, border: `1.5px solid ${closed ? "rgba(34,197,94,0.35)" : "rgba(0,194,178,0.45)"}`, background: closed ? "rgba(34,197,94,0.08)" : "rgba(0,194,178,0.1)", color: closed ? "#22C55E" : T.teal }) }, closed ? "Today closed ✓" : "Close today →") : null,
       onMenu ? ce("button", { onClick: onMenu, "aria-label": feedbackNudge ? "Menu: settings and feedback (new)" : "Menu: settings and feedback", style: btn({ position: "relative", width: 44, height: 44, borderRadius: 22, padding: 0, border: `1px solid ${T.border2}`, background: T.card, color: T.text, fontSize: 15, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }) },
         ((userName || "").trim().charAt(0) || "Z").toUpperCase(),
         feedbackNudge ? ce("span", { "aria-hidden": true, style: { position: "absolute", top: 2, right: 2, width: 10, height: 10, borderRadius: 5, background: T.teal, border: `2px solid ${T.bg}` } }) : null) : null));
@@ -1887,7 +1891,7 @@ const FocusTab = ({ day, activeZoneKey, setActiveZoneKey, sessionDuration, setSe
           RC("div", { style: { fontSize: 11, color: T.sub, marginTop: 3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, "Done when: ", day[`${tier}_done_when`]))),
       pendingTiers.length > 1 ? RC("div", { style: { display: "flex", gap: 6, marginTop: 10 } }, pendingTiers.map((t) => RC("button", { key: t, onClick: () => setActiveZoneKey(t), style: btn({ padding: "0 14px", minHeight: 44, fontSize: 13, fontWeight: 700, borderRadius: 50, border: `1px solid ${tier === t ? DL_TIER[t].color : T.border}`, background: tier === t ? DL_TIER[t].bg : "transparent", color: tier === t ? DL_TIER[t].color : T.sub }) }, RC("span", { style: { display: "inline-flex", alignItems: "center", gap: 6 } }, RC(TierMark, { tier: t, size: 14 }), DL_TIER[t].label)))) : null),
     (() => { const real = (sessionHistory || []).filter((s) => !s.reckonedWithoutSession); return computeMomentum(real).total >= 5 ? RC("div", { style: { flexShrink: 0 } }, RC(MomentumCard, { sessionHistory: real })) : null; })(),
-    RC("div", { style: { flex: 1 } }),
+    RC("div", { style: { height: 14, flexShrink: 0 } }),
     RC("div", { style: { margin: "0 16px 10px", fontFamily: "'Space Grotesk',sans-serif", fontSize: 15, fontWeight: 800, color: T.text, flexShrink: 0 } }, OB_DURATION_HEADING),
     RC("div", { style: { margin: "0 16px 8px", flexShrink: 0 } }, RC(DurationChips, { value: sessionDuration, onChange: setSessionDuration })),
     RC("div", { style: { margin: "0 16px 12px", fontSize: 12, color: T.sub, lineHeight: 1.5, flexShrink: 0 } }, OB_DURATION_HELPER),
@@ -1915,7 +1919,7 @@ const insightCardEl = (ins, latest) => RC("div", { key: (ins.date || "") + (late
     RC("span", { style: { fontSize: 12, fontWeight: 700, color: latest ? T.teal : T.sub, letterSpacing: 0.3 } }, latest ? "Tonight’s insight" : "Insight · " + fmtDay(ins.date, { weekday: "short", day: "numeric", month: "short" })),
     RC("span", { style: { display: "flex", gap: 6, color: T.sub } }, ins.mood ? RC(MoodIcon, { val: ins.mood, size: 16 }) : null, ins.energy ? RC(EnergyIcon, { val: ins.energy, size: 16 }) : null)),
   RC("div", { style: { padding: "12px 16px", fontSize: 13, lineHeight: 1.8, color: latest ? "rgba(var(--zi-ink),0.9)" : T.sub, whiteSpace: "pre-wrap" } }, ins.text),
-  latest ? RC("div", { style: { padding: "0 16px 12px", fontSize: 11, color: T.sub2, lineHeight: 1.5 } }, "Written by Claude, Anthropic\u2019s AI, from your commitments and check-ins. Not used to train AI models. ", RC("a", { href: "/privacy.html", style: { color: T.teal, textDecoration: "none" } }, "How we use AI")) : null);
+  latest ? RC("div", { style: { padding: "0 16px 12px", fontSize: 11, color: T.sub2, lineHeight: 1.5 } }, "Written by AI from your commitments and check-ins. Not used to train AI models. ", RC("a", { href: "/privacy.html", style: { color: T.teal, textDecoration: "none" } }, "How we use AI")) : null);
 
 const RecordDay = ({ date, row, insight }) => {
   const [open, setOpen] = useState(false);
@@ -1926,7 +1930,8 @@ const RecordDay = ({ date, row, insight }) => {
       RC("span", { style: { minWidth: 44, padding: "4px 8px", borderRadius: 10, textAlign: "center", fontSize: 14, fontWeight: 800, color: all ? T.teal : c.kept ? T.gold : T.sub, background: all ? "rgba(0,194,178,0.1)" : c.kept ? "rgba(245,158,11,0.1)" : "rgba(var(--zi-line),0.04)" } }, c.kept, "/", c.committed),
       RC("span", { style: { flex: 1, minWidth: 0 } },
         RC("span", { style: { display: "block", fontSize: 14, fontWeight: 700 } }, fmtDay(date, { weekday: "short", day: "numeric", month: "short" })),
-        RC("span", { style: { display: "block", fontSize: 12, color: T.sub, marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, row.gold || "")),
+        RC("span", { style: { display: "block", fontSize: 12, color: T.sub, marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } },
+          row.outcomes && row.outcomes.gold ? RC("span", { style: { fontWeight: 700, color: row.outcomes.gold === "kept" ? T.gold : T.sub } }, row.outcomes.gold === "kept" ? "Gold kept · " : "Gold missed · ") : null, row.gold || "")),
       RC("span", { "aria-hidden": true, style: { color: T.sub, fontSize: 14, transform: open ? "rotate(90deg)" : "none", transition: "transform var(--zi-quick) var(--zi-ease)" } }, "›")),
     open ? RC("div", { className: "fade-up", style: { padding: "4px 14px 14px" } },
       RC("div", { style: { fontSize: 13, fontWeight: 700, color: T.text, marginBottom: 10 } }, verdictLine(c.kept, c.committed)),
@@ -1954,7 +1959,6 @@ const ReflectTab = ({ progressEl, reviews, onOpenReview, day, today, weekRecord,
   const orphanInsights = insightHistory.filter((i) => i !== todays && !(i.date && pastDates.includes(i.date)));
   return RC("div", { className: "fade-up" },
     RC("div", { style: { padding: "2px 20px 12px", fontSize: 13, color: T.sub, lineHeight: 1.5 } }, "How your commitments are going, day by day."),
-    progressEl || null,
     (reviews || []).length ? RC("div", { style: { margin: "0 16px 12px", display: "flex", flexDirection: "column", gap: 8 } },
       (reviews || []).slice(0, 6).map((r) => RC("button", { key: r.id || r.created_at, onClick: () => onOpenReview(r), style: { display: "flex", alignItems: "center", gap: 12, width: "100%", textAlign: "left", padding: "14px 16px", borderRadius: 14, cursor: "pointer", fontFamily: "'DM Sans',sans-serif", background: T.tealBg, border: `1px solid ${T.teal}40`, color: T.text } },
         RC("span", { style: { flex: 1 } },
@@ -1976,6 +1980,11 @@ const ReflectTab = ({ progressEl, reviews, onOpenReview, day, today, weekRecord,
             RC("button", { onClick: onRefreshInsight, style: btn({ padding: "0 14px", minHeight: 44, borderRadius: 50, background: "transparent", border: "1px solid rgba(226,114,111,0.4)", color: "#E2726F", fontSize: 13 }) }, "Retry"))
         : null,
       !loadingInsight && (todays || !insightError) ? RC("button", { onClick: onRefreshInsight, style: btn({ width: "100%", background: "none", color: T.teal, fontSize: 13, padding: "0 8px", minHeight: 44, fontWeight: 600 }) }, todays ? "Refresh insight" : "Get tonight’s insight") : null) : null,
+    window.__ziReviewIn != null ? RC("div", { style: { margin: "0 16px 12px", padding: "14px 16px", borderRadius: 16, background: T.tealBg, border: `1px solid ${T.teal}40` } },
+      RC("div", { style: { fontSize: 11, fontWeight: 800, letterSpacing: 1.1, textTransform: "uppercase", color: T.teal } }, "Your two-week review"),
+      RC("div", { style: { fontSize: 15, fontWeight: 700, color: T.text, marginTop: 4 } }, window.__ziReviewIn === 0 ? "Arrives tonight when you close the day" : `Arrives in ${window.__ziReviewIn} day${window.__ziReviewIn === 1 ? "" : "s"}`),
+      RC("div", { style: { fontSize: 13, color: T.sub, marginTop: 3, lineHeight: 1.5 } }, "It reads your first 14 days and predicts how to get more done in the next two.")) : null,
+    progressEl || null,
     RC(DaysWonGrid, { rowsByDate: rowsByDate || {}, today }),
     RC("div", { style: { margin: "4px 16px 12px" } },
       dlLabel("Past days", T.sub, { marginBottom: 10, padding: "0 4px" }),
@@ -2001,11 +2010,11 @@ const ProgressTab = ({ settingsOnly, planInfo, onShareWeek, morningPushOn, onMor
   settingsOnly ? null : React.createElement(React.Fragment, null,
   /* @__PURE__ */ React.createElement("div", { style: { height: 4 } }),
   React.createElement("div", { style: { ...card(), margin: "0 16px 12px", textAlign: "center", padding: "24px 20px 18px" } },
-    React.createElement("div", { style: { fontSize: 12, fontWeight: 700, letterSpacing: 1.1, textTransform: "uppercase", color: T.teal } }, "ZonedIn Rate \u00B7 this week"),
+    React.createElement("div", { style: { fontSize: 12, fontWeight: 700, letterSpacing: 1.1, textTransform: "uppercase", color: T.teal } }, "Gold kept \u00B7 this week"),
     weekRecord && weekRecord.committed
       ? React.createElement(React.Fragment, null,
-          React.createElement("div", { style: { fontFamily: "'Space Grotesk',sans-serif", fontSize: 72, fontWeight: 900, color: T.text, letterSpacing: -4, lineHeight: 1, marginTop: 8 } }, weekRecord.pct, React.createElement("span", { style: { fontSize: 34, color: T.sub, letterSpacing: -1 } }, "%")),
-          React.createElement("div", { style: { fontSize: 15, color: T.sub, marginTop: 6 } }, weekRecord.kept, " of ", weekRecord.committed, " commitments kept"),
+          React.createElement("div", { style: { fontFamily: "'Space Grotesk',sans-serif", fontSize: 72, fontWeight: 900, color: T.text, letterSpacing: -4, lineHeight: 1, marginTop: 8 } }, weekRecord.goldKept, React.createElement("span", { style: { fontSize: 34, color: T.sub, letterSpacing: -1 } }, "/", weekRecord.goldDays)),
+          React.createElement("div", { style: { fontSize: 15, color: T.sub, marginTop: 6 } }, "ZonedIn Rate ", weekRecord.pct, "% \u00B7 ", weekRecord.kept, " of ", weekRecord.committed, " commitments kept"),
           weekRecord.committed >= 3 ? React.createElement("button", { onClick: onShareWeek, style: btn({ marginTop: 10, minHeight: 44, padding: "0 18px", borderRadius: 99, border: "1.5px solid rgba(0,194,178,0.3)", background: "transparent", color: T.teal, fontSize: 13, fontWeight: 700 }) }, "Share this week") : null)
       : React.createElement("div", { style: { fontSize: 14, color: T.sub, marginTop: 10, lineHeight: 1.5 } }, "Commit to today\u2019s three. Your week starts with it."),
     React.createElement("div", { style: { height: 1, background: T.border, margin: "16px 0 12px" } }),
@@ -2688,6 +2697,9 @@ const ZonedInMVP = () => {
   const trialDay = pw.createdAt ? ziDayDiff(localDay(new Date(pw.createdAt)), today) + 1 : 1;
   const paid = ziSubActive(pw.sub);
   const twoWeek = pw.reviews.find((r) => r.kind === "two_week") || null;
+  window.__ziRows = rowsByDate;
+  window.__ziReviewIn = pw.ready && hasOnboarded && !twoWeek && trialDay <= ZI_REVIEW_DAY ? ZI_REVIEW_DAY - trialDay : null;
+  window.__ziGoldMisses = (() => { let n = 0, d = today; if (!(rowsByDate[d] && rowsByDate[d].outcomes && rowsByDate[d].outcomes.gold === "not_kept")) d = addDays(d, -1); while (rowsByDate[d] && rowsByDate[d].outcomes && rowsByDate[d].outcomes.gold === "not_kept") { n++; d = addDays(d, -1); } return n; })();
   const latestReview = pw.reviews[0] || null;
   const phase = !pw.ready || !pw.enabled || paid ? "open" : trialDay > ZI_TRIAL_DAYS ? "locked" : trialDay > ZI_REVIEW_DAY ? "offer" : "trial";
 
