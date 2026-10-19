@@ -1,7 +1,7 @@
 // ZonedIn Service Worker — v3 (instant open + offline)
 // The app shell lives on the phone. Opening ZonedIn waits at most 1.5s for a fresh copy
 // (covered by the splash); with a slow or no connection the cached copy opens instead. Data calls (Supabase, /api, analytics) always go to the network.
-const CACHE = 'zonedin-v4';
+const CACHE = 'zonedin-v5';
 const SHELL = [
   '/',
   '/manifest.json',
@@ -9,8 +9,8 @@ const SHELL = [
   '/vendor/react-18.3.1.min.js',
   '/vendor/react-dom-18.3.1.min.js',
   '/vendor/supabase-2.45.4.js',
-  '/fonts/syne-latin-700-normal.woff2',
-  '/fonts/syne-latin-800-normal.woff2',
+  '/fonts/space-grotesk-latin-600-normal.woff2',
+  '/fonts/space-grotesk-latin-700-normal.woff2',
   '/fonts/dm-sans-latin-400-normal.woff2',
   '/fonts/dm-sans-latin-500-normal.woff2',
   '/fonts/dm-sans-latin-600-normal.woff2',
