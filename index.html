@@ -202,7 +202,7 @@
     <div class="zs-box"><svg class="zs-mark" width="144" height="144" viewBox="0 0 64 64" fill="none" aria-hidden="true"><circle cx="32" cy="32" r="26" stroke="rgba(255,255,255,0.12)" stroke-width="3"/><circle cx="32" cy="32" r="16" stroke="#00C2B2" stroke-width="5.5"/><circle cx="32" cy="32" r="7" fill="#111720"/><text x="32" y="36" text-anchor="middle" font-size="11" font-weight="900" fill="#F0F4F8" style="font-family:'Space Grotesk',sans-serif">Z</text></svg></div>
     <div class="zs-cap"><div class="zs-word">ZonedIn</div>
     <div class="zs-line">Clarity beats chaos.</div>
-    <div class="zs-day" id="zi-splash-day" hidden>A new day. Choose your three.</div></div>
+    <div class="zs-day" id="zi-splash-day" hidden>A new day. Choose your top 3.</div></div>
   </div>
   <script>
     // Fixed-length brand moment: ~2s on the first open of the day, ~1.3s otherwise. Never stretched by the network.
@@ -496,7 +496,7 @@ const OnboardingFlow = ({ day, form, onCommitDay, onStartFirstSession }) => {
         ce("div", { style: { fontSize: 14, color: T.sub, lineHeight: 1.55 } }, "Choose a step you can finish in this first session. We\u2019ll start the timer as soon as you commit.")),
       ce(TodaysThreeForm, __spreadProps(__spreadValues({ day }, form), {
         goldOnly: true,
-        hint: "Just one today. Tomorrow you\u2019ll choose your Three.",
+        hint: "Just one today. Tomorrow you\u2019ll choose your top 3.",
         commitLabel: "Commit to it",
         beforeCommit: ce("div", { style: { margin: "4px 0 12px" } },
           ce("div", { style: { fontSize: 12, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase", color: T.sub, marginBottom: 8 } }, "First session"),
@@ -1394,7 +1394,7 @@ const TypeItOut = ({ onSorted }) => {
     msg ? RC("div", { className: "fade-up", style: { fontSize: 12, color: T.sub, margin: "-2px 2px 10px", lineHeight: 1.5 } }, msg) : null);
   const go = async () => {
     if (!txt.trim() || busy) return;
-    if (navigator.onLine === false) { setMsg("Sorting needs a connection. You can still fill in your Three below."); return; }
+    if (navigator.onLine === false) { setMsg("Sorting needs a connection. You can still fill in your top 3 below."); return; }
     setBusy(true); setMsg("");
     try {
       const r = await fetch("/api/sort", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: txt.trim() }) });
@@ -1404,7 +1404,7 @@ const TypeItOut = ({ onSorted }) => {
       if (window.zi) window.zi.track("type_it_sorted", { tiers: ["gold", "diamond", "platinum"].filter((k) => j[k]).length, later: (j.later || []).length });
       setMsg((j.later || []).length ? "Also on your mind, for another day: " + j.later.join(" \u00B7 ") : "Check the order and the finish lines, then commit.");
       setOpen(false); setTxt("");
-    } catch (e) { setMsg("Couldn\u2019t sort that right now. Fill in your Three below instead."); }
+    } catch (e) { setMsg("Couldn\u2019t sort that right now. Fill in your top 3 below instead."); }
     finally { setBusy(false); }
   };
   return RC("div", { className: "fade-up", style: { marginBottom: 12, padding: 14, borderRadius: 16, border: "1px solid rgba(0,194,178,0.25)", background: "rgba(0,194,178,0.05)" } },
@@ -1460,7 +1460,7 @@ const TodaysThreeForm = ({ day, onTask, onTaskBlur, onDoneWhen, onWhy, onPromise
           style: __spreadProps(__spreadValues({}, dlInput(focus === "why", T.teal)), { fontSize: 16 }) })) : null);
     }),
     beforeCommit || null,
-    RC("button", { onClick: () => { if (ok) onPromise(); else setTried(true); }, style: btnGold({ width: "100%", fontSize: 16, padding: "16px", marginTop: 6, opacity: ok ? 1 : 0.7 }) }, commitLabel || "Commit to today"),
+    RC("button", { onClick: () => { if (ok) onPromise(); else setTried(true); }, style: btnGold({ width: "100%", fontSize: 16, padding: "16px", marginTop: 6, opacity: ok ? 1 : 0.7 }) }, commitLabel || "Commit to your top 3"),
     !ok && (tried || day.gold.trim()) ? RC("div", { role: "status", style: { fontSize: 13, fontWeight: tried ? 700 : 400, color: tried ? T.gold : T.sub, textAlign: "center", marginTop: 8 } }, "Still needed: ", missing.join(" \u00B7 "), ".") : null,
     weekRecord && weekRecord.committed > 0 ? RC("div", { style: { fontSize: 12, color: T.sub, textAlign: "center", marginTop: 16 } }, "ZonedIn Rate this week: ", RC("span", { style: { color: T.teal, fontWeight: 700 } }, weekRecord.kept, " of ", weekRecord.committed), " kept") : null);
 };
@@ -1713,7 +1713,7 @@ const CloseTheDay = ({ day, weekRecord, summaryOnly, firstTime, onAnswer, onFini
         RC("button", { onClick: () => onAnswer(t, true), style: btn({ flex: 1, padding: "11px", borderRadius: 12, background: "rgba(0,194,178,0.12)", border: "1px solid rgba(0,194,178,0.4)", color: T.teal, fontSize: 14, minHeight: 44 }) }, "Yes, kept it"),
         RC("button", { onClick: () => onAnswer(t, false), style: btn({ flex: 1, padding: "11px", borderRadius: 12, background: "transparent", border: `1px solid ${T.border2}`, color: T.sub, fontSize: 14 }) }, "Not quite"))))));
   if (screen === 2) return shell(RC(React.Fragment, null, screen === 2 && !pending.length && !summaryOnly ? intro : null,
-    dlLabel(summaryOnly ? "Today, closed" : "Today’s three", T.teal, { textAlign: "center", marginBottom: 18 }),
+    dlLabel(summaryOnly ? "Today, closed" : "Today’s top 3", T.teal, { textAlign: "center", marginBottom: 18 }),
     RC(VerdictBlock, { day, big: true }),
     weekRecord && weekRecord.committed ? RC("div", { style: { fontSize: 13, color: T.sub, textAlign: "center", marginTop: 18 } }, "ZonedIn Rate this week: ", RC("span", { style: { color: T.teal, fontWeight: 700 } }, weekRecord.kept, " of ", weekRecord.committed), " kept · ", weekRecord.pct, "%") : null,
     summaryOnly
@@ -1802,7 +1802,7 @@ const TopBar = ({ tab, greetMsg, userName, identityStatement, dateStr, streak, s
   const title = tab === "plan" ? `${greetMsg}${userName ? `, ${userName}` : ""}` : tab === "focus" ? "ZonedIn" : tab === "reflect" ? "Review" : "Settings";
   let sub = null, subTeal = false;
   if (tab === "plan") {
-    if (!committed) sub = "What are today’s three?";
+    if (!committed) sub = "What are today’s top 3?";
     else if (!closed) { sub = `Today matters because… ${day.gold_why}`; subTeal = true; }
     else { const c = dayCounts(day, true); sub = `Day closed · ${c.kept} of ${c.committed} kept`; }
   }
@@ -1862,7 +1862,7 @@ const PlanTab = (p) => {
     p.yRow ? RC(CloseYesterdayCard, { row: p.yRow, onAnswer: p.onAnswerYesterday }) : null,
     committed && p.showThreeIntro ? RC("div", { className: "pop-in", style: { margin: "4px 16px 12px", padding: "16px", borderRadius: 18, background: "rgba(0,194,178,0.07)", border: "1.5px solid rgba(0,194,178,0.3)" } },
       RC("div", { style: { fontSize: 15, fontWeight: 800, color: T.text, marginBottom: 4 } }, "You\u2019ve just seen how ZonedIn works."),
-      RC("div", { style: { fontSize: 13, color: T.sub, lineHeight: 1.5, marginBottom: 6 } }, "Tomorrow, you\u2019ll choose your Three: Gold, plus up to two more."),
+      RC("div", { style: { fontSize: 13, color: T.sub, lineHeight: 1.5, marginBottom: 6 } }, "Tomorrow, you\u2019ll choose your top 3: Gold, plus up to two more."),
       RC("button", { onClick: p.onDismissThreeIntro, style: btn({ background: "none", color: T.teal, fontSize: 13, padding: "0 4px", minHeight: 44 }) }, "Got it")) : null,
     !committed ? RC(TodaysThreeForm, { day: p.day, onTask: p.form.onTask, onTaskBlur: p.form.onTaskBlur, onDoneWhen: p.form.onDoneWhen, onWhy: p.form.onWhy, onAcceptSuggestion: p.form.onAcceptSuggestion, onPromise: p.onPromise, weekRecord: p.weekRecord, fromTomorrow: p.fromTomorrow })
       : closed ? RC(ClosedDayCard, { day: p.day, weekRecord: p.weekRecord, onShare: p.onShareDay, onView: p.onViewSummary })
@@ -1880,7 +1880,7 @@ const FocusTab = ({ day, activeZoneKey, setActiveZoneKey, sessionDuration, setSe
       RC("div", { style: { fontFamily: "'Space Grotesk',sans-serif", fontSize: 22, fontWeight: 900, color: T.text, letterSpacing: -0.3, marginBottom: 10 } }, head),
       RC("div", { style: { fontSize: 14, color: T.sub, lineHeight: 1.65, marginBottom: 26 } }, body),
       cta ? RC("button", { onClick: onCta, style: btnPrimary({ width: "100%", maxWidth: 280, fontSize: 15, padding: "15px 24px" }) }, cta) : null));
-  if (!committed) return empty(RC("span", { style: { display: "inline-flex" } }, RC(TierMark, { tier: "gold", size: 48 })), "Commit to today’s three first", "Write today’s three in Plan and commit to them. Then come back to focus.", "Go to Plan →", () => setTab("plan"));
+  if (!committed) return empty(RC("span", { style: { display: "inline-flex" } }, RC(TierMark, { tier: "gold", size: 48 })), "Commit to your top 3 first", "Write your top 3 in Plan and commit to them. Then come back to focus.", "Go to Plan →", () => setTab("plan"));
   if (!pendingTiers.length) return day.closed_at
     ? empty("✓", "Today is closed", "Rest. Tomorrow’s Gold is waiting in Plan.", null)
     : empty("✓", "Everything is reckoned", "Every commitment has an answer. One step left.", "Close your day →", () => onOpenClose("banner"));
@@ -1976,7 +1976,7 @@ const ReflectTab = ({ progressEl, reviews, onOpenReview, day, today, weekRecord,
           weekRecord && weekRecord.committed ? RC("div", { style: { fontSize: 13, color: T.sub, textAlign: "center", marginTop: 14 } }, "ZonedIn Rate this week: ", weekRecord.kept, " of ", weekRecord.committed, " kept · ", weekRecord.pct, "%") : null)
       : RC("div", { style: __spreadProps(__spreadValues({}, card()), { margin: "0 16px 12px", textAlign: "center", padding: "22px 18px" }) },
           RC("div", { style: { fontSize: 15, fontWeight: 700, color: T.text, marginBottom: 6 } }, committed ? "Today isn’t closed yet" : "Nothing committed today yet"),
-          RC("div", { style: { fontSize: 13, color: T.sub, lineHeight: 1.55, marginBottom: 14 } }, committed ? "Close the day to add it to your record. Your insight arrives when you do." : "Commit to today’s three in Plan. Tonight it joins your record."),
+          RC("div", { style: { fontSize: 13, color: T.sub, lineHeight: 1.55, marginBottom: 14 } }, committed ? "Close the day to add it to your record. Your insight arrives when you do." : "Commit to your top 3 in Plan. Tonight it joins your record."),
           RC("button", { onClick: committed ? () => onOpenClose("reflect") : () => setTab("plan"), style: btnPrimary({ fontSize: 14, padding: "0 22px", minHeight: 44 }) }, committed ? "Close today →" : "Go to Plan →")),
     closed ? RC("div", { style: { margin: "0 16px 12px" } },
       loadingInsight ? RC("div", { style: { padding: "18px", borderRadius: 18, border: `1px solid ${T.border}`, fontSize: 13, color: T.sub, textAlign: "center" } }, "Reading your day…")
@@ -2022,7 +2022,7 @@ const ProgressTab = ({ settingsOnly, planInfo, onShareWeek, morningPushOn, onMor
           React.createElement("div", { style: { fontFamily: "'Space Grotesk',sans-serif", fontSize: 72, fontWeight: 900, color: T.text, letterSpacing: -4, lineHeight: 1, marginTop: 8 } }, weekRecord.goldKept, React.createElement("span", { style: { fontSize: 34, color: T.sub, letterSpacing: -1 } }, "/", weekRecord.goldDays)),
           React.createElement("div", { style: { fontSize: 15, color: T.sub, marginTop: 6 } }, "ZonedIn Rate ", weekRecord.pct, "% \u00B7 ", weekRecord.kept, " of ", weekRecord.committed, " commitments kept"),
           weekRecord.committed >= 3 ? React.createElement("button", { onClick: onShareWeek, style: btn({ marginTop: 10, minHeight: 44, padding: "0 18px", borderRadius: 99, border: "1.5px solid rgba(0,194,178,0.3)", background: "transparent", color: T.teal, fontSize: 13, fontWeight: 700 }) }, "Share this week") : null)
-      : React.createElement("div", { style: { fontSize: 14, color: T.sub, marginTop: 10, lineHeight: 1.5 } }, "Commit to today\u2019s three. Your week starts with it."),
+      : React.createElement("div", { style: { fontSize: 14, color: T.sub, marginTop: 10, lineHeight: 1.5 } }, "Commit to your top 3. Your week starts with it."),
     moreStats ? React.createElement(React.Fragment, null, React.createElement("div", { style: { height: 1, background: T.border, margin: "16px 0 12px" } }),
     React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "center", gap: 14, flexWrap: "wrap", fontSize: 13, color: T.sub } },
       React.createElement("span", { style: { display: "inline-flex", alignItems: "center", gap: 5, color: streak > 0 ? T.gold : T.sub } }, React.createElement(BoltMark, { size: 15 }), React.createElement("b", { style: { color: T.text } }, streak), React.createElement("span", { style: { color: T.sub } }, streak === 1 ? " day Gold kept" : " days Gold kept")),
@@ -2281,7 +2281,7 @@ const Paywall = ({ mode, trialDay, review, busy, error, onSubscribe, onClose, on
         locked ? "Your record is safe" : left <= 1 ? "Last day of full ZonedIn" : `${left} days of full ZonedIn left`),
       RC("div", { style: { fontFamily: "'Space Grotesk',sans-serif", fontSize: 30, fontWeight: 800, lineHeight: 1.15, color: T.text, marginBottom: 12, textWrap: "balance" } }, head),
       RC("div", { style: { fontSize: 16, lineHeight: 1.55, color: T.sub, marginBottom: 6 } }, "Every kept commitment is evidence of who you’re becoming."),
-      RC("div", { style: { fontSize: 16, lineHeight: 1.55, color: T.text, marginBottom: 22 } }, locked ? "Subscribe to commit to today’s three again." : "Keep committing to your top three. Your next review arrives in a month."),
+      RC("div", { style: { fontSize: 16, lineHeight: 1.55, color: T.text, marginBottom: 22 } }, locked ? "Subscribe to commit to your top 3 again." : "Keep committing to your top three. Your next review arrives in a month."),
       RC("div", { role: "radiogroup", "aria-label": "Plan", style: { display: "flex", flexDirection: "column", gap: 10, marginBottom: 18 } },
         opt("year", `${ZI_PRICE.year} a year`, `${ZI_PRICE.yearWeekly}, billed yearly`, "Best value"),
         opt("month", `${ZI_PRICE.month} a month`, "Billed monthly")),
@@ -2976,7 +2976,7 @@ const ZonedInMVP = () => {
   // ── DL-09 — Close the Day ──
   const openClose = (via) => {
     const d = dayRef.current;
-    if (!d.committed_at) { showToast("Commit to today’s three first."); return; }
+    if (!d.committed_at) { showToast("Commit to your top 3 first."); return; }
     const firstTime = !LS.get("zi_close_intro_seen", false);
     if (firstTime) LS.set("zi_close_intro_seen", true);
     setCloseView({ via, summary: !!d.closed_at, firstTime });
@@ -3198,7 +3198,7 @@ Write 3 short sections. Direct, data-first, no filler:
     onDismiss: () => { track("a2hs_nudge_dismissed", {}); dismissInstall(); }
   } : showPush ? {
     title: "Get your Gold each morning",
-    body: `One notification at ${morningTime}: tomorrow\u2019s Gold, or a nudge to commit to today\u2019s three.`,
+    body: `One notification at ${morningTime}: tomorrow\u2019s Gold, or a nudge to commit to your top 3.`,
     cta: "Turn on",
     onCta: () => toggleMorningPush(true),
     onDismiss: () => { setPushDismissed(true); LS.set("zi_push_dismissed", true); track("push_nudge_dismissed", {}); }
