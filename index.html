@@ -1411,7 +1411,7 @@ const TypeItOut = ({ onSorted }) => {
     RC("div", { style: { fontSize: 13, fontWeight: 700, color: T.text, marginBottom: 8 } }, "What\u2019s on your mind today?"),
     RC("textarea", { value: txt, autoFocus: true, rows: 3, maxLength: 800, "aria-label": "Type your tasks", onChange: (e) => setTxt(e.target.value), placeholder: "e.g. need to send Sarah the proposal, reply to Sam, maybe sketch the homepage", style: { width: "100%", resize: "none", padding: "12px 14px", borderRadius: 12, border: `1px solid ${T.border2}`, background: T.bg, color: T.text, fontSize: 16, lineHeight: 1.45, fontFamily: "'DM Sans',sans-serif" } }),
     RC("div", { style: { display: "flex", gap: 8, marginTop: 10 } },
-      RC("button", { onClick: go, disabled: !txt.trim() || busy, style: btnPrimary({ flex: 2, fontSize: 14, padding: "12px", opacity: txt.trim() && !busy ? 1 : 0.45 }) }, busy ? "Sorting\u2026" : "Sort into my Three"),
+      RC("button", { onClick: go, disabled: !txt.trim() || busy, style: btnPrimary({ flex: 2, fontSize: 14, padding: "12px", opacity: txt.trim() && !busy ? 1 : 0.45 }) }, busy ? "Sorting\u2026" : "Sort into my top 3"),
       RC("button", { onClick: () => { setOpen(false); setMsg(""); }, style: btn({ flex: 1, fontSize: 13, background: "transparent", border: `1px solid ${T.border}`, color: T.sub, borderRadius: 50 }) }, "Cancel")),
     msg ? RC("div", { style: { fontSize: 12, color: T.sub, marginTop: 8, lineHeight: 1.5 } }, msg) : null,
     RC("div", { style: { fontSize: 12, color: T.sub2, marginTop: 8 } }, "Sorted by AI. You decide what you commit to."));
